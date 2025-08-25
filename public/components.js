@@ -1,4 +1,4 @@
-const { useState } = React;
+// React hooks are available globally from app.js
 
 // Auth Form Component
 function AuthForm({ onAuth }) {

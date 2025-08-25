@@ -1,5 +1,4 @@
-const { useState, useEffect } = React;
-const API_URL = window.location.origin;
+// React hooks are already declared in index.html
 
 // Main App Component
 function App() {

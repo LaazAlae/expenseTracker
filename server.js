@@ -77,7 +77,7 @@ const PORT = process.env.PORT || 3000;
 // Initialize and start server
 loadData().then(() => {
   const server = app.listen(PORT, () => {
-    console.log(`🚀 Secure expense tracker running on port ${PORT}`);
+    console.log(` Secure expense tracker running on port ${PORT}`);
   });
   
   initSocket(server);
