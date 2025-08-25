@@ -3,7 +3,6 @@ const { body, validationResult } = require('express-validator');
 const { authenticateToken } = require('../middleware/auth');
 const { sanitize, sanitizeTransaction } = require('../utils/sanitizer');
 const { getData, saveData } = require('../services/database');
-const { broadcastUpdate } = require('../services/socket');
 
 const router = express.Router();
 
@@ -70,7 +69,6 @@ router.post('/update-budget', authenticateToken, budgetValidation, async (req, r
     data.userData[req.user.userId].budget = parseFloat(budget);
     await saveData();
     
-    broadcastUpdate(data.userData[req.user.userId]);
     res.json({ success: true });
   } catch (err) {
     console.error('Update budget error:', err);
@@ -137,7 +135,6 @@ router.post('/add-transaction', authenticateToken, transactionValidation, async 
     
     await saveData();
     
-    broadcastUpdate(userData);
     res.json({ success: true });
   } catch (err) {
     console.error('Add transaction error:', err);

@@ -5,7 +5,6 @@ const compression = require('compression');
 const path = require('path');
 const authRoutes = require('./routes/auth');
 const dataRoutes = require('./routes/data');
-const { initSocket } = require('./services/socket');
 const { loadData } = require('./services/database');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 const { setupProcessSecurity } = require('./security/process');
@@ -22,7 +21,7 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdnjs.cloudflare.com"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      connectSrc: ["'self'", "ws:", "wss:"]
+      connectSrc: ["'self'"]
     }
   }
 }));
@@ -76,9 +75,7 @@ const PORT = process.env.PORT || 3000;
 
 // Initialize and start server
 loadData().then(() => {
-  const server = app.listen(PORT, () => {
+  app.listen(PORT, () => {
     console.log(` Secure expense tracker running on port ${PORT}`);
   });
-  
-  initSocket(server);
 }).catch(console.error);
