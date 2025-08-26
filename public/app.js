@@ -18,12 +18,18 @@ function App() {
   const [fundsAmount, setFundsAmount] = useState('');
   const [error, setError] = useState('');
   const [screenSize, setScreenSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
-  // Initialize auth
+  // Initialize auth - online only
   useEffect(() => {
+    if (!navigator.onLine) {
+      setError('This app requires an internet connection to function properly.');
+      setLoading(false);
+      return;
+    }
+    
     const token = localStorage.getItem('authToken');
     if (token) {
-      // Validate token format
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         if (payload.exp && payload.exp < Date.now() / 1000) {
@@ -42,17 +48,40 @@ function App() {
     }
   }, []);
 
-  // Real-time screen size detection
+  // Real-time screen size detection and online status
   useEffect(() => {
     const handleResize = () => {
       setScreenSize({ width: window.innerWidth, height: window.innerHeight });
     };
-
+    
+    const handleOnline = () => {
+      setIsOnline(true);
+      setError('');
+    };
+    
+    const handleOffline = () => {
+      setIsOnline(false);
+      setError('This app requires an internet connection to function properly.');
+    };
+    
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
 
   const loadData = async () => {
+    if (!navigator.onLine) {
+      setError('This app requires an internet connection to function properly.');
+      setLoading(false);
+      return;
+    }
+    
     try {
       const token = localStorage.getItem('authToken');
       if (!token) return;
@@ -65,7 +94,6 @@ function App() {
       });
       
       if (response.status === 401) {
-        // Token expired
         localStorage.removeItem('authToken');
         setIsAuthenticated(false);
         return;
@@ -80,7 +108,7 @@ function App() {
       setLoading(false);
     } catch (err) {
       console.error('Load data error:', err);
-      setError('Failed to load data. Please refresh the page.');
+      setError('Failed to load data. Please check your internet connection.');
       setLoading(false);
     }
   };
@@ -100,6 +128,11 @@ function App() {
   };
 
   const handleAddFunds = async () => {
+    if (!navigator.onLine) {
+      alert('This action requires an internet connection.');
+      return;
+    }
+    
     const amount = parseFloat(fundsAmount);
     if (isNaN(amount) || amount <= 0) {
       alert('Please enter a valid amount');
@@ -136,6 +169,11 @@ function App() {
   };
 
   const handleAddTransaction = async (transaction) => {
+    if (!navigator.onLine) {
+      alert('This action requires an internet connection.');
+      return;
+    }
+    
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${API_URL}/api/add-transaction`, {
@@ -192,18 +230,18 @@ function App() {
     }
   };
 
+  // Show auth form if not authenticated
   if (!isAuthenticated) {
     return React.createElement(AuthForm, { onAuth: handleAuth });
   }
   
+  // Show loading screen
   if (loading) {
-    return React.createElement('div', { 
-      className: 'app-container'
-    },
-      React.createElement('div', { className: 'flex justify-center items-center h-full' },
+    return React.createElement('div', { className: 'app-container' },
+      React.createElement('div', { className: 'flex items-center justify-center h-full' },
         React.createElement('div', { className: 'text-center' },
-          React.createElement(Loader, { className: 'w-8 h-8 animate-spin text-red-600 mx-auto mb-4' }),
-          React.createElement('div', { className: 'text-gray-600 responsive-text' }, 'Loading your expense data...')
+          React.createElement(Loader, { className: 'icon animate-spin text-gray-600 mx-auto mb-4' }),
+          React.createElement('div', { className: 'text-gray-600' }, 'Loading your expense data...')
         )
       )
     );
@@ -212,91 +250,70 @@ function App() {
   const totalSpent = data.transactions.reduce((sum, transaction) => sum + transaction.amount, 0);
   const remainingBudget = data.budget - totalSpent;
   const isMobile = screenSize.width < 640;
-  const isTablet = screenSize.width >= 640 && screenSize.width < 1024;
 
-  return React.createElement('div', { 
-    className: 'app-container'
-  },
-    // Header
-    React.createElement('div', { 
-      className: 'app-header'
-    },
-      React.createElement('div', { className: 'flex items-center gap-4' },
-        currentUser && React.createElement('span', { className: 'text-sm text-gray-600' }, 
-          isMobile ? currentUser.username : `Welcome, ${currentUser.username}`
-        ),
+  return React.createElement('div', { className: 'app-container' },
+    // Professional Header with Perfect Alignment
+    React.createElement('div', { className: 'app-header' },
+      React.createElement('div', { className: 'header-left' },
         React.createElement('button', { 
           onClick: handleLogout, 
-          className: 'btn btn-secondary text-sm no-print'
+          className: 'btn btn-secondary no-print'
         },
-          React.createElement(LogOut, { className: 'w-4 h-4 mr-2' }),
+          React.createElement(LogOut, { className: 'icon mr-2' }),
           isMobile ? '' : 'Logout'
         )
       ),
-      React.createElement('button', { 
-        onClick: exportToExcel, 
-        className: 'btn btn-purple no-print'
-      },
-        React.createElement(Download, { className: 'w-5 h-5 mr-2' }),
-        isMobile ? '' : 'Export to Excel'
+      React.createElement('div', { className: 'header-center' },
+        currentUser ? `Hello, ${currentUser.username}` : ''
+      ),
+      React.createElement('div', { className: 'header-right' },
+        React.createElement('button', { 
+          onClick: exportToExcel, 
+          className: 'btn btn-secondary no-print'
+        },
+          React.createElement(Download, { className: 'icon mr-2' }),
+          isMobile ? '' : 'Export'
+        )
       )
     ),
 
     // Error Display
-    error && React.createElement('div', {
-      className: 'px-4 py-2 mx-4 mt-4'
-    },
-      React.createElement('div', { className: 'error-message' }, error)
-    ),
+    error && React.createElement('div', { className: 'error-message' }, error),
 
-    // Main Content
+    // Main Professional Content
     React.createElement('div', { className: 'app-content' },
-      React.createElement('div', { className: 'adaptive-container' },
-        // Header
-        React.createElement('header', { className: 'text-center mb-8' },
-          React.createElement('h1', { className: 'page-title font-bold text-gray-800' }, 
-            isMobile ? 'Expense Tracker' : 'Expense Reimbursement Tracker'
+      React.createElement('div', { className: 'content-container' },
+        
+        // Clean Budget Section - More Compact Layout
+        React.createElement('div', { className: 'budget-section' },
+          React.createElement('div', { className: 'budget-display' },
+            React.createElement('div', { className: 'budget-label' }, 'Available Budget'),
+            React.createElement('div', { 
+              className: `budget-amount${remainingBudget <= 0 ? ' negative' : ''}` 
+            }, 
+              `$${remainingBudget.toFixed(2)}`
+            )
           ),
-          React.createElement('p', { className: 'page-subtitle text-gray-600' }, 'Manage your reimbursements with ease')
-        ),
-
-        // Budget Card
-        React.createElement('div', { className: 'flex flex-col items-center mb-8' },
-          React.createElement('div', { className: 'budget-card' },
-            React.createElement('p', { className: 'responsive-text-lg font-medium mb-2', style: { opacity: 0.9 }}, 'Available Budget'),
-            React.createElement('p', { 
-              className: 'font-bold',
-              style: { fontSize: isMobile ? 'clamp(2rem, 8vw, 3rem)' : 'clamp(3rem, 6vw, 5rem)' }
-            }, `$${remainingBudget.toFixed(2)}`)
-          ),
-          
           React.createElement('button', { 
             onClick: () => setShowAddFunds(true), 
-            className: 'btn btn-blue btn-lg no-print'
+            className: 'btn btn-link no-print'
           },
-            React.createElement(Plus, { className: 'w-5 h-5 mr-2' }),
+            React.createElement(Plus, { className: 'icon mr-2' }),
             'Add Funds'
           )
         ),
 
-        // Transaction Table
-        React.createElement('div', { 
-          className: 'bg-white rounded-xl shadow-lg overflow-hidden mb-8 flex-1',
-          style: { minHeight: 0 }
-        },
-          React.createElement('div', { className: 'p-6 border-b border-gray-200' },
-            React.createElement('h2', { className: 'responsive-text-xl font-bold text-gray-800' }, 'Transaction History')
+        // Professional Transaction Section
+        React.createElement('div', { className: 'transaction-section' },
+          React.createElement('div', { className: 'transaction-header' },
+            React.createElement('h2', null, 'Transaction History')
           ),
-          
-          React.createElement('div', { 
-            className: 'table-container',
-            style: { maxHeight: `${Math.max(screenSize.height * 0.4, 200)}px` }
-          },
+          React.createElement('div', { className: 'transaction-content' },
             data.transactions.length === 0 ? 
               React.createElement('div', { className: 'empty-state' },
-                React.createElement(FileText, { className: 'w-16 h-16 text-gray-300 mx-auto mb-4' }),
-                React.createElement('p', { className: 'responsive-text-lg text-gray-600 mb-2' }, 'No transactions yet'),
-                React.createElement('p', { className: 'responsive-text text-gray-400' }, 'Add your first transaction to get started')
+                React.createElement(FileText, { className: 'empty-icon' }),
+                React.createElement('div', { className: 'empty-title' }, 'No transactions yet'),
+                React.createElement('div', { className: 'empty-subtitle' }, 'Add your first transaction to get started')
               ) :
               React.createElement('table', { className: 'table' },
                 React.createElement('thead', null,
@@ -305,7 +322,7 @@ function App() {
                     React.createElement('th', null, isMobile ? 'Person' : 'Beneficiary'),
                     React.createElement('th', null, 'Item'),
                     React.createElement('th', null, 'Amount'),
-                    !isMobile && React.createElement('th', null, 'Amount Left')
+                    !isMobile && React.createElement('th', null, 'Remaining')
                   )
                 ),
                 React.createElement('tbody', null,
@@ -325,10 +342,10 @@ function App() {
                       ),
                       React.createElement('td', null,
                         React.createElement('div', { className: 'flex items-center' },
-                          !isMobile && React.createElement(User, { className: 'w-4 h-4 text-gray-400 mr-2' }),
+                          !isMobile && React.createElement(User, { className: 'icon text-gray-600 mr-2' }),
                           React.createElement('span', null, 
-                            isMobile && transaction.beneficiary.length > 10 ? 
-                              transaction.beneficiary.substring(0, 10) + '...' : 
+                            isMobile && transaction.beneficiary.length > 12 ? 
+                              transaction.beneficiary.substring(0, 12) + '...' : 
                               transaction.beneficiary
                           )
                         )
@@ -338,38 +355,45 @@ function App() {
                           transaction.itemDescription.substring(0, 15) + '...' : 
                           transaction.itemDescription
                       ),
-                      React.createElement('td', { className: 'font-medium' }, `$${transaction.amount.toFixed(2)}`),
-                      !isMobile && React.createElement('td', { className: 'font-medium' }, `$${amountLeftAfterTransaction.toFixed(2)}`)
+                      React.createElement('td', { className: 'font-medium' }, 
+                        `$${transaction.amount.toFixed(2)}`
+                      ),
+                      !isMobile && React.createElement('td', { className: 'font-medium' }, 
+                        `$${amountLeftAfterTransaction.toFixed(2)}`
+                      )
                     );
                   })
                 )
               )
           )
-        ),
-
-        // New Transaction Button
-        React.createElement('button', { 
-          onClick: () => setShowTransactionForm(true), 
-          className: 'new-transaction-btn no-print',
-          style: { 
-            position: 'fixed',
-            bottom: isMobile ? '20px' : '30px',
-            right: isMobile ? '20px' : '30px',
-            zIndex: 50
-          }
-        }, isMobile ? '+' : 'NEW')
+        )
       )
     ),
 
-    // Modals
+    // Professional Floating Action Button - More Prominent
+    React.createElement('button', { 
+      onClick: () => setShowTransactionForm(true), 
+      className: 'fab-button no-print',
+      title: 'Add New Transaction'
+    }, '+'),
+
+    // Professional Add Funds Modal
     showAddFunds && React.createElement('div', { className: 'modal-overlay' },
-      React.createElement('div', { className: 'modal-content', style: { maxWidth: '28rem' }},
-        React.createElement('div', { className: 'p-6' },
-          React.createElement('h3', { className: 'text-xl font-bold text-gray-800 mb-4' }, 'Add Funds'),
-          React.createElement('div', { className: 'mb-4' },
-            React.createElement('label', { className: 'block text-sm font-medium text-gray-700 mb-2' }, 'Amount'),
+      React.createElement('div', { className: 'modal-content' },
+        React.createElement('div', { className: 'modal-header' },
+          React.createElement('h3', { className: 'modal-title' }, 'Add Funds'),
+          React.createElement('button', { 
+            onClick: () => setShowAddFunds(false),
+            className: 'btn btn-secondary'
+          }, '×')
+        ),
+        React.createElement('div', { className: 'modal-body' },
+          React.createElement('div', { className: 'form-group' },
+            React.createElement('label', { className: 'form-label' }, 'Amount'),
             React.createElement('div', { className: 'relative' },
-              React.createElement('span', { className: 'absolute left-3 top-3 text-gray-500' }, '$'),
+              React.createElement('span', { 
+                className: 'absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500' 
+              }, '$'),
               React.createElement('input', { 
                 type: 'number', 
                 step: '0.01',
@@ -378,8 +402,9 @@ function App() {
                 value: fundsAmount, 
                 onChange: (e) => setFundsAmount(e.target.value), 
                 placeholder: '0.00', 
-                className: 'form-input pl-8',
-                autoFocus: true 
+                className: 'form-input',
+                autoFocus: true,
+                style: { paddingLeft: '2.5rem' }
               })
             )
           ),
@@ -398,6 +423,7 @@ function App() {
       )
     ),
 
+    // Transaction Form Modal
     showTransactionForm && React.createElement(TransactionForm, {
       onSubmit: handleAddTransaction,
       onCancel: () => setShowTransactionForm(false),
@@ -406,6 +432,7 @@ function App() {
       flightNumbers: data.flightNumbers
     }),
 
+    // Transaction Details Modal
     selectedTransaction && React.createElement(TransactionDetails, {
       transaction: selectedTransaction,
       onClose: () => setSelectedTransaction(null)
