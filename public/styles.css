@@ -514,13 +514,16 @@ body {
 .modal { 
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
-  width: clamp(320px, 90vw, 600px);
-  max-height: 85vh;
+  width: clamp(300px, 95vw, 600px);
+  max-width: calc(var(--actual-width, 100vw) - 20px);
+  max-height: calc(var(--vh, 1vh) * 90);
+  max-height: calc(var(--actual-height, 100vh) - 40px);
   overflow: hidden;
-  border-radius: 24px;
+  border-radius: 16px;
   box-shadow: 0 32px 64px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.2);
   animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  margin: 10px;
 }
 
 .modal-header { 
@@ -1990,9 +1993,11 @@ body {
   
   /* Mobile Modals */
   .modal {
-    margin: 16px;
-    width: calc(100vw - 32px);
-    max-height: calc(100vh - 32px);
+    margin: 8px;
+    width: calc(var(--actual-width, 100vw) - 16px);
+    max-width: calc(var(--actual-width, 100vw) - 16px);
+    max-height: calc(var(--actual-height, 100vh) - 16px);
+    height: auto;
     border-radius: 12px;
   }
   
@@ -2002,8 +2007,9 @@ body {
   
   .modal-body {
     padding: 16px;
-    max-height: calc(100vh - 120px);
+    max-height: calc(var(--actual-height, 100vh) - 120px);
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
   
   .modal-footer {
@@ -2012,9 +2018,11 @@ body {
   }
   
   .modal-large {
-    width: calc(100vw - 20px);
-    margin: 10px;
-    max-height: calc(100vh - 20px);
+    width: calc(var(--actual-width, 100vw) - 12px);
+    max-width: calc(var(--actual-width, 100vw) - 12px);
+    margin: 6px;
+    max-height: calc(var(--actual-height, 100vh) - 12px);
+    height: auto;
   }
   
   /* Mobile Forms */
@@ -2224,9 +2232,11 @@ body {
   }
   
   .modal {
-    margin: 8px;
-    width: calc(100vw - 16px);
-    max-height: calc(100vh - 16px);
+    margin: 4px;
+    width: calc(var(--actual-width, 100vw) - 8px);
+    max-width: calc(var(--actual-width, 100vw) - 8px);
+    max-height: calc(var(--actual-height, 100vh) - 8px);
+    height: auto;
   }
   
   .btn {
@@ -2608,6 +2618,44 @@ body.mobile-device .transaction-table td {
 }
 
 /* No content pushing needed for floating confirm panel */
+
+/* Mobile Modal Real-time Viewport Awareness */
+body.mobile-device .modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--actual-width, 100vw);
+  height: var(--actual-height, 100vh);
+  max-width: var(--actual-width, 100vw);
+  max-height: var(--actual-height, 100vh);
+}
+
+body.mobile-device .modal {
+  position: relative;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: calc(var(--actual-width, 100vw) - 16px);
+  max-height: calc(var(--actual-height, 100vh) - 16px);
+  width: calc(var(--actual-width, 100vw) - 16px);
+  height: auto;
+  margin: 0;
+}
+
+body.mobile-device .modal-large {
+  max-width: calc(var(--actual-width, 100vw) - 12px);
+  width: calc(var(--actual-width, 100vw) - 12px);
+  max-height: calc(var(--actual-height, 100vh) - 12px);
+  height: auto;
+}
+
+body.mobile-device .modal-body {
+  max-height: calc(var(--actual-height, 100vh) - 160px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
 
 /* PWA and Mobile Device Specific Fixes */
 body.pwa-mode {

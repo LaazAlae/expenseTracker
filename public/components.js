@@ -419,7 +419,6 @@ function TransactionEditModal({ transaction, onSave, onCancel }) {
     React.createElement('div', { className: 'modal modal-large' },
       React.createElement('div', { className: 'modal-header' },
         React.createElement('h3', null, 
-          React.createElement('span', { className: 'icon icon-edit' }),
           isFundAddition ? 'Edit Fund Addition' : 'Edit Transaction'
         ),
         React.createElement('button', { onClick: onCancel }, '×')
@@ -637,7 +636,6 @@ function TransactionForm({ onSubmit, onCancel }) {
     React.createElement('div', { className: 'modal modal-large' },
       React.createElement('div', { className: 'modal-header' },
         React.createElement('h3', null, 
-          React.createElement('span', { className: 'icon icon-document' }),
           'New Transaction'
         ),
         React.createElement('button', { onClick: onCancel }, '×')
@@ -803,7 +801,6 @@ function TransactionDetails({ transaction, onClose, editMode, onEdit }) {
     React.createElement('div', { className: 'modal' },
       React.createElement('div', { className: 'modal-header' },
         React.createElement('h3', null, 
-          React.createElement('span', { className: 'icon icon-info' }),
           isPositiveTransaction ? 'Fund Addition Details' : 'Transaction Details'
         ),
         React.createElement('button', { onClick: onClose }, '×')
@@ -998,7 +995,6 @@ function AdminPanel({ onClose }) {
     React.createElement('div', { className: 'modal modal-large' },
       React.createElement('div', { className: 'modal-header' },
         React.createElement('h3', null, 
-          React.createElement('span', { className: 'icon icon-settings' }),
           'Admin Panel - User Management'
         ),
         React.createElement('button', { onClick: onClose }, '×')

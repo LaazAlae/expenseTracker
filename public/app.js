@@ -518,7 +518,7 @@ function App() {
         React.createElement('button', {
           onClick: () => setShowTransactionForm(true),
           className: 'btn btn-primary btn-action',
-          dangerouslySetInnerHTML: { __html: `${icon('add', 18)} New Transaction` }
+          dangerouslySetInnerHTML: { __html: `New Transaction` }
         }),
         React.createElement('button', {
           onClick: handleBDCreation,
