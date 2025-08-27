@@ -137,6 +137,7 @@ function App() {
   const [selectedForBD, setSelectedForBD] = useState(new Set());
   const [bdNumber, setBdNumber] = useState('');
   const [showBDNumberPrompt, setShowBDNumberPrompt] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -420,32 +421,80 @@ function App() {
   return React.createElement('div', { className: 'app' },
     React.createElement('div', { className: 'header' },
       React.createElement('h1', null, `Welcome ${currentUser?.username || 'User'}`),
-      React.createElement('div', { className: 'header-actions' },
+      
+      // Desktop Header Actions
+      React.createElement('div', { className: 'header-actions desktop-only' },
         currentUser ? React.createElement('span', { className: 'header-user' }, 
           `${currentUser.username}${currentUser.isAdmin ? ' (Admin)' : ''}`
         ) : '',
         React.createElement('button', { 
           onClick: () => setEditMode(!editMode),
-          className: `btn ${editMode ? 'btn-warning' : 'btn-secondary'} btn-header`
-        }, 
-          React.createElement('span', { className: 'icon icon-edit' }),
-          editMode ? 'Exit Edit' : 'Edit Mode'
-        ),
+          className: `btn ${editMode ? 'btn-warning' : 'btn-secondary'} btn-header`,
+          dangerouslySetInnerHTML: { __html: `${icon('edit', 18)} ${editMode ? 'Exit Edit' : 'Edit Mode'}` }
+        }),
         currentUser?.isAdmin && React.createElement('button', { 
           onClick: () => setShowSettings(!showSettings),
-          className: 'btn btn-info btn-header'
-        }, 
-          React.createElement('span', { className: 'icon icon-settings' }),
-          'Settings'
-        ),
-        React.createElement('button', { onClick: exportToExcel, className: 'btn btn-success btn-header' }, 
-          React.createElement('span', { className: 'icon icon-export' }),
-          'Export'
-        ),
-        React.createElement('button', { onClick: handleLogout, className: 'btn btn-header' }, 
-          React.createElement('span', { className: 'icon icon-logout' }),
-          'Logout'
-        )
+          className: 'btn btn-info btn-header',
+          dangerouslySetInnerHTML: { __html: `${icon('settings', 18)} Settings` }
+        }),
+        React.createElement('button', { 
+          onClick: exportToExcel, 
+          className: 'btn btn-success btn-header',
+          dangerouslySetInnerHTML: { __html: `${icon('export', 18)} Export` }
+        }),
+        React.createElement('button', { 
+          onClick: handleLogout, 
+          className: 'btn btn-header',
+          dangerouslySetInnerHTML: { __html: `${icon('logout', 18)} Logout` }
+        })
+      ),
+
+      // Mobile Header Actions
+      React.createElement('div', { className: 'header-actions mobile-only' },
+        React.createElement('button', { 
+          onClick: () => setShowMobileMenu(!showMobileMenu),
+          className: 'btn btn-header mobile-menu-btn',
+          dangerouslySetInnerHTML: { __html: icon('menu', 24) }
+        })
+      ),
+
+      // Mobile Dropdown Menu
+      showMobileMenu && React.createElement('div', { className: 'mobile-menu' },
+        currentUser ? React.createElement('div', { className: 'mobile-menu-user' }, 
+          `${currentUser.username}${currentUser.isAdmin ? ' (Admin)' : ''}`
+        ) : '',
+        React.createElement('button', { 
+          onClick: () => {
+            setEditMode(!editMode);
+            setShowMobileMenu(false);
+          },
+          className: `mobile-menu-item ${editMode ? 'active' : ''}`,
+          dangerouslySetInnerHTML: { __html: `${icon('edit', 18)} ${editMode ? 'Exit Edit Mode' : 'Edit Mode'}` }
+        }),
+        currentUser?.isAdmin && React.createElement('button', { 
+          onClick: () => {
+            setShowSettings(!showSettings);
+            setShowMobileMenu(false);
+          },
+          className: 'mobile-menu-item',
+          dangerouslySetInnerHTML: { __html: `${icon('settings', 18)} Settings` }
+        }),
+        React.createElement('button', { 
+          onClick: () => {
+            exportToExcel();
+            setShowMobileMenu(false);
+          },
+          className: 'mobile-menu-item',
+          dangerouslySetInnerHTML: { __html: `${icon('export', 18)} Export Excel` }
+        }),
+        React.createElement('button', { 
+          onClick: () => {
+            handleLogout();
+            setShowMobileMenu(false);
+          },
+          className: 'mobile-menu-item logout',
+          dangerouslySetInnerHTML: { __html: `${icon('logout', 18)} Logout` }
+        })
       )
     ),
 
@@ -466,21 +515,17 @@ function App() {
       React.createElement('div', { className: 'transaction-section' },
         React.createElement('div', { className: 'transaction-header' },
           React.createElement('h2', null, 'Transactions'),
-          React.createElement('div', { style: { display: 'flex', gap: '8px' } },
+          React.createElement('div', { className: 'transaction-actions' },
             React.createElement('button', {
               onClick: () => setShowTransactionForm(true),
-              className: 'btn btn-primary'
-            }, 
-              React.createElement('span', { className: 'icon icon-add' }),
-              'New Transaction'
-            ),
+              className: 'btn btn-primary',
+              dangerouslySetInnerHTML: { __html: `${icon('add', 18)} <span>New Transaction</span>` }
+            }),
             React.createElement('button', {
               onClick: handleBDCreation,
-              className: 'btn'
-            }, 
-              React.createElement('span', { className: 'icon icon-bd' }),
-              'Create BD'
-            )
+              className: `btn ${showBDCreation ? 'btn-warning' : 'btn-secondary'}`,
+              dangerouslySetInnerHTML: { __html: `${icon('bd', 18)} <span>${showBDCreation ? 'Cancel BD' : 'Assign BD Numbers'}</span>` }
+            })
           )
         ),
         
@@ -535,36 +580,43 @@ function App() {
                     React.createElement('td', { className: 'col-bd' }, transaction.bdNumber || '-'),
                     
                     editMode && React.createElement('td', null,
-                      React.createElement('div', { style: { display: 'flex', gap: '4px' } },
+                      React.createElement('div', { className: 'transaction-actions-cell' },
                         React.createElement('button', {
                           onClick: (e) => {
                             e.stopPropagation();
                             handleEditTransaction(transaction);
                           },
                           className: 'btn btn-sm btn-secondary',
-                          title: 'Edit'
-                        }, '✏️'),
+                          title: 'Edit Transaction',
+                          dangerouslySetInnerHTML: { __html: icon('edit', 14) }
+                        }),
                         React.createElement('button', {
                           onClick: (e) => {
                             e.stopPropagation();
                             handleDeleteTransaction(transaction.id);
                           },
                           className: 'btn btn-sm btn-danger',
-                          title: 'Delete'
-                        }, '🗑️')
+                          title: 'Delete Transaction',
+                          dangerouslySetInnerHTML: { __html: icon('delete', 14) }
+                        })
                       )
                     ),
                     
                     showBDCreation && React.createElement('td', {
                       onClick: (e) => {
                         e.stopPropagation();
-                        if (!hasBD && !isPositiveTransaction) toggleTransactionForBD(transaction.id);
+                        if (!isPositiveTransaction) toggleTransactionForBD(transaction.id);
                       }
                     },
                       React.createElement('div', {
-                        className: `bd-select-button ${isSelected ? 'selected' : ''} ${hasBD || isPositiveTransaction ? 'disabled' : ''}`
+                        className: `bd-select-button ${isSelected ? 'selected' : ''} ${isPositiveTransaction ? 'disabled' : ''}`
                       },
-                        isPositiveTransaction ? '−' : (hasBD ? '✓' : (isSelected ? '−' : '+'))
+                        isPositiveTransaction ? 
+                          React.createElement('span', { dangerouslySetInnerHTML: { __html: icon('cancel', 16) } }) :
+                          (isSelected ? 
+                            React.createElement('span', { dangerouslySetInnerHTML: { __html: icon('check', 16) } }) :
+                            React.createElement('span', { dangerouslySetInnerHTML: { __html: icon('add', 16) } })
+                          )
                       )
                     )
                   );
@@ -607,16 +659,37 @@ function App() {
       onCancel: () => setEditingTransaction(null)
     }),
 
-    showBDCreation && React.createElement('div', { className: 'bd-controls' },
-      React.createElement('span', null, `${selectedForBD.size} transactions selected`),
-      React.createElement('button', {
-        onClick: submitBDSelection,
-        className: 'btn btn-primary'
-      }, 'Submit BD'),
-      React.createElement('button', {
-        onClick: () => setShowBDCreation(false),
-        className: 'btn'
-      }, 'Cancel')
+    showBDCreation && React.createElement('div', { className: 'bd-assignment-panel' },
+      React.createElement('div', { className: 'bd-panel-header' },
+        React.createElement('h3', { dangerouslySetInnerHTML: { __html: `${icon('bd', 24)} BD Number Assignment` } }),
+        React.createElement('p', null, 'Select transactions to assign BD numbers. You can reassign existing BD numbers.')
+      ),
+      React.createElement('div', { className: 'bd-panel-content' },
+        React.createElement('div', { className: 'bd-selection-info' },
+          React.createElement('span', { className: 'selected-count' }, 
+            `${selectedForBD.size} transaction${selectedForBD.size !== 1 ? 's' : ''} selected`
+          ),
+          selectedForBD.size > 0 && React.createElement('span', { className: 'selected-transactions' },
+            'Ready for BD assignment'
+          )
+        ),
+        React.createElement('div', { className: 'bd-panel-actions' },
+          React.createElement('button', {
+            onClick: submitBDSelection,
+            className: 'btn btn-primary btn-lg',
+            disabled: selectedForBD.size === 0,
+            dangerouslySetInnerHTML: { __html: `${icon('check', 18)} Assign BD Number` }
+          }),
+          React.createElement('button', {
+            onClick: () => {
+              setShowBDCreation(false);
+              setSelectedForBD(new Set());
+            },
+            className: 'btn btn-secondary btn-lg',
+            dangerouslySetInnerHTML: { __html: `${icon('cancel', 18)} Cancel` }
+          })
+        )
+      )
     ),
 
     showBDNumberPrompt && React.createElement(BDNumberModal, {
@@ -631,6 +704,259 @@ function App() {
     })
   );
 }
+
+// Real-time Responsive System & Edge Detection
+class ResponsiveManager {
+  constructor() {
+    this.isMobile = false;
+    this.isTablet = false;
+    this.isDesktop = false;
+    this.orientation = 'portrait';
+    this.screenSize = 'desktop';
+    this.callbacks = new Set();
+    
+    this.init();
+  }
+
+  init() {
+    this.updateViewportInfo();
+    this.addEventListeners();
+    this.detectEdges();
+    this.setupViewportHeightFix();
+  }
+
+  addEventListeners() {
+    // Listen for resize events with debouncing
+    let resizeTimeout;
+    const handleResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        this.updateViewportInfo();
+        this.detectEdges();
+        this.notifyCallbacks();
+      }, 100);
+    };
+
+    // Listen for orientation changes
+    const handleOrientationChange = () => {
+      // Small delay to allow for orientation change to complete
+      setTimeout(() => {
+        this.updateViewportInfo();
+        this.detectEdges();
+        this.notifyCallbacks();
+      }, 150);
+    };
+
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleOrientationChange);
+    
+    // Also listen for visual viewport changes (mobile keyboard, etc.)
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize);
+    }
+  }
+
+  updateViewportInfo() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    
+    // Update device type flags
+    this.isMobile = width <= 768;
+    this.isTablet = width > 768 && width <= 1024;
+    this.isDesktop = width > 1024;
+    
+    // Update screen size categories
+    if (width <= 360) {
+      this.screenSize = 'mobile-xs';
+    } else if (width <= 480) {
+      this.screenSize = 'mobile-sm';
+    } else if (width <= 768) {
+      this.screenSize = 'mobile';
+    } else if (width <= 1024) {
+      this.screenSize = 'tablet';
+    } else if (width <= 1440) {
+      this.screenSize = 'desktop';
+    } else {
+      this.screenSize = 'desktop-xl';
+    }
+    
+    // Update orientation
+    this.orientation = width > height ? 'landscape' : 'portrait';
+    
+    // Apply CSS classes to body
+    this.applyCSSClasses();
+    
+    console.log(`Viewport: ${width}x${height}, Type: ${this.screenSize}, Orientation: ${this.orientation}`);
+  }
+
+  applyCSSClasses() {
+    const body = document.body;
+    
+    // Remove existing responsive classes
+    const existingClasses = [
+      'mobile', 'tablet', 'desktop', 'mobile-xs', 'mobile-sm', 'desktop-xl',
+      'portrait', 'landscape'
+    ];
+    body.classList.remove(...existingClasses);
+    
+    // Add current classes
+    body.classList.add(this.screenSize);
+    body.classList.add(this.orientation);
+    
+    if (this.isMobile) {
+      body.classList.add('mobile-device');
+    } else {
+      body.classList.remove('mobile-device');
+    }
+  }
+
+  detectEdges() {
+    const app = document.querySelector('.app');
+    if (!app) return;
+
+    // Check if device has notch/safe area
+    const hasNotch = window.CSS && CSS.supports('padding-top', 'env(safe-area-inset-top)');
+    
+    if (hasNotch) {
+      app.classList.add('has-safe-area');
+      
+      // Add edge detection classes
+      app.classList.add('edge-top', 'edge-bottom', 'edge-left', 'edge-right');
+    } else {
+      app.classList.remove('has-safe-area', 'edge-top', 'edge-bottom', 'edge-left', 'edge-right');
+    }
+
+    // Detect if keyboard is open on mobile (viewport height change)
+    if (this.isMobile && window.visualViewport) {
+      const keyboardHeight = window.innerHeight - window.visualViewport.height;
+      if (keyboardHeight > 150) { // Keyboard is likely open
+        app.classList.add('keyboard-open');
+        app.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
+      } else {
+        app.classList.remove('keyboard-open');
+        app.style.removeProperty('--keyboard-height');
+      }
+    }
+  }
+
+  setupViewportHeightFix() {
+    // Fix for mobile browsers where 100vh includes address bar
+    const setVH = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+
+    setVH();
+    window.addEventListener('resize', setVH);
+    
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', setVH);
+    }
+  }
+
+  // API for components to listen to viewport changes
+  subscribe(callback) {
+    this.callbacks.add(callback);
+    return () => this.callbacks.delete(callback);
+  }
+
+  notifyCallbacks() {
+    this.callbacks.forEach(callback => {
+      try {
+        callback({
+          isMobile: this.isMobile,
+          isTablet: this.isTablet,
+          isDesktop: this.isDesktop,
+          orientation: this.orientation,
+          screenSize: this.screenSize,
+          width: window.innerWidth,
+          height: window.innerHeight
+        });
+      } catch (error) {
+        console.error('Error in viewport callback:', error);
+      }
+    });
+  }
+
+  // Utility methods
+  getViewportInfo() {
+    return {
+      isMobile: this.isMobile,
+      isTablet: this.isTablet,
+      isDesktop: this.isDesktop,
+      orientation: this.orientation,
+      screenSize: this.screenSize,
+      width: window.innerWidth,
+      height: window.innerHeight
+    };
+  }
+}
+
+// Initialize responsive manager
+const responsiveManager = new ResponsiveManager();
+
+// Make it globally available for other components
+window.responsiveManager = responsiveManager;
+
+// Add CSS custom properties for real-time use
+const updateCSSVariables = () => {
+  const root = document.documentElement;
+  root.style.setProperty('--viewport-width', `${window.innerWidth}px`);
+  root.style.setProperty('--viewport-height', `${window.innerHeight}px`);
+  root.style.setProperty('--is-mobile', responsiveManager.isMobile ? '1' : '0');
+  root.style.setProperty('--is-tablet', responsiveManager.isTablet ? '1' : '0');
+  root.style.setProperty('--is-desktop', responsiveManager.isDesktop ? '1' : '0');
+};
+
+// Update CSS variables on viewport changes
+responsiveManager.subscribe(updateCSSVariables);
+updateCSSVariables(); // Initial call
+
+// Mobile-specific optimizations
+if (responsiveManager.isMobile) {
+  // Prevent zoom on input focus (iOS)
+  const metaViewport = document.querySelector('meta[name=viewport]');
+  if (metaViewport) {
+    metaViewport.setAttribute('content', 
+      'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover'
+    );
+  }
+  
+  // Disable pull-to-refresh on mobile
+  document.addEventListener('touchstart', (e) => {
+    if (e.touches.length > 1) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+  
+  let lastTouchEnd = 0;
+  document.addEventListener('touchend', (e) => {
+    const now = (new Date()).getTime();
+    if (now - lastTouchEnd <= 300) {
+      e.preventDefault();
+    }
+    lastTouchEnd = now;
+  }, false);
+}
+
+// Add performance monitoring for responsiveness
+if (window.PerformanceObserver) {
+  const observer = new PerformanceObserver((list) => {
+    for (const entry of list.getEntries()) {
+      if (entry.name === 'layout-shift' && entry.value > 0.1) {
+        console.warn('Layout shift detected:', entry.value);
+      }
+    }
+  });
+  
+  try {
+    observer.observe({ entryTypes: ['layout-shift'] });
+  } catch (e) {
+    // Layout shift API not supported
+  }
+}
+
+console.log('✅ Real-time responsive system initialized');
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(React.createElement(App));

@@ -825,6 +825,254 @@ body {
   }
 }
 
+/* Real-time Responsive Design System */
+.desktop-only {
+  display: flex;
+}
+
+.mobile-only {
+  display: none;
+}
+
+/* Mobile Menu System */
+.mobile-menu-btn {
+  padding: 8px 12px !important;
+  min-width: auto !important;
+}
+
+.mobile-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  min-width: 200px;
+  animation: slideDown 0.2s ease;
+}
+
+.mobile-menu-user {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 12px;
+  color: #6b7280;
+  background: #f9fafb;
+  border-radius: 8px 8px 0 0;
+}
+
+.mobile-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 14px;
+  color: #374151;
+}
+
+.mobile-menu-item:hover {
+  background: #f3f4f6;
+}
+
+.mobile-menu-item.active {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.mobile-menu-item.logout {
+  color: #dc2626;
+  border-top: 1px solid #e5e7eb;
+}
+
+.mobile-menu-item.logout:hover {
+  background: #fef2f2;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Professional Icon Styles */
+.icon {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Transaction Actions */
+.transaction-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.transaction-actions-cell {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+/* BD Assignment Panel */
+.bd-assignment-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 3px solid #3b82f6;
+  box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  animation: slideUp 0.3s ease;
+}
+
+.bd-panel-header {
+  padding: 20px 24px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+.bd-panel-header h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bd-panel-header p {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.bd-panel-content {
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.bd-selection-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.selected-count {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.selected-transactions {
+  font-size: 14px;
+  color: #059669;
+}
+
+.bd-panel-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-lg {
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* BD Select Buttons */
+.bd-select-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid #e5e7eb;
+  background: white;
+}
+
+.bd-select-button:hover:not(.disabled) {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  transform: scale(1.1);
+}
+
+.bd-select-button.selected {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.bd-select-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f3f4f6;
+}
+
+/* Enhanced Modal Styles */
+.modal-close-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  color: #6b7280;
+}
+
+.modal-close-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
 /* Additional styles for new components */
 .modal-large {
   width: min(800px, 95vw);
@@ -967,24 +1215,660 @@ body {
   margin-right: 4px;
 }
 
-/* Responsive improvements for admin panel */
-@media (max-width: 768px) {
-  .modal-large {
-    width: 95vw;
-    margin: 10px;
+/* COMPREHENSIVE MOBILE RESPONSIVE SYSTEM */
+
+/* Large Desktop and Ultra-wide */
+@media (min-width: 1441px) {
+  .header h1 {
+    font-size: 28px;
   }
   
+  .main {
+    max-width: 1400px;
+    padding: 32px;
+  }
+  
+  .budget-card {
+    padding: 40px;
+  }
+  
+  .transaction-table {
+    font-size: 15px;
+  }
+  
+  .transaction-table th,
+  .transaction-table td {
+    padding: 16px 20px;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1025px) and (max-width: 1440px) {
+  .header h1 {
+    font-size: 24px;
+  }
+  
+  .main {
+    max-width: 1200px;
+    padding: 24px;
+  }
+  
+  .desktop-only {
+    display: flex;
+  }
+  
+  .mobile-only {
+    display: none;
+  }
+}
+
+/* Small Desktop / Large Laptop */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .header {
+    padding: 16px 24px;
+  }
+  
+  .header h1 {
+    font-size: 22px;
+  }
+  
+  .main {
+    max-width: 960px;
+    padding: 20px;
+  }
+  
+  .budget-card {
+    padding: 24px;
+  }
+  
+  .transaction-table {
+    font-size: 13px;
+  }
+  
+  .notification {
+    min-width: 280px;
+  }
+}
+
+/* MOBILE BREAKPOINT - Everything below 768px is mobile */
+@media (max-width: 768px) {
+  /* Switch to mobile layout */
+  .desktop-only {
+    display: none !important;
+  }
+  
+  .mobile-only {
+    display: flex !important;
+  }
+  
+  /* Mobile Header */
+  .header {
+    padding: 12px 16px;
+    position: relative;
+  }
+  
+  .header h1 {
+    font-size: 18px;
+    flex: 1;
+    text-align: center;
+  }
+  
+  .header-actions {
+    position: absolute;
+    right: 16px;
+    gap: 4px;
+  }
+  
+  /* Mobile Main Content */
+  .main {
+    padding: 12px 16px;
+    max-width: 100%;
+    gap: 16px;
+  }
+  
+  /* Mobile Budget Card */
+  .budget-card {
+    padding: 20px 16px;
+    margin-bottom: 8px;
+  }
+  
+  .budget-amount {
+    font-size: 32px;
+  }
+  
+  /* Mobile Transaction Table */
+  .transaction-section {
+    border-radius: 12px;
+  }
+  
+  .transaction-header {
+    padding: 12px 16px;
+  }
+  
+  .transaction-header h2 {
+    font-size: 16px;
+  }
+  
+  .transaction-table {
+    font-size: 12px;
+  }
+  
+  .transaction-table th,
+  .transaction-table td {
+    padding: 8px 6px;
+    min-width: 60px;
+  }
+  
+  /* Mobile Buttons */
+  .btn {
+    padding: 10px 16px;
+    font-size: 13px;
+    min-height: 40px;
+  }
+  
+  .btn-sm {
+    padding: 6px 10px;
+    font-size: 11px;
+    min-height: 32px;
+  }
+  
+  /* Mobile FAB */
+  .fab {
+    bottom: 16px;
+    right: 16px;
+    width: 56px;
+    height: 56px;
+    font-size: 24px;
+  }
+  
+  /* Mobile Modals */
+  .modal {
+    margin: 16px;
+    width: calc(100vw - 32px);
+    max-height: calc(100vh - 32px);
+    border-radius: 12px;
+  }
+  
+  .modal-header {
+    padding: 16px;
+  }
+  
+  .modal-body {
+    padding: 16px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+  }
+  
+  .modal-footer {
+    padding: 16px;
+    gap: 8px;
+  }
+  
+  .modal-large {
+    width: calc(100vw - 20px);
+    margin: 10px;
+    max-height: calc(100vh - 20px);
+  }
+  
+  /* Mobile Forms */
+  .form-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .form-group {
+    margin-bottom: 16px;
+  }
+  
+  .form-control {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 12px;
+    border-radius: 8px;
+  }
+  
+  /* Mobile Notifications */
+  .notification {
+    right: 16px;
+    left: 16px;
+    min-width: auto;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  
+  /* Mobile BD Assignment Panel */
+  .bd-assignment-panel {
+    border-radius: 12px 12px 0 0;
+  }
+  
+  .bd-panel-header {
+    padding: 16px 20px 10px;
+  }
+  
+  .bd-panel-header h3 {
+    font-size: 16px;
+  }
+  
+  .bd-panel-content {
+    padding: 16px 20px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .bd-panel-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+  
+  .bd-panel-actions .btn {
+    flex: 1;
+  }
+  
+  /* Mobile Admin Panel */
   .users-table {
     font-size: 12px;
+    overflow-x: auto;
   }
   
   .users-table th,
   .users-table td {
     padding: 8px 6px;
+    white-space: nowrap;
   }
   
   .create-user-form > div {
-    grid-template-columns: 1fr !important;
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 10px;
+  }
+  
+  /* Mobile Connection Status */
+  .connection-status {
+    top: 70px;
+    right: 16px;
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+}
+
+/* Small Mobile Phones */
+@media (max-width: 480px) {
+  .header {
+    padding: 10px 12px;
+  }
+  
+  .header h1 {
+    font-size: 16px;
+  }
+  
+  .main {
+    padding: 8px 12px;
+    gap: 12px;
+  }
+  
+  .budget-card {
+    padding: 16px 12px;
+  }
+  
+  .budget-amount {
+    font-size: 28px;
+  }
+  
+  .transaction-table {
+    font-size: 11px;
+  }
+  
+  .transaction-table th,
+  .transaction-table td {
+    padding: 6px 4px;
+  }
+  
+  .modal {
+    margin: 8px;
+    width: calc(100vw - 16px);
+    max-height: calc(100vh - 16px);
+  }
+  
+  .btn {
+    padding: 8px 12px;
+    font-size: 12px;
+    min-height: 36px;
+  }
+  
+  .fab {
+    width: 50px;
+    height: 50px;
+    bottom: 12px;
+    right: 12px;
+  }
+  
+  .notification {
+    font-size: 12px;
+    padding: 12px 16px;
+  }
+  
+  /* Hide less important columns on very small screens */
+  .transaction-table .col-date,
+  .transaction-table .col-beneficiary {
+    display: none;
+  }
+}
+
+/* Extra Small Mobile Phones */
+@media (max-width: 360px) {
+  .header h1 {
+    font-size: 14px;
+  }
+  
+  .budget-amount {
+    font-size: 24px;
+  }
+  
+  .transaction-table {
+    font-size: 10px;
+  }
+  
+  .transaction-table th,
+  .transaction-table td {
+    padding: 4px 2px;
+  }
+  
+  /* Hide BD column on extra small screens */
+  .transaction-table .col-bd {
+    display: none;
+  }
+  
+  .btn {
+    padding: 6px 10px;
+    font-size: 11px;
+    min-height: 32px;
+  }
+}
+
+/* Landscape Phone Optimization */
+@media (max-height: 500px) and (orientation: landscape) {
+  .header {
+    padding: 8px 16px;
+  }
+  
+  .header h1 {
+    font-size: 16px;
+  }
+  
+  .main {
+    padding: 8px 16px;
+  }
+  
+  .budget-card {
+    padding: 12px 16px;
+  }
+  
+  .budget-amount {
+    font-size: 24px;
+    margin: 4px 0;
+  }
+  
+  .modal {
+    max-height: calc(100vh - 20px);
+    margin: 10px;
+  }
+  
+  .modal-body {
+    max-height: calc(100vh - 100px);
+  }
+  
+  .fab {
+    bottom: 8px;
+    right: 8px;
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .header-actions,
+  .fab,
+  .bd-assignment-panel,
+  .notification,
+  .connection-status,
+  .security-badge,
+  .mobile-menu {
+    display: none !important;
+  }
+  
+  .main {
+    max-width: 100%;
+    padding: 0;
+  }
+  
+  .transaction-table {
+    font-size: 10px;
+  }
+  
+  .transaction-table th,
+  .transaction-table td {
+    padding: 4px;
+    border: 1px solid #000;
+  }
+}
+
+/* High DPI / Retina Display Optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .icon {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+  
+  .transaction-table {
+    font-weight: 500;
+  }
+}
+
+/* Real-time Edge Detection Classes */
+.edge-top { padding-top: env(safe-area-inset-top); }
+.edge-bottom { padding-bottom: env(safe-area-inset-bottom); }
+.edge-left { padding-left: env(safe-area-inset-left); }
+.edge-right { padding-right: env(safe-area-inset-right); }
+
+/* Dynamic responsive classes added by JavaScript */
+body.mobile-xs .transaction-table .col-bd,
+body.mobile-xs .transaction-table .col-beneficiary,
+body.mobile-xs .transaction-table .col-date {
+  display: none;
+}
+
+body.mobile-sm .transaction-table .col-bd {
+  display: none;
+}
+
+body.mobile .desktop-only {
+  display: none !important;
+}
+
+body.mobile .mobile-only {
+  display: flex !important;
+}
+
+body.tablet .desktop-only {
+  display: flex;
+}
+
+body.desktop .mobile-only {
+  display: none;
+}
+
+/* Keyboard open state */
+.app.keyboard-open {
+  height: calc(var(--vh, 1vh) * 100 - var(--keyboard-height, 0px));
+}
+
+.app.keyboard-open .bd-assignment-panel {
+  bottom: var(--keyboard-height, 0px);
+}
+
+.app.keyboard-open .fab {
+  bottom: calc(16px + var(--keyboard-height, 0px));
+}
+
+/* Notched device styles */
+.app.has-safe-area {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.app.has-safe-area .header {
+  padding-top: max(12px, env(safe-area-inset-top));
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
+.app.has-safe-area .main {
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
+.app.has-safe-area .bd-assignment-panel {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Orientation-specific styles */
+body.landscape .header {
+  padding: 8px 16px;
+}
+
+body.landscape .header h1 {
+  font-size: 18px;
+}
+
+body.landscape.mobile .main {
+  padding: 8px 16px;
+}
+
+body.landscape.mobile .budget-card {
+  padding: 12px 20px;
+}
+
+body.landscape.mobile .budget-amount {
+  font-size: 28px;
+  margin: 8px 0;
+}
+
+/* Performance optimizations for animations on mobile */
+body.mobile-device * {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+body.mobile-device .transaction-table tr:hover {
+  transform: none; /* Disable hover transform on mobile */
+}
+
+/* CSS Grid and Flexbox adjustments based on screen size */
+body.mobile .form-row {
+  display: flex;
+  flex-direction: column;
+}
+
+body.tablet .form-row,
+body.desktop .form-row {
+  display: flex;
+  flex-direction: row;
+}
+
+/* Dynamic font scaling */
+body.mobile-xs {
+  font-size: 12px;
+}
+
+body.mobile-sm {
+  font-size: 13px;
+}
+
+body.mobile {
+  font-size: 14px;
+}
+
+body.tablet {
+  font-size: 14px;
+}
+
+body.desktop {
+  font-size: 14px;
+}
+
+body.desktop-xl {
+  font-size: 15px;
+}
+
+/* Touch target optimization for mobile */
+body.mobile-device .btn {
+  min-height: 44px; /* Apple's recommended minimum touch target */
+  min-width: 44px;
+}
+
+body.mobile-device .bd-select-button {
+  min-width: 40px;
+  min-height: 40px;
+}
+
+body.mobile-device .transaction-table td {
+  min-height: 44px;
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .transaction-table th,
+  .transaction-table td {
+    border: 2px solid;
+  }
+  
+  .btn {
+    border-width: 2px;
+  }
+}
+
+/* Safe area support for notched devices */
+.app {
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Dynamic viewport height support */
+.app {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  min-height: 100dvh; /* Dynamic viewport height */
+}
+
+/* Container query fallbacks for older browsers */
+@supports not (container-type: inline-size) {
+  /* Fallback responsive table columns */
+  @media (max-width: 600px) {
+    .transaction-table .col-bd {
+      display: none;
+    }
+  }
+  
+  @media (max-width: 500px) {
+    .transaction-table .col-beneficiary {
+      display: none;
+    }
+  }
+  
+  @media (max-width: 400px) {
+    .transaction-table .col-date {
+      display: none;
+    }
   }
 }
