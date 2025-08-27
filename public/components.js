@@ -1,123 +1,315 @@
-// React hooks are available globally from app.js
-
-// Professional Auth Form Component
-function AuthForm({ onAuth }) {
-  const [isLogin, setIsLogin] = useState(true);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    
-    if (!navigator.onLine) {
-      setError('This app requires an internet connection to sign in.');
-      setLoading(false);
-      return;
-    }
-    
-    // Basic client-side validation
-    if (username.trim().length < 3) {
-      setError('Username must be at least 3 characters');
-      setLoading(false);
-      return;
-    }
-    
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
-      setLoading(false);
-      return;
-    }
-    
+// Professional Utility Functions
+const LocalStorageManager = {
+  getOptions: (key) => {
     try {
-      const endpoint = isLogin ? '/api/login' : '/api/register';
-      const response = await fetch(`${API_URL}${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          username: username.trim(), 
-          password 
-        }),
-      });
-      
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error);
-      
-      localStorage.setItem('authToken', data.token);
-      onAuth(data.token, data.user);
-    } catch (err) {
-      setError(err.message || 'Authentication failed');
+      return JSON.parse(localStorage.getItem(`autocomplete_${key}`) || '[]');
+    } catch {
+      return [];
     }
-    setLoading(false);
+  },
+  
+  saveOption: (key, value) => {
+    if (!value || !value.trim()) return;
+    const capitalized = value.trim().replace(/\b\w/g, l => l.toUpperCase());
+    const options = LocalStorageManager.getOptions(key);
+    if (!options.includes(capitalized)) {
+      options.unshift(capitalized);
+      localStorage.setItem(`autocomplete_${key}`, JSON.stringify(options.slice(0, 50)));
+    }
+  },
+  
+  initializeDefaults: (key, defaults = []) => {
+    const existing = LocalStorageManager.getOptions(key);
+    if (existing.length === 0 && defaults.length > 0) {
+      localStorage.setItem(`autocomplete_${key}`, JSON.stringify(defaults));
+    }
+  },
+  
+  deleteOption: (key, value) => {
+    const options = LocalStorageManager.getOptions(key);
+    const filtered = options.filter(option => option !== value);
+    localStorage.setItem(`autocomplete_${key}`, JSON.stringify(filtered));
+  }
+};
+
+// Form Validation
+const validateForm = (data, requiredFields) => {
+  const errors = {};
+  
+  requiredFields.forEach(field => {
+    if (!data[field] || !data[field].toString().trim()) {
+      errors[field] = 'Ce champ est requis';
+    }
+  });
+  
+  if (data.amount && (isNaN(parseFloat(data.amount)) || parseFloat(data.amount) <= 0)) {
+    errors.amount = 'Le montant doit être supérieur à 0';
+  }
+  
+  if (data.email && !/\S+@\S+\.\S+/.test(data.email)) {
+    errors.email = 'Adresse email invalide';
+  }
+  
+  return errors;
+};
+
+// Professional Autocomplete Component
+function AutocompleteInput({ 
+  value, 
+  onChange, 
+  storageKey, 
+  placeholder, 
+  required, 
+  type = 'text',
+  step,
+  min,
+  className = 'form-input',
+  error,
+  defaults = []
+}) {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [filteredOptions, setFilteredOptions] = useState([]);
+  
+  useEffect(() => {
+    if (storageKey) {
+      // Initialize defaults if provided
+      if (defaults.length > 0) {
+        LocalStorageManager.initializeDefaults(storageKey, defaults);
+      }
+      
+      const options = LocalStorageManager.getOptions(storageKey);
+      if (value && value.length > 0) {
+        const filtered = options.filter(option => 
+          option.toLowerCase().includes(value.toLowerCase())
+        );
+        setFilteredOptions(filtered);
+      } else {
+        setFilteredOptions(options);
+      }
+    }
+  }, [value, storageKey, defaults]);
+
+  const handleInputChange = (e) => {
+    onChange(e.target.value);
   };
 
-  return React.createElement('div', { className: 'auth-container' },
-    React.createElement('div', { className: 'auth-card' },
-      React.createElement('div', { className: 'text-center mb-8' },
-        React.createElement('h1', { className: 'modal-title mb-2' }, 'Expense Tracker'),
-        React.createElement('p', { className: 'text-gray-600' }, 
-          isLogin ? 'Sign in to your account' : 'Create a new account'
+  const handleOptionSelect = (option) => {
+    onChange(option);
+    setShowDropdown(false);
+  };
+
+  const handleDeleteOption = (option, e) => {
+    e.stopPropagation();
+    LocalStorageManager.deleteOption(storageKey, option);
+    const options = LocalStorageManager.getOptions(storageKey);
+    const filtered = options.filter(opt => 
+      opt.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredOptions(filtered);
+  };
+
+  const handleBlur = () => {
+    setTimeout(() => setShowDropdown(false), 200);
+    if (storageKey && value) {
+      LocalStorageManager.saveOption(storageKey, value);
+    }
+  };
+
+  return React.createElement('div', { className: 'autocomplete-container' },
+    React.createElement('input', {
+      type,
+      value,
+      onChange: handleInputChange,
+      onFocus: () => setShowDropdown(filteredOptions.length > 0),
+      onBlur: handleBlur,
+      required,
+      className: `${className} ${error ? 'error' : ''}`,
+      placeholder,
+      step,
+      min
+    }),
+    error && React.createElement('div', { className: 'form-error' },
+      React.createElement('span', { className: 'icon icon-error' }),
+      error
+    ),
+    showDropdown && React.createElement('div', { className: 'autocomplete-dropdown' },
+      filteredOptions.map((option, index) => 
+        React.createElement('div', {
+          key: index,
+          className: 'autocomplete-item',
+          onClick: () => handleOptionSelect(option)
+        },
+          React.createElement('span', null, option),
+          React.createElement('span', {
+            className: 'delete-option',
+            onClick: (e) => handleDeleteOption(option, e)
+          }, '×')
         )
-      ),
-      
-      React.createElement('form', { onSubmit: handleSubmit },
-        React.createElement('div', { className: 'form-group' },
-          React.createElement('label', { className: 'form-label flex items-center' },
-            React.createElement(User, { className: 'icon mr-2' }),
-            'Username'
-          ),
-          React.createElement('input', {
-            type: 'text',
-            value: username,
-            onChange: (e) => setUsername(e.target.value),
-            className: 'form-input',
-            placeholder: 'Enter your username',
-            required: true,
-            maxLength: 30
-          })
-        ),
-        
-        React.createElement('div', { className: 'form-group' },
-          React.createElement('label', { className: 'form-label' }, 'Password'),
-          React.createElement('input', {
-            type: 'password',
-            value: password,
-            onChange: (e) => setPassword(e.target.value),
-            className: 'form-input',
-            placeholder: 'Enter your password',
-            required: true,
-            minLength: 6,
-            maxLength: 128
-          })
-        ),
-        
-        error && React.createElement('div', { 
-          className: 'error-message',
-          style: { margin: '1rem 0' }
-        }, error),
-        
-        React.createElement('button', {
-          type: 'submit',
-          disabled: loading,
-          className: `btn btn-primary btn-lg w-full ${loading ? 'btn-disabled' : ''}`,
-          style: { marginBottom: '1rem' }
-        }, loading ? 'Please wait...' : isLogin ? 'Sign In' : 'Create Account'),
-        
-        React.createElement('button', {
-          type: 'button',
-          onClick: () => { setIsLogin(!isLogin); setError(''); setUsername(''); setPassword(''); },
-          className: 'btn btn-secondary w-full'
-        }, isLogin ? 'Need an account? Sign Up' : 'Already have an account? Sign In')
       )
     )
   );
 }
 
-// Professional Transaction Form Component  
-function TransactionForm({ onSubmit, onCancel, beneficiaries, itemDescriptions, flightNumbers }) {
+// Professional Authentication Form
+function AuthForm({ onAuth }) {
+  const [isLogin, setIsLogin] = useState(true);
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    const requiredFields = isLogin ? ['username', 'password'] : ['username', 'email', 'password'];
+    const validationErrors = validateForm(formData, requiredFields);
+    
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+    
+    setLoading(true);
+    setErrors({});
+
+    try {
+      const endpoint = isLogin ? '/api/login' : '/api/register';
+      const payload = isLogin 
+        ? { username: formData.username, password: formData.password }
+        : formData;
+
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Échec de l\'authentification');
+      }
+
+      localStorage.setItem('authToken', data.token);
+      onAuth(data.token, data.user);
+    } catch (err) {
+      setErrors({ general: err.message });
+    }
+    
+    setLoading(false);
+  };
+
+  const handleChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  return React.createElement('div', { 
+    className: 'app',
+    style: { display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }
+  },
+    React.createElement('div', { 
+      style: { 
+        background: 'white', 
+        borderRadius: '8px',
+        boxShadow: '0 20px 25px rgba(0, 0, 0, 0.3)',
+        padding: '32px', 
+        width: '400px',
+        maxWidth: '90vw'
+      }
+    },
+      React.createElement('h2', { 
+        style: { 
+          marginBottom: '24px', 
+          textAlign: 'center', 
+          fontSize: '20px', 
+          fontWeight: '600',
+          color: '#111827'
+        } 
+      }, isLogin ? 'Connexion' : 'Inscription'),
+      
+      errors.general && React.createElement('div', { className: 'form-error', style: { marginBottom: '16px' } },
+        React.createElement('span', { className: 'icon icon-error' }),
+        errors.general
+      ),
+      
+      React.createElement('form', { onSubmit: handleSubmit },
+        React.createElement('div', { className: 'form-group' },
+          React.createElement('label', { className: 'form-label' }, 'Nom d\'utilisateur'),
+          React.createElement('input', {
+            type: 'text',
+            value: formData.username,
+            onChange: (e) => handleChange('username', e.target.value),
+            required: true,
+            className: `form-input ${errors.username ? 'error' : ''}`,
+            placeholder: 'Votre nom d\'utilisateur'
+          }),
+          errors.username && React.createElement('div', { className: 'form-error' },
+            React.createElement('span', { className: 'icon icon-error' }),
+            errors.username
+          )
+        ),
+        
+        !isLogin && React.createElement('div', { className: 'form-group' },
+          React.createElement('label', { className: 'form-label' }, 'Email'),
+          React.createElement('input', {
+            type: 'email',
+            value: formData.email,
+            onChange: (e) => handleChange('email', e.target.value),
+            required: true,
+            className: `form-input ${errors.email ? 'error' : ''}`,
+            placeholder: 'votre@email.com'
+          }),
+          errors.email && React.createElement('div', { className: 'form-error' },
+            React.createElement('span', { className: 'icon icon-error' }),
+            errors.email
+          )
+        ),
+        
+        React.createElement('div', { className: 'form-group' },
+          React.createElement('label', { className: 'form-label' }, 'Mot de passe'),
+          React.createElement('input', {
+            type: 'password',
+            value: formData.password,
+            onChange: (e) => handleChange('password', e.target.value),
+            required: true,
+            className: `form-input ${errors.password ? 'error' : ''}`,
+            placeholder: 'Votre mot de passe'
+          }),
+          errors.password && React.createElement('div', { className: 'form-error' },
+            React.createElement('span', { className: 'icon icon-error' }),
+            errors.password
+          )
+        ),
+        
+        React.createElement('button', {
+          type: 'submit',
+          disabled: loading,
+          className: 'btn btn-primary',
+          style: { width: '100%', marginBottom: '16px' }
+        }, loading ? 'Traitement en cours...' : (isLogin ? 'Se connecter' : 'Créer un compte')),
+        
+        React.createElement('button', {
+          type: 'button',
+          onClick: () => {
+            setIsLogin(!isLogin);
+            setErrors({});
+          },
+          className: 'btn',
+          style: { width: '100%' }
+        }, isLogin ? 'Créer un compte' : 'Connexion existante')
+      )
+    )
+  );
+}
+
+// Professional Transaction Form
+function TransactionForm({ onSubmit, onCancel }) {
   const [formData, setFormData] = useState({
     dateOfReimbursement: new Date().toISOString().split('T')[0],
     beneficiary: '',
@@ -130,211 +322,204 @@ function TransactionForm({ onSubmit, onCancel, beneficiaries, itemDescriptions, 
     numberOfLuggage: ''
   });
 
-  const isSkyCapSelected = formData.itemDescription.toLowerCase() === 'sky cap';
+  const [errors, setErrors] = useState({});
+  const [showFlightFields, setShowFlightFields] = useState(false);
+
+  useEffect(() => {
+    setShowFlightFields(formData.itemDescription.toLowerCase().includes('sky cap'));
+  }, [formData.itemDescription]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Client-side validation
-    if (!formData.beneficiary.trim()) {
-      alert('Beneficiary is required');
+    const requiredFields = ['beneficiary', 'itemDescription', 'invoiceNumber', 'dateOfPurchase', 'amount'];
+    const validationErrors = validateForm(formData, requiredFields);
+    
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
+
+    const cleanedData = {};
+    Object.keys(formData).forEach(key => {
+      const value = formData[key];
+      if (value && value.toString().trim() !== '') {
+        cleanedData[key] = value;
+      }
+    });
     
-    const amount = parseFloat(formData.amount);
-    if (isNaN(amount) || amount <= 0) {
-      alert('Please enter a valid amount');
-      return;
-    }
+    cleanedData.dateOfReimbursement = formData.dateOfReimbursement;
+    cleanedData.beneficiary = formData.beneficiary.trim();
+    cleanedData.itemDescription = formData.itemDescription.trim();
+    cleanedData.invoiceNumber = formData.invoiceNumber.trim();
+    cleanedData.dateOfPurchase = formData.dateOfPurchase;
+    cleanedData.amount = parseFloat(formData.amount);
     
-    if (amount > 999999) {
-      alert('Amount cannot exceed $999,999');
-      return;
-    }
-    
-    const transaction = {
-      ...formData,
-      beneficiary: formData.beneficiary.trim(),
-      itemDescription: formData.itemDescription.trim(),
-      invoiceNumber: formData.invoiceNumber.trim(),
-      amount: amount,
-      observations: formData.observations.trim(),
-      numberOfLuggage: isSkyCapSelected && formData.numberOfLuggage ? parseInt(formData.numberOfLuggage) : undefined,
-      flightNumber: isSkyCapSelected ? formData.flightNumber.trim().toUpperCase() : undefined
-    };
-    
-    onSubmit(transaction);
+    onSubmit(cleanedData);
   };
 
-  const isValid = () => {
-    const required = ['beneficiary', 'itemDescription', 'invoiceNumber', 'dateOfPurchase', 'amount'];
-    const basicValid = required.every(field => formData[field].toString().trim() !== '');
-    const validAmount = !isNaN(parseFloat(formData.amount)) && parseFloat(formData.amount) > 0;
-    
-    if (isSkyCapSelected) {
-      return basicValid && validAmount && formData.flightNumber.trim() !== '' && formData.numberOfLuggage.toString().trim() !== '';
+  const handleChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
     }
-    return basicValid && validAmount;
   };
 
   return React.createElement('div', { className: 'modal-overlay' },
-    React.createElement('div', { className: 'modal-content' },
+    React.createElement('div', { className: 'modal' },
       React.createElement('div', { className: 'modal-header' },
-        React.createElement('h2', { className: 'modal-title' }, 'New Transaction'),
-        React.createElement('button', { 
-          type: 'button', 
-          onClick: onCancel, 
-          className: 'btn btn-secondary'
-        }, '×')
+        React.createElement('h3', null, 
+          React.createElement('span', { className: 'icon icon-document' }),
+          'Nouvelle Transaction'
+        ),
+        React.createElement('button', { onClick: onCancel }, '×')
       ),
       React.createElement('form', { onSubmit: handleSubmit },
         React.createElement('div', { className: 'modal-body' },
-          React.createElement('div', { className: 'flex flex-col gap-4' },
+          React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' } },
+            
             React.createElement('div', { className: 'form-group' },
-              React.createElement('label', { className: 'form-label' }, 'Date of Reimbursement'),
-              React.createElement('input', { 
-                type: 'date', 
-                value: formData.dateOfReimbursement, 
-                onChange: (e) => setFormData(prev => ({...prev, dateOfReimbursement: e.target.value})), 
-                className: 'form-input',
-                required: true 
+              React.createElement('label', { className: 'form-label' }, 'Date de Remboursement *'),
+              React.createElement('input', {
+                type: 'date',
+                value: formData.dateOfReimbursement,
+                onChange: (e) => handleChange('dateOfReimbursement', e.target.value),
+                required: true,
+                className: 'form-input'
               })
             ),
             
             React.createElement('div', { className: 'form-group' },
-              React.createElement('label', { className: 'form-label' }, 'Beneficiary'),
-              React.createElement('input', { 
-                type: 'text', 
-                value: formData.beneficiary, 
-                onChange: (e) => setFormData(prev => ({...prev, beneficiary: e.target.value})), 
-                list: 'beneficiaries', 
-                className: 'form-input',
-                placeholder: 'Enter beneficiary name',
+              React.createElement('label', { className: 'form-label' }, 'Bénéficiaire *'),
+              React.createElement(AutocompleteInput, {
+                value: formData.beneficiary,
+                onChange: (value) => handleChange('beneficiary', value),
+                storageKey: 'beneficiaries',
+                placeholder: 'Nom du bénéficiaire',
                 required: true,
-                maxLength: 100
+                error: errors.beneficiary
+              })
+            ),
+            
+            React.createElement('div', { className: 'form-group' },
+              React.createElement('label', { className: 'form-label' }, 'Description de l\'Article *'),
+              React.createElement(AutocompleteInput, {
+                value: formData.itemDescription,
+                onChange: (value) => handleChange('itemDescription', value),
+                storageKey: 'itemDescriptions',
+                placeholder: 'Description de l\'article',
+                required: true,
+                error: errors.itemDescription,
+                defaults: ['Sky Cap']
+              })
+            ),
+            
+            React.createElement('div', { className: 'form-group' },
+              React.createElement('label', { className: 'form-label' }, 'Numéro de Facture *'),
+              React.createElement(AutocompleteInput, {
+                value: formData.invoiceNumber,
+                onChange: (value) => handleChange('invoiceNumber', value),
+                storageKey: 'invoiceNumbers',
+                placeholder: 'Numéro de facture',
+                required: true,
+                error: errors.invoiceNumber
+              })
+            ),
+            
+            React.createElement('div', { className: 'form-group' },
+              React.createElement('label', { className: 'form-label' }, 'Date d\'Achat *'),
+              React.createElement('input', {
+                type: 'date',
+                value: formData.dateOfPurchase,
+                onChange: (e) => handleChange('dateOfPurchase', e.target.value),
+                required: true,
+                className: `form-input ${errors.dateOfPurchase ? 'error' : ''}`
               }),
-              React.createElement('datalist', { id: 'beneficiaries' }, 
-                beneficiaries.map((b, i) => React.createElement('option', { key: i, value: b }))
+              errors.dateOfPurchase && React.createElement('div', { className: 'form-error' },
+                React.createElement('span', { className: 'icon icon-error' }),
+                errors.dateOfPurchase
               )
             ),
             
             React.createElement('div', { className: 'form-group' },
-              React.createElement('label', { className: 'form-label' }, 'Item Description'),
-              React.createElement('input', { 
-                type: 'text', 
-                value: formData.itemDescription, 
-                onChange: (e) => setFormData(prev => ({...prev, itemDescription: e.target.value})), 
-                list: 'items', 
-                className: 'form-input',
-                placeholder: 'Enter item description',
+              React.createElement('label', { className: 'form-label' }, 'Montant ($) *'),
+              React.createElement('input', {
+                type: 'number',
+                step: '0.01',
+                min: '0.01',
+                value: formData.amount,
+                onChange: (e) => handleChange('amount', e.target.value),
                 required: true,
-                maxLength: 200
+                className: `form-input ${errors.amount ? 'error' : ''}`,
+                placeholder: '0.00'
               }),
-              React.createElement('datalist', { id: 'items' }, 
-                itemDescriptions.map((item, i) => React.createElement('option', { key: i, value: item }))
+              errors.amount && React.createElement('div', { className: 'form-error' },
+                React.createElement('span', { className: 'icon icon-error' }),
+                errors.amount
               )
-            ),
-            
-            React.createElement('div', { className: 'form-group' },
-              React.createElement('label', { className: 'form-label' }, 'Invoice Number'),
-              React.createElement('input', { 
-                type: 'text', 
-                value: formData.invoiceNumber, 
-                onChange: (e) => setFormData(prev => ({...prev, invoiceNumber: e.target.value})), 
-                className: 'form-input',
-                placeholder: 'Enter invoice number',
-                required: true,
-                maxLength: 50
-              })
-            ),
-            
-            React.createElement('div', { className: 'form-group' },
-              React.createElement('label', { className: 'form-label' }, 'Date of Purchase'),
-              React.createElement('input', { 
-                type: 'date', 
-                value: formData.dateOfPurchase, 
-                onChange: (e) => setFormData(prev => ({...prev, dateOfPurchase: e.target.value})), 
-                className: 'form-input',
-                required: true 
-              })
-            ),
-            
-            React.createElement('div', { className: 'form-group' },
-              React.createElement('label', { className: 'form-label' }, 'Amount'),
-              React.createElement('div', { className: 'relative' },
-                React.createElement('span', { 
-                  className: 'absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500' 
-                }, '$'),
-                React.createElement('input', { 
-                  type: 'number', 
-                  step: '0.01', 
-                  min: '0.01',
-                  max: '999999',
-                  value: formData.amount, 
-                  onChange: (e) => setFormData(prev => ({...prev, amount: e.target.value})), 
-                  className: 'form-input',
-                  placeholder: '0.00',
-                  required: true,
-                  style: { paddingLeft: '2.5rem' }
-                })
-              )
-            ),
-
-            isSkyCapSelected && [
-              React.createElement('div', { key: 'flight', className: 'form-group' },
-                React.createElement('label', { className: 'form-label' }, 'Flight Number'),
-                React.createElement('input', { 
-                  type: 'text', 
-                  value: formData.flightNumber, 
-                  onChange: (e) => setFormData(prev => ({...prev, flightNumber: e.target.value})), 
-                  list: 'flights', 
-                  className: 'form-input',
-                  placeholder: 'Enter flight number',
-                  required: true,
-                  maxLength: 20
-                }),
-                React.createElement('datalist', { id: 'flights' }, 
-                  flightNumbers.map((f, i) => React.createElement('option', { key: i, value: f }))
-                )
-              ),
-              React.createElement('div', { key: 'luggage', className: 'form-group' },
-                React.createElement('label', { className: 'form-label' }, 'Number of Luggage'),
-                React.createElement('input', { 
-                  type: 'number', 
-                  min: '1', 
-                  max: '99',
-                  value: formData.numberOfLuggage, 
-                  onChange: (e) => setFormData(prev => ({...prev, numberOfLuggage: e.target.value})), 
-                  className: 'form-input',
-                  placeholder: '1',
-                  required: true 
-                })
-              )
-            ],
-            
-            React.createElement('div', { className: 'form-group' },
-              React.createElement('label', { className: 'form-label' }, 'Observations (Optional)'),
-              React.createElement('textarea', { 
-                value: formData.observations, 
-                onChange: (e) => setFormData(prev => ({...prev, observations: e.target.value})), 
-                className: 'form-textarea',
-                placeholder: 'Additional notes or observations',
-                maxLength: 500
-              })
             )
           ),
-
-          React.createElement('div', { className: 'flex gap-3', style: { marginTop: '1.5rem' } },
-            React.createElement('button', { 
-              type: 'button', 
-              onClick: onCancel, 
-              className: 'btn btn-secondary flex-1'
-            }, 'Cancel'),
-            React.createElement('button', { 
-              type: 'submit', 
-              disabled: !isValid(), 
-              className: `btn btn-primary flex-1 ${!isValid() ? 'btn-disabled' : ''}`
-            }, 'Add Transaction')
+          
+          React.createElement('div', { className: 'form-group' },
+            React.createElement('label', { className: 'form-label' }, 'Observations'),
+            React.createElement(AutocompleteInput, {
+              value: formData.observations,
+              onChange: (value) => handleChange('observations', value),
+              storageKey: 'observations',
+              placeholder: 'Observations (optionnel)'
+            })
+          ),
+          
+          showFlightFields && React.createElement('div', { 
+            className: 'flight-fields'
+          },
+            React.createElement('h4', null,
+              React.createElement('span', { className: 'icon icon-flight' }),
+              'Informations de Vol'
+            ),
+            
+            React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' } },
+              React.createElement('div', { className: 'form-group', style: { marginBottom: '0' } },
+                React.createElement('label', { className: 'form-label' }, 'Numéro de Vol'),
+                React.createElement(AutocompleteInput, {
+                  value: formData.flightNumber,
+                  onChange: (value) => handleChange('flightNumber', value),
+                  storageKey: 'flightNumbers',
+                  placeholder: 'AT200, AT201...'
+                })
+              ),
+              
+              React.createElement('div', { className: 'form-group', style: { marginBottom: '0' } },
+                React.createElement('label', { className: 'form-label' }, 'Nombre de Bagages'),
+                React.createElement('input', {
+                  type: 'number',
+                  min: '1',
+                  max: '10',
+                  value: formData.numberOfLuggage,
+                  onChange: (e) => handleChange('numberOfLuggage', e.target.value),
+                  className: 'form-input',
+                  placeholder: '1, 2, 3...'
+                })
+              )
+            )
+          )
+        ),
+        
+        React.createElement('div', { className: 'modal-footer' },
+          React.createElement('button', { 
+            type: 'button', 
+            onClick: onCancel, 
+            className: 'btn' 
+          }, 
+            React.createElement('span', { className: 'icon icon-cancel' }),
+            'Annuler'
+          ),
+          React.createElement('button', { 
+            type: 'submit', 
+            className: 'btn btn-primary' 
+          }, 
+            React.createElement('span', { className: 'icon icon-check' }),
+            'Ajouter'
           )
         )
       )
@@ -342,162 +527,113 @@ function TransactionForm({ onSubmit, onCancel, beneficiaries, itemDescriptions, 
   );
 }
 
-// Professional Transaction Details Component
+// Professional Transaction Details Modal
 function TransactionDetails({ transaction, onClose }) {
-  if (!transaction) return null;
-
+  const isPositiveTransaction = transaction.type === 'fund_addition';
+  
   return React.createElement('div', { className: 'modal-overlay' },
-    React.createElement('div', { className: 'modal-content' },
+    React.createElement('div', { className: 'modal' },
       React.createElement('div', { className: 'modal-header' },
-        React.createElement('h2', { className: 'modal-title' }, 'Transaction Details'),
-        React.createElement('button', { 
-          onClick: onClose, 
-          className: 'btn btn-secondary'
-        }, '×')
+        React.createElement('h3', null, 
+          React.createElement('span', { className: 'icon icon-info' }),
+          isPositiveTransaction ? 'Détails de l\'Ajout de Fonds' : 'Détails de la Transaction'
+        ),
+        React.createElement('button', { onClick: onClose }, '×')
       ),
       React.createElement('div', { className: 'modal-body' },
-        React.createElement('div', { 
-          className: 'flex flex-col gap-4',
-          style: { 
-            display: 'grid', 
-            gridTemplateColumns: window.innerWidth > 640 ? '1fr 1fr' : '1fr', 
-            gap: '1.5rem' 
-          }
-        },
-          React.createElement('div', { className: 'flex flex-col gap-4' },
-            React.createElement('div', null,
-              React.createElement('label', { className: 'form-label' }, 'Date of Reimbursement'),
-              React.createElement('div', { 
-                className: 'text-gray-700',
-                style: { 
-                  padding: '0.75rem 1rem',
-                  background: '#f8f9fa',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(0,0,0,0.05)'
-                }
-              }, new Date(transaction.dateOfReimbursement).toLocaleDateString())
+        React.createElement('div', { style: { display: 'grid', gap: '16px' } },
+          React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' } },
+            React.createElement('div', { className: 'detail-card' },
+              React.createElement('div', { className: 'detail-label' }, 'Date de Remboursement'),
+              React.createElement('div', { className: 'detail-value' },
+                new Date(transaction.dateOfReimbursement).toLocaleDateString('fr-FR')
+              )
             ),
-            React.createElement('div', null,
-              React.createElement('label', { className: 'form-label' }, 'Beneficiary'),
-              React.createElement('div', { 
-                className: 'text-gray-700',
-                style: { 
-                  padding: '0.75rem 1rem',
-                  background: '#f8f9fa',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(0,0,0,0.05)'
-                }
-              }, transaction.beneficiary)
+            React.createElement('div', { className: 'detail-card' },
+              React.createElement('div', { className: 'detail-label' }, 'Bénéficiaire'),
+              React.createElement('div', { className: 'detail-value' },
+                transaction.beneficiary || '-'
+              )
             ),
-            React.createElement('div', null,
-              React.createElement('label', { className: 'form-label' }, 'Item Description'),
-              React.createElement('div', { 
-                className: 'text-gray-700',
-                style: { 
-                  padding: '0.75rem 1rem',
-                  background: '#f8f9fa',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(0,0,0,0.05)'
-                }
-              }, transaction.itemDescription)
+            React.createElement('div', { className: 'detail-card' },
+              React.createElement('div', { className: 'detail-label' }, 'Article'),
+              React.createElement('div', { className: 'detail-value' },
+                transaction.itemDescription
+              )
             ),
-            React.createElement('div', null,
-              React.createElement('label', { className: 'form-label' }, 'Invoice Number'),
+            React.createElement('div', { className: 'detail-card' },
+              React.createElement('div', { className: 'detail-label' }, 'Facture'),
+              React.createElement('div', { className: 'detail-value' },
+                transaction.invoiceNumber || '-'
+              )
+            ),
+            React.createElement('div', { className: 'detail-card' },
+              React.createElement('div', { className: 'detail-label' }, 'Date d\'Achat'),
+              React.createElement('div', { className: 'detail-value' },
+                transaction.dateOfPurchase ? new Date(transaction.dateOfPurchase).toLocaleDateString('fr-FR') : '-'
+              )
+            ),
+            React.createElement('div', { 
+              className: 'detail-card',
+              style: { 
+                background: isPositiveTransaction ? '#f0fdf4' : '#fef2f2',
+                borderColor: isPositiveTransaction ? '#bbf7d0' : '#fecaca'
+              }
+            },
+              React.createElement('div', { className: 'detail-label' }, 'Montant'),
               React.createElement('div', { 
-                className: 'text-gray-700',
-                style: { 
-                  padding: '0.75rem 1rem',
-                  background: '#f8f9fa',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(0,0,0,0.05)'
-                }
-              }, transaction.invoiceNumber)
+                className: `detail-amount ${isPositiveTransaction ? 'positive' : 'negative'}`
+              },
+                `${isPositiveTransaction ? '+' : '-'}$${transaction.amount.toFixed(2)}`
+              )
             )
           ),
-
-          React.createElement('div', { className: 'flex flex-col gap-4' },
-            React.createElement('div', null,
-              React.createElement('label', { className: 'form-label' }, 'Date of Purchase'),
-              React.createElement('div', { 
-                className: 'text-gray-700',
-                style: { 
-                  padding: '0.75rem 1rem',
-                  background: '#f8f9fa',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(0,0,0,0.05)'
-                }
-              }, new Date(transaction.dateOfPurchase).toLocaleDateString())
-            ),
-            React.createElement('div', null,
-              React.createElement('label', { className: 'form-label' }, 'Amount'),
-              React.createElement('div', { 
-                className: 'text-gray-700 font-bold',
-                style: { 
-                  fontSize: '1.5rem',
-                  padding: '0.75rem 1rem',
-                  background: '#f0f9ff',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(0,122,255,0.1)',
-                  color: '#007AFF'
-                }
-              }, `$${transaction.amount.toFixed(2)}`)
-            ),
-            transaction.flightNumber && React.createElement('div', null,
-              React.createElement('label', { className: 'form-label' }, 'Flight Number'),
-              React.createElement('div', { 
-                className: 'text-gray-700',
-                style: { 
-                  padding: '0.75rem 1rem',
-                  background: '#f8f9fa',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(0,0,0,0.05)'
-                }
-              }, transaction.flightNumber)
-            ),
-            transaction.numberOfLuggage && React.createElement('div', null,
-              React.createElement('label', { className: 'form-label' }, 'Number of Luggage'),
-              React.createElement('div', { 
-                className: 'text-gray-700',
-                style: { 
-                  padding: '0.75rem 1rem',
-                  background: '#f8f9fa',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(0,0,0,0.05)'
-                }
-              }, transaction.numberOfLuggage)
+          
+          transaction.observations && React.createElement('div', { 
+            className: 'detail-card',
+            style: { background: '#fffbeb', borderColor: '#fed7aa' }
+          },
+            React.createElement('div', { className: 'detail-label' }, 'Observations'),
+            React.createElement('div', { className: 'detail-value' },
+              transaction.observations
+            )
+          ),
+          
+          (transaction.flightNumber || transaction.numberOfLuggage) && React.createElement('div', { 
+            className: 'detail-card',
+            style: { background: '#f0f9ff', borderColor: '#bae6fd' }
+          },
+            React.createElement('div', { className: 'detail-label' }, 'Informations de Vol'),
+            React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '8px', marginTop: '8px' } },
+              transaction.flightNumber && React.createElement('div', null,
+                React.createElement('div', { style: { fontSize: '11px', color: '#6b7280', textTransform: 'uppercase' } }, 'Vol'),
+                React.createElement('div', { className: 'detail-value' }, transaction.flightNumber)
+              ),
+              transaction.numberOfLuggage && React.createElement('div', null,
+                React.createElement('div', { style: { fontSize: '11px', color: '#6b7280', textTransform: 'uppercase' } }, 'Bagages'),
+                React.createElement('div', { className: 'detail-value' }, transaction.numberOfLuggage)
+              )
+            )
+          ),
+          
+          transaction.bdNumber && React.createElement('div', { 
+            className: 'detail-card',
+            style: { background: '#fdf4ff', borderColor: '#e9d5ff' }
+          },
+            React.createElement('div', { className: 'detail-label' }, 'Numéro BD'),
+            React.createElement('div', { className: 'detail-value', style: { color: '#7c3aed', fontWeight: '600' } },
+              transaction.bdNumber
             )
           )
-        ),
-
-        transaction.observations && React.createElement('div', { 
-          className: 'form-group',
-          style: { 
-            marginTop: '1.5rem',
-            paddingTop: '1.5rem',
-            borderTop: '1px solid rgba(0,0,0,0.05)' 
-          }
-        },
-          React.createElement('label', { className: 'form-label' }, 'Observations'),
-          React.createElement('div', { 
-            className: 'text-gray-700',
-            style: { 
-              backgroundColor: '#f8f9fa', 
-              padding: '1rem', 
-              borderRadius: '8px',
-              border: '1px solid rgba(0,0,0,0.05)',
-              lineHeight: '1.6'
-            }
-          }, transaction.observations)
-        ),
-
-        React.createElement('div', { 
-          className: 'flex justify-end',
-          style: { marginTop: '2rem' }
-        },
-          React.createElement('button', { 
-            onClick: onClose, 
-            className: 'btn btn-primary'
-          }, 'Close')
+        )
+      ),
+      React.createElement('div', { className: 'modal-footer' },
+        React.createElement('button', { 
+          onClick: onClose, 
+          className: 'btn btn-primary' 
+        }, 
+          React.createElement('span', { className: 'icon icon-check' }),
+          'Fermer'
         )
       )
     )

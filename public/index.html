@@ -1,33 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="description" content="Professional expense reimbursement tracker" />
-  <meta name="theme-color" content="#007AFF" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="Expenses" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <title>Expense Tracker</title>
-  
-  <!-- PWA Manifest -->
-  <link rel="manifest" href="/manifest.json" />
-  
-  <!-- Preload critical resources for instant loading -->
-  <link rel="preload" href="/styles.css" as="style" />
-  <link rel="preload" href="https://unpkg.com/react@18/umd/react.production.min.js" as="script" crossorigin />
-  <link rel="preload" href="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" as="script" crossorigin />
-  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" as="script" crossorigin />
-  <link rel="preload" href="/icons.js" as="script" />
-  <link rel="preload" href="/components.js" as="script" />
-  <link rel="preload" href="/app.js" as="script" />
-  
-  <!-- Critical CSS for instant rendering -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Suivi des Dépenses</title>
   <link rel="stylesheet" href="/styles.css" />
-  
-  <!-- Favicons -->
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23007AFF' rx='4'/%3E%3Ctext x='16' y='24' text-anchor='middle' font-family='system-ui' font-size='20' font-weight='500' fill='white'%3E$%3C/text%3E%3C/svg%3E" />
 </head>
 <body>
   <div id="root"></div>
@@ -35,52 +12,14 @@
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  
   <script>
-    // Global React setup and PWA registration
     const { useState, useEffect } = React;
     const API_URL = window.location.origin;
-    
-    // Register PWA Service Worker for instant loading
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', async () => {
-        try {
-          const registration = await navigator.serviceWorker.register('/sw.js');
-          console.log('PWA Service Worker registered successfully:', registration.scope);
-          
-          // Handle service worker updates
-          registration.addEventListener('updatefound', () => {
-            const newWorker = registration.installing;
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('PWA: New version available');
-                // Could show update notification here
-              }
-            });
-          });
-        } catch (error) {
-          console.log('PWA Service Worker registration failed:', error);
-        }
-      });
-    }
-    
-    // Online/Offline detection
-    let isOnline = navigator.onLine;
-    const updateOnlineStatus = () => {
-      const wasOnline = isOnline;
-      isOnline = navigator.onLine;
-      if (!wasOnline && isOnline) {
-        console.log('PWA: Back online - refreshing data');
-        window.location.reload();
-      } else if (wasOnline && !isOnline) {
-        console.log('PWA: Gone offline - app will show error for API calls');
-      }
-    };
-    
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
   </script>
-  <script src="/icons.js" defer></script>
-  <script src="/components.js" defer></script>
-  <script src="/app.js" defer></script>
+  
+  <script src="/icons.js"></script>
+  <script src="/components.js"></script>
+  <script src="/app.js"></script>
 </body>
 </html>

@@ -25,7 +25,10 @@ const sanitizeTransaction = (transaction) => {
     amount: parseFloat(transaction.amount),
     observations: transaction.observations ? sanitize(transaction.observations) : '',
     flightNumber: transaction.flightNumber ? sanitize(transaction.flightNumber.toUpperCase()) : undefined,
-    numberOfLuggage: transaction.numberOfLuggage ? parseInt(transaction.numberOfLuggage) : undefined
+    numberOfLuggage: transaction.numberOfLuggage ? parseInt(transaction.numberOfLuggage) : undefined,
+    type: transaction.type ? sanitize(transaction.type) : undefined,
+    username: transaction.username ? sanitize(transaction.username) : undefined,
+    bdNumber: transaction.bdNumber ? sanitize(transaction.bdNumber) : undefined
   };
 };
 

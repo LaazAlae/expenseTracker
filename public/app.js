@@ -1,33 +1,54 @@
-// React hooks are already declared in index.html
+// Notification system
+let notificationTimeout = null;
 
-// Main App Component
+function showNotification(message, type = 'info') {
+  // Remove existing notification
+  const existing = document.querySelector('.notification');
+  if (existing) existing.remove();
+  if (notificationTimeout) clearTimeout(notificationTimeout);
+
+  // Create new notification
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  notification.innerHTML = `
+    <span class="icon icon-${type}"></span>
+    ${message}
+  `;
+  
+  document.body.appendChild(notification);
+  
+  // Auto remove after 4 seconds
+  notificationTimeout = setTimeout(() => {
+    if (notification.parentNode) {
+      notification.remove();
+    }
+  }, 4000);
+}
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [data, setData] = useState({ 
-    budget: 0, 
-    transactions: [], 
-    beneficiaries: [], 
-    itemDescriptions: ['Sky Cap'], 
-    flightNumbers: ['AT200', 'AT201'] 
-  });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [data, setData] = useState({
+    budget: 0,
+    transactions: [],
+    beneficiaries: [],
+    itemDescriptions: ['Sky Cap'],
+    flightNumbers: ['AT200', 'AT201']
+  });
+  
   const [showTransactionForm, setShowTransactionForm] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [showAddFunds, setShowAddFunds] = useState(false);
   const [fundsAmount, setFundsAmount] = useState('');
-  const [error, setError] = useState('');
-  const [screenSize, setScreenSize] = useState({ width: window.innerWidth, height: window.innerHeight });
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  
+  const [showBDCreation, setShowBDCreation] = useState(false);
+  const [selectedForBD, setSelectedForBD] = useState(new Set());
+  const [bdNumber, setBdNumber] = useState('');
+  const [showBDNumberPrompt, setShowBDNumberPrompt] = useState(false);
 
-  // Initialize auth - online only
   useEffect(() => {
-    if (!navigator.onLine) {
-      setError('This app requires an internet connection to function properly.');
-      setLoading(false);
-      return;
-    }
-    
     const token = localStorage.getItem('authToken');
     if (token) {
       try {
@@ -48,67 +69,33 @@ function App() {
     }
   }, []);
 
-  // Real-time screen size detection and online status
-  useEffect(() => {
-    const handleResize = () => {
-      setScreenSize({ width: window.innerWidth, height: window.innerHeight });
-    };
-    
-    const handleOnline = () => {
-      setIsOnline(true);
-      setError('');
-    };
-    
-    const handleOffline = () => {
-      setIsOnline(false);
-      setError('This app requires an internet connection to function properly.');
-    };
-    
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
   const loadData = async () => {
-    if (!navigator.onLine) {
-      setError('This app requires an internet connection to function properly.');
-      setLoading(false);
-      return;
-    }
-    
     try {
       const token = localStorage.getItem('authToken');
       if (!token) return;
-      
+
       const response = await fetch(`${API_URL}/api/user-data`, {
-        headers: { 
+        headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
       });
-      
+
       if (response.status === 401) {
         localStorage.removeItem('authToken');
         setIsAuthenticated(false);
         return;
       }
-      
+
       if (!response.ok) {
         throw new Error('Failed to load data');
       }
-      
+
       const userData = await response.json();
       setData(userData);
       setLoading(false);
     } catch (err) {
-      console.error('Load data error:', err);
-      setError('Failed to load data. Please check your internet connection.');
+      setError('Failed to load data');
       setLoading(false);
     }
   };
@@ -128,302 +115,332 @@ function App() {
   };
 
   const handleAddFunds = async () => {
-    if (!navigator.onLine) {
-      alert('This action requires an internet connection.');
-      return;
-    }
-    
     const amount = parseFloat(fundsAmount);
     if (isNaN(amount) || amount <= 0) {
-      alert('Please enter a valid amount');
+      showNotification('Veuillez saisir un montant valide', 'error');
       return;
     }
-    
-    if (amount > 999999) {
-      alert('Amount cannot exceed $999,999');
-      return;
-    }
-    
+
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${API_URL}/api/update-budget`, {
         method: 'POST',
-        headers: { 
-          'Authorization': `Bearer ${token}`, 
-          'Content-Type': 'application/json' 
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ budget: data.budget + amount }),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to add funds');
+        throw new Error(errorData.error || 'Échec de l\'ajout de fonds');
       }
-      
+
       setFundsAmount('');
       setShowAddFunds(false);
       loadData();
+      showNotification(`Fonds ajoutés avec succès: $${amount.toFixed(2)}`, 'success');
     } catch (err) {
-      alert(err.message);
+      showNotification(err.message, 'error');
     }
   };
 
-  const handleAddTransaction = async (transaction) => {
-    if (!navigator.onLine) {
-      alert('This action requires an internet connection.');
+  const handleBDCreation = () => {
+    setShowBDCreation(true);
+    setSelectedForBD(new Set());
+  };
+
+  const toggleTransactionForBD = (transactionId) => {
+    const newSelected = new Set(selectedForBD);
+    if (newSelected.has(transactionId)) {
+      newSelected.delete(transactionId);
+    } else {
+      newSelected.add(transactionId);
+    }
+    setSelectedForBD(newSelected);
+  };
+
+  const submitBDSelection = () => {
+    if (selectedForBD.size === 0) {
+      showNotification('Veuillez sélectionner au moins une transaction', 'warning');
       return;
     }
-    
+    setShowBDNumberPrompt(true);
+  };
+
+  const confirmBDCreation = async () => {
+    if (!bdNumber.trim()) {
+      showNotification('Veuillez saisir un numéro BD', 'error');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${API_URL}/api/assign-bd-number`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          transactionIds: Array.from(selectedForBD),
+          bdNumber: bdNumber.trim()
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Échec de l\'attribution du numéro BD');
+      }
+
+      const count = selectedForBD.size;
+      setSelectedForBD(new Set());
+      setBdNumber('');
+      setShowBDCreation(false);
+      setShowBDNumberPrompt(false);
+      loadData();
+      showNotification(`Numéro BD attribué à ${count} transaction${count > 1 ? 's' : ''}`, 'success');
+    } catch (err) {
+      showNotification(err.message, 'error');
+    }
+  };
+
+  const cancelBDCreation = () => {
+    setSelectedForBD(new Set());
+    setBdNumber('');
+    setShowBDCreation(false);
+    setShowBDNumberPrompt(false);
+  };
+
+  const handleAddTransaction = async (transaction) => {
     try {
       const token = localStorage.getItem('authToken');
       const response = await fetch(`${API_URL}/api/add-transaction`, {
         method: 'POST',
-        headers: { 
-          'Authorization': `Bearer ${token}`, 
-          'Content-Type': 'application/json' 
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(transaction),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to add transaction');
+        throw new Error(errorData.error || 'Échec de l\'ajout de la transaction');
       }
-      
+
       setShowTransactionForm(false);
       loadData();
+      showNotification('Transaction ajoutée avec succès', 'success');
     } catch (err) {
-      alert(err.message);
+      showNotification(err.message, 'error');
     }
   };
 
   const exportToExcel = () => {
     try {
       const worksheetData = [
-        ['Date of Reimbursement', 'Beneficiary', 'Item Description', 'Invoice Number', 'Date of Purchase', 'Amount', 'Amount Left', 'Flight Number', 'Number of Luggage', 'Observations'],
-        ...data.transactions.map((transaction, index) => {
-          const transactionsUpToHere = data.transactions.slice(0, index + 1);
-          const spentUpToHere = transactionsUpToHere.reduce((sum, t) => sum + t.amount, 0);
-          const amountLeftAfterTransaction = data.budget - spentUpToHere;
-          
-          return [
-            new Date(transaction.dateOfReimbursement).toLocaleDateString(),
-            transaction.beneficiary,
-            transaction.itemDescription,
-            transaction.invoiceNumber,
-            new Date(transaction.dateOfPurchase).toLocaleDateString(),
-            transaction.amount,
-            amountLeftAfterTransaction.toFixed(2),
-            transaction.flightNumber || '',
-            transaction.numberOfLuggage || '',
-            transaction.observations || ''
-          ];
-        })
+        ['Date', 'Bénéficiaire', 'Description Item', 'Facture N', 'Date de Facture', 'Montant', 'Solde Restant', 'N de Vol', 'Bagages', 'Observations', 'Numéro BD', 'Nom d\'utilisateur'],
+        ...data.transactions.map(transaction => [
+          new Date(transaction.dateOfReimbursement).toLocaleDateString('fr-FR'),
+          transaction.beneficiary || '-',
+          transaction.itemDescription || '-',
+          transaction.invoiceNumber || '-',
+          transaction.dateOfPurchase ? new Date(transaction.dateOfPurchase).toLocaleDateString('fr-FR') : '-',
+          transaction.amount || '-',
+          '-', // Solde Restant - always dash
+          transaction.flightNumber || '-',
+          transaction.numberOfLuggage || '-',
+          transaction.observations || '-',
+          transaction.bdNumber || '-',
+          transaction.username || currentUser?.username || 'Inconnu'
+        ])
       ];
 
       const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+      
+      // Apply gray background to dash cells
+      const range = XLSX.utils.decode_range(worksheet['!ref']);
+      for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const cellAddress = XLSX.utils.encode_cell({r: R, c: C});
+          const cell = worksheet[cellAddress];
+          if (cell && cell.v === '-') {
+            worksheet[cellAddress].s = {
+              fill: {
+                fgColor: { rgb: "E8E8E8" }
+              }
+            };
+          }
+        }
+      }
+      
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Transactions');
-      XLSX.writeFile(workbook, `expense-report-${new Date().toISOString().split('T')[0]}.xlsx`);
+      XLSX.writeFile(workbook, `rapport-depenses-${new Date().toISOString().split('T')[0]}.xlsx`);
+      showNotification('Rapport Excel exporté avec succès', 'success');
     } catch (err) {
-      alert('Failed to export to Excel. Please try again.');
+      showNotification('Échec de l\'export vers Excel', 'error');
     }
   };
 
-  // Show auth form if not authenticated
   if (!isAuthenticated) {
     return React.createElement(AuthForm, { onAuth: handleAuth });
   }
-  
-  // Show loading screen
+
   if (loading) {
-    return React.createElement('div', { className: 'app-container' },
-      React.createElement('div', { className: 'flex items-center justify-center h-full' },
-        React.createElement('div', { className: 'text-center' },
-          React.createElement(Loader, { className: 'icon animate-spin text-gray-600 mx-auto mb-4' }),
-          React.createElement('div', { className: 'text-gray-600' }, 'Loading your expense data...')
-        )
+    return React.createElement('div', { className: 'app' },
+      React.createElement('div', { style: { padding: '50px', textAlign: 'center' } },
+'Chargement...'
       )
     );
   }
 
-  const totalSpent = data.transactions.reduce((sum, transaction) => sum + transaction.amount, 0);
-  const remainingBudget = data.budget - totalSpent;
-  const isMobile = screenSize.width < 640;
+  const totalExpenses = data.transactions
+    .filter(transaction => transaction.type !== 'fund_addition')
+    .reduce((sum, transaction) => sum + transaction.amount, 0);
+  
+  // Budget already includes fund additions from server, so just subtract expenses
+  const remainingBudget = data.budget - totalExpenses;
 
-  return React.createElement('div', { className: 'app-container' },
-    // Professional Header with Perfect Alignment
-    React.createElement('div', { className: 'app-header' },
-      React.createElement('div', { className: 'header-left' },
-        React.createElement('button', { 
-          onClick: handleLogout, 
-          className: 'btn btn-secondary no-print'
-        },
-          React.createElement(LogOut, { className: 'icon mr-2' }),
-          isMobile ? '' : 'Logout'
-        )
-      ),
-      React.createElement('div', { className: 'header-center' },
-        currentUser ? `Hello, ${currentUser.username}` : ''
-      ),
-      React.createElement('div', { className: 'header-right' },
-        React.createElement('button', { 
-          onClick: exportToExcel, 
-          className: 'btn btn-secondary no-print'
-        },
-          React.createElement(Download, { className: 'icon mr-2' }),
-          isMobile ? '' : 'Export'
+  return React.createElement('div', { className: 'app' },
+    React.createElement('div', { className: 'header' },
+      React.createElement('h1', null, `Bienvenu ${currentUser?.username || 'Utilisateur'}`),
+      React.createElement('div', { className: 'header-actions' },
+        currentUser ? React.createElement('span', { className: 'header-user' }, `${currentUser.username}`) : '',
+        React.createElement('button', { onClick: exportToExcel, className: 'btn btn-success btn-header' }, 
+          React.createElement('span', { className: 'icon icon-export' }),
+          'Exporter'
+        ),
+        React.createElement('button', { onClick: handleLogout, className: 'btn btn-header' }, 
+          React.createElement('span', { className: 'icon icon-logout' }),
+          'Déconnexion'
         )
       )
     ),
 
-    // Error Display
     error && React.createElement('div', { className: 'error-message' }, error),
 
-    // Main Professional Content
-    React.createElement('div', { className: 'app-content' },
-      React.createElement('div', { className: 'content-container' },
-        
-        // Clean Budget Section - More Compact Layout
-        React.createElement('div', { className: 'budget-section' },
-          React.createElement('div', { className: 'budget-display' },
-            React.createElement('div', { className: 'budget-label' }, 'Available Budget'),
-            React.createElement('div', { 
-              className: `budget-amount${remainingBudget <= 0 ? ' negative' : ''}` 
-            }, 
-              `$${remainingBudget.toFixed(2)}`
-            )
-          ),
-          React.createElement('button', { 
-            onClick: () => setShowAddFunds(true), 
-            className: 'btn btn-link no-print'
-          },
-            React.createElement(Plus, { className: 'icon mr-2' }),
-            'Add Funds'
+    React.createElement('div', { className: 'main' },
+      React.createElement('div', { className: 'budget-card' },
+        React.createElement('h2', null, 'Budget Disponible'),
+        React.createElement('div', {
+          className: `budget-amount${remainingBudget <= 0 ? ' negative' : ''}`
+        }, `$${remainingBudget.toFixed(2)}`),
+        React.createElement('button', {
+          onClick: () => setShowAddFunds(true),
+          className: 'btn btn-primary'
+        }, 
+          React.createElement('span', { className: 'icon icon-money' }),
+          'Ajouter des Fonds'
+        )
+      ),
+
+      React.createElement('div', { className: 'transaction-section' },
+        React.createElement('div', { className: 'transaction-header' },
+          React.createElement('h2', null, 'Transactions'),
+          React.createElement('button', {
+            onClick: handleBDCreation,
+            className: 'btn'
+          }, 
+            React.createElement('span', { className: 'icon icon-bd' }),
+            'Créer BD'
           )
         ),
-
-        // Professional Transaction Section
-        React.createElement('div', { className: 'transaction-section' },
-          React.createElement('div', { className: 'transaction-header' },
-            React.createElement('h2', null, 'Transaction History')
-          ),
-          React.createElement('div', { className: 'transaction-content' },
-            data.transactions.length === 0 ? 
-              React.createElement('div', { className: 'empty-state' },
-                React.createElement(FileText, { className: 'empty-icon' }),
-                React.createElement('div', { className: 'empty-title' }, 'No transactions yet'),
-                React.createElement('div', { className: 'empty-subtitle' }, 'Add your first transaction to get started')
-              ) :
-              React.createElement('table', { className: 'table' },
-                React.createElement('thead', null,
-                  React.createElement('tr', null,
-                    React.createElement('th', null, 'Date'),
-                    React.createElement('th', null, isMobile ? 'Person' : 'Beneficiary'),
-                    React.createElement('th', null, 'Item'),
-                    React.createElement('th', null, 'Amount'),
-                    !isMobile && React.createElement('th', null, 'Remaining')
-                  )
-                ),
-                React.createElement('tbody', null,
-                  data.transactions.map((transaction, index) => {
-                    const transactionsUpToHere = data.transactions.slice(0, index + 1);
-                    const spentUpToHere = transactionsUpToHere.reduce((sum, t) => sum + t.amount, 0);
-                    const amountLeftAfterTransaction = data.budget - spentUpToHere;
-                    
-                    return React.createElement('tr', { 
-                      key: transaction.id,
-                      onClick: () => setSelectedTransaction(transaction)
-                    },
-                      React.createElement('td', null, 
-                        isMobile ? 
-                          new Date(transaction.dateOfReimbursement).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) :
-                          new Date(transaction.dateOfReimbursement).toLocaleDateString()
-                      ),
-                      React.createElement('td', null,
-                        React.createElement('div', { className: 'flex items-center' },
-                          !isMobile && React.createElement(User, { className: 'icon text-gray-600 mr-2' }),
-                          React.createElement('span', null, 
-                            isMobile && transaction.beneficiary.length > 12 ? 
-                              transaction.beneficiary.substring(0, 12) + '...' : 
-                              transaction.beneficiary
-                          )
-                        )
-                      ),
-                      React.createElement('td', null, 
-                        isMobile && transaction.itemDescription.length > 15 ? 
-                          transaction.itemDescription.substring(0, 15) + '...' : 
-                          transaction.itemDescription
-                      ),
-                      React.createElement('td', { className: 'font-medium' }, 
-                        `$${transaction.amount.toFixed(2)}`
-                      ),
-                      !isMobile && React.createElement('td', { className: 'font-medium' }, 
-                        `$${amountLeftAfterTransaction.toFixed(2)}`
-                      )
-                    );
-                  })
-                )
+        
+        data.transactions.length === 0 ?
+          React.createElement('div', { className: 'empty-state' }, 'Aucune transaction pour le moment') :
+          React.createElement('table', { className: 'transaction-table' },
+            React.createElement('thead', null,
+              React.createElement('tr', null,
+                React.createElement('th', null, 'Date'),
+                React.createElement('th', null, 'Bénéficiaire'),
+                React.createElement('th', null, 'Article'),
+                React.createElement('th', null, 'Montant'),
+                React.createElement('th', null, 'BD#'),
+                showBDCreation && React.createElement('th', null, 'Sélectionner')
               )
+            ),
+            React.createElement('tbody', null,
+              data.transactions.map(transaction => {
+                const hasBD = transaction.bdNumber;
+                const isSelected = selectedForBD.has(transaction.id);
+
+                const isPositiveTransaction = transaction.type === 'fund_addition';
+                
+                return React.createElement('tr', {
+                  key: transaction.id,
+                  onClick: showBDCreation ? undefined : () => setSelectedTransaction(transaction),
+                  className: isPositiveTransaction ? 'fund-addition-row' : ''
+                },
+                  React.createElement('td', null,
+                    new Date(transaction.dateOfReimbursement).toLocaleDateString()
+                  ),
+                  React.createElement('td', null, isPositiveTransaction ? '-' : transaction.beneficiary),
+                  React.createElement('td', null, transaction.itemDescription),
+                  React.createElement('td', { 
+                    style: isPositiveTransaction ? { color: 'green', fontWeight: 'bold' } : { color: 'red', fontWeight: 'bold' }
+                  }, `${isPositiveTransaction ? '+' : '-'}$${transaction.amount.toFixed(2)}`),
+                  React.createElement('td', null, transaction.bdNumber || '-'),
+                  showBDCreation && React.createElement('td', {
+                    onClick: (e) => {
+                      e.stopPropagation();
+                      if (!hasBD && !isPositiveTransaction) toggleTransactionForBD(transaction.id);
+                    }
+                  },
+                    React.createElement('div', {
+                      className: `bd-select-button ${isSelected ? 'selected' : ''} ${hasBD || isPositiveTransaction ? 'disabled' : ''}`
+                    },
+                      isPositiveTransaction ? '−' : (hasBD ? '✓' : (isSelected ? '−' : '+'))
+                    )
+                  )
+                );
+              })
+            )
           )
-        )
       )
     ),
 
-    // Professional Floating Action Button - More Prominent
-    React.createElement('button', { 
-      onClick: () => setShowTransactionForm(true), 
-      className: 'fab-button no-print',
-      title: 'Add New Transaction'
-    }, '+'),
+    React.createElement('button', {
+      onClick: () => setShowTransactionForm(true),
+      className: 'fab'
+    }, React.createElement('span', { className: 'icon icon-add' })),
 
-    // Professional Add Funds Modal
     showAddFunds && React.createElement('div', { className: 'modal-overlay' },
-      React.createElement('div', { className: 'modal-content' },
+      React.createElement('div', { className: 'modal' },
         React.createElement('div', { className: 'modal-header' },
-          React.createElement('h3', { className: 'modal-title' }, 'Add Funds'),
-          React.createElement('button', { 
-            onClick: () => setShowAddFunds(false),
-            className: 'btn btn-secondary'
+          React.createElement('h3', null, 'Ajouter des Fonds'),
+          React.createElement('button', {
+            onClick: () => setShowAddFunds(false)
           }, '×')
         ),
         React.createElement('div', { className: 'modal-body' },
           React.createElement('div', { className: 'form-group' },
-            React.createElement('label', { className: 'form-label' }, 'Amount'),
-            React.createElement('div', { className: 'relative' },
-              React.createElement('span', { 
-                className: 'absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500' 
-              }, '$'),
-              React.createElement('input', { 
-                type: 'number', 
-                step: '0.01',
-                min: '0.01',
-                max: '999999',
-                value: fundsAmount, 
-                onChange: (e) => setFundsAmount(e.target.value), 
-                placeholder: '0.00', 
-                className: 'form-input',
-                autoFocus: true,
-                style: { paddingLeft: '2.5rem' }
-              })
-            )
-          ),
-          React.createElement('div', { className: 'flex gap-3' },
-            React.createElement('button', { 
-              onClick: () => setShowAddFunds(false), 
-              className: 'btn btn-secondary flex-1'
-            }, 'Cancel'),
-            React.createElement('button', { 
-              onClick: handleAddFunds, 
-              disabled: !fundsAmount || parseFloat(fundsAmount) <= 0, 
-              className: `btn btn-blue flex-1 ${!fundsAmount || parseFloat(fundsAmount) <= 0 ? 'btn-disabled' : ''}`
-            }, 'Add Funds')
+            React.createElement('label', { className: 'form-label' }, 'Montant'),
+            React.createElement('input', {
+              type: 'number',
+              step: '0.01',
+              value: fundsAmount,
+              onChange: (e) => setFundsAmount(e.target.value),
+              className: 'form-input',
+              placeholder: '0.00'
+            })
           )
+        ),
+        React.createElement('div', { className: 'modal-footer' },
+          React.createElement('button', {
+            onClick: () => setShowAddFunds(false),
+            className: 'btn'
+          }, 'Annuler'),
+          React.createElement('button', {
+            onClick: handleAddFunds,
+            className: 'btn btn-primary'
+          }, 'Ajouter des Fonds')
         )
       )
     ),
 
-    // Transaction Form Modal
     showTransactionForm && React.createElement(TransactionForm, {
       onSubmit: handleAddTransaction,
       onCancel: () => setShowTransactionForm(false),
@@ -432,14 +449,57 @@ function App() {
       flightNumbers: data.flightNumbers
     }),
 
-    // Transaction Details Modal
     selectedTransaction && React.createElement(TransactionDetails, {
       transaction: selectedTransaction,
       onClose: () => setSelectedTransaction(null)
-    })
+    }),
+
+    showBDCreation && React.createElement('div', { className: 'bd-controls' },
+      React.createElement('span', null, `${selectedForBD.size} transactions sélectionnées`),
+      React.createElement('button', {
+        onClick: submitBDSelection,
+        className: 'btn btn-primary'
+      }, 'Soumettre BD'),
+      React.createElement('button', {
+        onClick: cancelBDCreation,
+        className: 'btn'
+      }, 'Annuler')
+    ),
+
+    showBDNumberPrompt && React.createElement('div', { className: 'modal-overlay' },
+      React.createElement('div', { className: 'modal' },
+        React.createElement('div', { className: 'modal-header' },
+          React.createElement('h3', null, 'Saisir le Numéro BD'),
+          React.createElement('button', {
+            onClick: () => setShowBDNumberPrompt(false)
+          }, '×')
+        ),
+        React.createElement('div', { className: 'modal-body' },
+          React.createElement('div', { className: 'form-group' },
+            React.createElement('label', { className: 'form-label' }, 'Numéro BD'),
+            React.createElement('input', {
+              type: 'text',
+              value: bdNumber,
+              onChange: (e) => setBdNumber(e.target.value),
+              className: 'form-input',
+              placeholder: 'BD-2025-001'
+            })
+          )
+        ),
+        React.createElement('div', { className: 'modal-footer' },
+          React.createElement('button', {
+            onClick: () => setShowBDNumberPrompt(false),
+            className: 'btn'
+          }, 'Annuler'),
+          React.createElement('button', {
+            onClick: confirmBDCreation,
+            className: 'btn btn-primary'
+          }, 'Confirmer')
+        )
+      )
+    )
   );
 }
 
-// Render the app
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(React.createElement(App));
