@@ -501,7 +501,7 @@ function App() {
     error && React.createElement('div', { className: 'error-message' }, error),
 
     React.createElement('div', { className: `main ${showBDCreation ? 'bd-panel-open' : ''}` },
-      React.createElement('div', { className: 'budget-card' },
+      React.createElement('div', { className: `budget-card ${showBDCreation ? 'compact-mode' : ''}` },
         React.createElement('h2', null, 'Available Budget'),
         React.createElement('div', {
           className: `budget-amount${availableBudget <= 0 ? ' negative' : ''}`
@@ -509,12 +509,12 @@ function App() {
         React.createElement('button', {
           onClick: () => setShowAddFunds(true),
           className: 'btn btn-success btn-add-funds',
-          dangerouslySetInnerHTML: { __html: `${icon('money', 18)} Add Funds` }
+          dangerouslySetInnerHTML: { __html: `Add Funds` }
         })
       ),
 
       // Professional Action Bar
-      React.createElement('div', { className: 'action-bar' },
+      React.createElement('div', { className: `action-bar ${showBDCreation ? 'bd-modal-active' : ''}` },
         React.createElement('button', {
           onClick: () => setShowTransactionForm(true),
           className: 'btn btn-primary btn-action',
@@ -527,7 +527,7 @@ function App() {
         })
       ),
 
-      React.createElement('div', { className: 'transaction-section' },
+      React.createElement('div', { className: `transaction-section ${showBDCreation ? 'bd-modal-active' : ''}` },
         React.createElement('div', { className: 'transaction-header' },
           React.createElement('h2', null, 'Transaction History')
         ),
@@ -574,7 +574,7 @@ function App() {
                       isPositiveTransaction ? 
                         React.createElement('span', { 
                           className: 'fund-addition-label',
-                          dangerouslySetInnerHTML: { __html: `${icon('money', 16)} Fund Addition` }
+                          dangerouslySetInnerHTML: { __html: `Fund Addition` }
                         }) :
                         transaction.itemDescription
                     ),

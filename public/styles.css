@@ -13,6 +13,11 @@ body {
   color: #1f2937;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   overflow-x: hidden;
+  /* Prevent elastic scrolling and over-scroll */
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .app { 
@@ -20,6 +25,9 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
+  /* Prevent over-scroll and elastic bounce */
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
 }
 
 /* Professional Icons */
@@ -89,8 +97,9 @@ body {
 
 .header-user {
   margin-right: 16px;
-  font-size: 13px;
+  font-size: 15px;
   opacity: 0.9;
+  font-weight: 600;
 }
 
 /* Main Content */
@@ -106,6 +115,9 @@ body {
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  /* Prevent over-scroll and elastic bounce */
+  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
 }
 
 .main::-webkit-scrollbar {
@@ -131,12 +143,13 @@ body {
 }
 
 .budget-card h2 {
-  font-size: 14px;
+  font-size: clamp(12px, 2.5vw, 14px);
   font-weight: 500;
   color: #6b7280;
   margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .budget-amount { 
@@ -178,6 +191,10 @@ body {
   overflow-x: hidden;
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
+  /* Prevent over-scroll and elastic bounce */
+  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .transaction-table-container::-webkit-scrollbar {
@@ -244,7 +261,20 @@ body {
 /* Fallback for browsers without container queries */
 @media (max-width: 600px) {
   .transaction-table .col-bd {
-    display: none;
+    display: none !important;
+    width: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    opacity: 0 !important;
+  }
+  
+  /* Show BD column when BD modal is active */
+  .transaction-section.bd-modal-active .transaction-table .col-bd {
+    display: table-cell !important;
+    width: auto !important;
+    padding: clamp(8px, 1.5vh, 14px) clamp(8px, 2vw, 16px) !important;
+    border-bottom: 1px solid #f3f4f6 !important;
+    opacity: 1 !important;
   }
 }
 
@@ -263,7 +293,7 @@ body {
 .transaction-table th { 
   background: #f3f4f6;
   padding: 12px 16px;
-  text-align: left;
+  text-align: center;
   font-weight: 600;
   color: #374151;
   font-size: 12px;
@@ -277,6 +307,14 @@ body {
   border-bottom: 1px solid #f3f4f6;
   vertical-align: middle;
   transition: all 0.2s ease;
+  text-align: center;
+}
+
+/* Center select column buttons specifically */
+.transaction-table td:last-child {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .transaction-table tr {
@@ -302,7 +340,7 @@ body {
   border: 1px solid #d1d5db;
   background: white;
   cursor: pointer;
-  font-size: clamp(12px, 1.5vw, 14px);
+  font-size: clamp(11px, 1.8vw, 14px);
   font-weight: 600;
   border-radius: 8px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -378,7 +416,7 @@ body {
 .btn-header {
   min-width: clamp(80px, 15vw, 120px);
   padding: clamp(6px, 1vh, 10px) clamp(12px, 2vw, 20px);
-  font-size: clamp(11px, 1.5vw, 14px);
+  font-size: clamp(10px, 1.8vw, 14px);
   font-weight: 600;
   backdrop-filter: blur(10px);
   background: rgba(255, 255, 255, 0.1);
@@ -850,6 +888,7 @@ body {
   width: 44px;
   height: 44px;
   color: white; /* Make hamburger white */
+  margin-left: 8px;
 }
 
 .hamburger-menu-btn:hover {
@@ -1143,17 +1182,20 @@ body {
 .btn-action {
   flex: 1;
   max-width: 200px;
-  min-width: 160px;
+  min-width: 120px;
   height: 48px;
   font-weight: 600;
-  font-size: 14px;
+  font-size: clamp(10px, 1.8vw, 12px);
   border-radius: 12px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   text-transform: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .btn-action:hover {
@@ -1167,20 +1209,25 @@ body {
 
 /* Add Funds Button in Budget Card */
 .btn-add-funds {
-  margin-top: 16px;
+  margin: 16px auto 0 auto;
   width: auto;
   min-width: 140px;
   height: 40px;
   border-radius: 20px;
   font-weight: 600;
-  font-size: 14px;
+  font-size: clamp(12px, 2.2vw, 14px);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .btn-add-funds:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
+
 
 /* Fund Addition Styling */
 .fund-addition-cell {
@@ -1195,12 +1242,14 @@ body {
 .fund-addition-label {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  color: #059669;
-  font-weight: 600;
-  font-size: 14px;
+  color: #1f2937;
+  font-weight: normal;
+  font-size: clamp(11px, 1.5vw, 14px);
   padding: 4px 0;
   transition: all 0.2s ease;
+  width: 100%;
 }
 
 .fund-addition-row:hover .fund-addition-label {
@@ -1252,6 +1301,7 @@ body {
   display: flex;
   gap: 6px;
   justify-content: center;
+  align-items: center;
 }
 
 /* BD Assignment Panel */
@@ -1262,8 +1312,9 @@ body {
   right: 0;
   background: white;
   border-top: 3px solid #3b82f6;
+  border-radius: 16px 16px 0 0;
   box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
+  z-index: 500;
   animation: slideUp 0.3s ease;
 }
 
@@ -1271,6 +1322,7 @@ body {
   padding: 20px 24px 12px;
   border-bottom: 1px solid #e5e7eb;
   background: #f8fafc;
+  border-radius: 16px 16px 0 0;
 }
 
 .bd-panel-header h3 {
@@ -1339,8 +1391,8 @@ body {
 
 /* BD Select Buttons */
 .bd-select-button {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -1349,6 +1401,31 @@ body {
   transition: all 0.2s;
   border: 2px solid #e5e7eb;
   background: white;
+  position: relative;
+}
+
+.bd-select-button span {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: center !important;
+}
+
+/* Ensure SVG icons and innerHTML content are perfectly centered */
+.bd-select-button span > *,
+.bd-select-button span::before,
+.bd-select-button svg {
+  display: block !important;
+  margin: 0 auto !important;
+  text-align: center !important;
+  line-height: 1 !important;
 }
 
 .bd-select-button:hover:not(.disabled) {
@@ -1619,7 +1696,7 @@ body {
     position: relative;
     display: flex;
     align-items: center;
-    justify-content: center; /* Center everything */
+    justify-content: center;
   }
   
   .header h1 {
@@ -1631,9 +1708,11 @@ body {
   
   .header-actions {
     position: absolute;
-    right: 16px; /* Hamburger on the right */
+    right: 16px;
     top: 50%;
     transform: translateY(-50%);
+    display: flex;
+    align-items: center;
   }
   
   /* Mobile Professional Menu */
@@ -1691,11 +1770,14 @@ body {
   .btn-action {
     min-width: auto;
     flex: 1;
-    height: 36px; /* Much smaller height */
-    font-size: 12px; /* Smaller font */
+    height: 36px;
+    font-size: clamp(8px, 2vw, 10px);
     border-radius: 8px;
-    padding: 0 8px;
+    padding: 0 4px;
     font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   
   /* Mobile Budget Card */
@@ -1706,11 +1788,11 @@ body {
   
   .btn-add-funds {
     width: auto;
-    min-width: 120px; /* Much smaller add funds button */
-    height: 34px;
-    font-size: 12px;
+    min-width: 120px;
+    height: 32px;
+    font-size: clamp(10px, 2.5vw, 12px);
     margin: 16px auto 0;
-    padding: 0 16px;
+    padding: 0 14px;
   }
   
   /* Mobile Main Content */
@@ -1755,15 +1837,15 @@ body {
   
   /* Mobile Buttons */
   .btn {
-    padding: 10px 16px;
-    font-size: 13px;
-    min-height: 40px;
+    padding: 8px 12px;
+    font-size: clamp(10px, 2.5vw, 13px);
+    min-height: 34px;
   }
   
   .btn-sm {
-    padding: 6px 10px;
-    font-size: 11px;
-    min-height: 32px;
+    padding: 4px 8px;
+    font-size: clamp(9px, 2.2vw, 11px);
+    min-height: 28px;
   }
   
   /* Mobile FAB */
@@ -1837,12 +1919,13 @@ body {
     right: 8px;
     max-height: 40vh; /* Limit height to 40% of viewport */
     border-radius: 16px 16px 0 0;
-    z-index: 1000;
+    z-index: 500;
   }
   
   .bd-panel-header {
     padding: 16px 20px 12px;
     text-align: center;
+    border-radius: 16px 16px 0 0;
   }
   
   .bd-panel-header h3 {
@@ -1896,12 +1979,176 @@ body {
     padding: 0 12px;
   }
   
-  /* Add bottom padding to main content when BD panel is open */
+  /* Dynamic layout adjustments for BD panel */
   .main.bd-panel-open {
-    padding-bottom: 240px; /* Make room for BD panel */
+    padding-bottom: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
-  /* Mobile Admin Panel */
+  /* Budget card shrinking when BD panel is open */
+  .budget-card.compact-mode {
+    padding: 12px 16px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: scale(0.85);
+    margin-bottom: 8px;
+  }
+  
+  .budget-card.compact-mode h2 {
+    font-size: clamp(9px, 2vw, 11px);
+    margin-bottom: 4px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .budget-card.compact-mode .budget-amount {
+    font-size: clamp(18px, 4vw, 24px);
+    margin: 4px 0 8px 0;
+  }
+  
+  .budget-card.compact-mode .btn-add-funds {
+    height: clamp(24px, 4vw, 28px);
+    font-size: clamp(8px, 2vw, 10px);
+    min-width: clamp(80px, 15vw, 90px);
+    margin-top: 8px;
+    padding: 0 clamp(8px, 2vw, 12px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Transaction section adjustments */
+  .transaction-section.bd-modal-active {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Action bar adjustments */
+  .action-bar.bd-modal-active {
+    padding: 6px 0;
+    margin-bottom: 6px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .action-bar.bd-modal-active .btn-action {
+    height: 28px;
+    font-size: 9px;
+  }
+}
+
+/* Desktop layout adjustments for BD panel */
+@media (min-width: 769px) {
+  .main.bd-panel-open {
+    padding-bottom: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .budget-card.compact-mode {
+    padding: 16px 20px;
+    transform: scale(0.9);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 12px;
+  }
+  
+  .budget-card.compact-mode h2 {
+    font-size: clamp(10px, 2.5vw, 12px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .budget-card.compact-mode .budget-amount {
+    font-size: clamp(24px, 4vw, 32px);
+    margin: 8px 0 12px 0;
+  }
+  
+  .transaction-section.bd-modal-active {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .action-bar.bd-modal-active {
+    padding: 10px 0;
+    margin-bottom: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .action-bar.bd-modal-active .btn-action {
+    height: 36px;
+    font-size: 11px;
+  }
+}
+
+/* Edge detection for ultra-responsive BD modal */
+@media (max-height: 700px) {
+  .budget-card.compact-mode {
+    transform: scale(0.8);
+    padding: 10px 14px;
+  }
+  
+  .budget-card.compact-mode .budget-amount {
+    font-size: clamp(16px, 3.5vw, 22px);
+  }
+  
+  .transaction-section.bd-modal-active {
+    /* No max-height restrictions - let content flow naturally */
+  }
+  
+  .action-bar.bd-modal-active {
+    padding: 4px 0;
+    margin-bottom: 4px;
+  }
+  
+  .action-bar.bd-modal-active .btn-action {
+    height: 26px;
+    font-size: 8px;
+  }
+}
+
+/* Edge detection for very small screens */
+@media (max-height: 600px) {
+  .budget-card.compact-mode {
+    transform: scale(0.75);
+    padding: 8px 12px;
+  }
+  
+  .budget-card.compact-mode h2 {
+    font-size: 10px;
+    margin-bottom: 2px;
+  }
+  
+  .budget-card.compact-mode .budget-amount {
+    font-size: clamp(14px, 3vw, 18px);
+    margin: 2px 0 4px 0;
+  }
+  
+  .budget-card.compact-mode .btn-add-funds {
+    height: clamp(20px, 3.5vw, 24px);
+    font-size: clamp(7px, 1.8vw, 9px);
+    min-width: clamp(70px, 12vw, 80px);
+    padding: 0 clamp(6px, 1.5vw, 8px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .transaction-section.bd-modal-active {
+    /* No max-height restrictions - let content flow naturally */
+  }
+  
+  .action-bar.bd-modal-active .btn-action {
+    height: 24px;
+    font-size: 7px;
+  }
+}
+
+/* Landscape mode edge detection */
+@media (max-height: 500px) and (orientation: landscape) {
+  .budget-card.compact-mode {
+    transform: scale(0.7);
+    padding: 6px 10px;
+  }
+  
+  .budget-card.compact-mode .budget-amount {
+    font-size: clamp(12px, 2.5vw, 16px);
+  }
+  
+  .transaction-section.bd-modal-active {
+    /* No max-height restrictions - let content flow naturally */
+  }
+
+/* Mobile Admin Panel */
+@media (max-width: 768px) {
   .users-table {
     font-size: 12px;
     overflow-x: auto;
@@ -1963,17 +2210,21 @@ body {
   }
   
   .btn-action {
-    height: 34px; /* Even smaller on small screens */
-    font-size: 11px;
+    height: 34px;
+    font-size: clamp(7px, 1.8vw, 9px);
     font-weight: 600;
     border-radius: 8px;
-    padding: 0 6px;
+    padding: 0 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   
   .btn-add-funds {
-    height: 32px;
-    font-size: 11px;
-    min-width: 100px;
+    height: clamp(28px, 5vw, 32px);
+    font-size: clamp(9px, 2.2vw, 11px);
+    min-width: clamp(90px, 18vw, 100px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   /* Small Mobile Professional Menu */
@@ -2012,9 +2263,9 @@ body {
   }
   
   .btn {
-    padding: 8px 12px;
-    font-size: 12px;
-    min-height: 36px;
+    padding: 6px 10px;
+    font-size: clamp(9px, 2.2vw, 12px);
+    min-height: 32px;
   }
   
   .fab {
@@ -2057,13 +2308,26 @@ body {
   
   /* Hide BD column on extra small screens */
   .transaction-table .col-bd {
-    display: none;
+    display: none !important;
+    width: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    opacity: 0 !important;
+  }
+  
+  /* Show BD column when BD modal is active */
+  .transaction-section.bd-modal-active .transaction-table .col-bd {
+    display: table-cell !important;
+    width: auto !important;
+    padding: clamp(8px, 1.5vh, 14px) clamp(8px, 2vw, 16px) !important;
+    border-bottom: 1px solid #f3f4f6 !important;
+    opacity: 1 !important;
   }
   
   .btn {
-    padding: 6px 10px;
-    font-size: 11px;
-    min-height: 32px;
+    padding: 4px 8px;
+    font-size: clamp(8px, 2vw, 11px);
+    min-height: 28px;
   }
 }
 
@@ -2157,11 +2421,28 @@ body {
 body.mobile-xs .transaction-table .col-bd,
 body.mobile-xs .transaction-table .col-beneficiary,
 body.mobile-xs .transaction-table .col-date {
-  display: none;
+  display: none !important;
+  width: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  opacity: 0 !important;
 }
 
 body.mobile-sm .transaction-table .col-bd {
-  display: none;
+  display: none !important;
+  width: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  opacity: 0 !important;
+}
+
+/* Show BD column when BD modal is active on mobile */
+body.mobile .transaction-section.bd-modal-active .transaction-table .col-bd {
+  display: table-cell !important;
+  width: auto !important;
+  padding: clamp(8px, 1.5vh, 14px) clamp(8px, 2vw, 16px) !important;
+  border-bottom: 1px solid #f3f4f6 !important;
+  opacity: 1 !important;
 }
 
 body.mobile .desktop-only {
@@ -2338,7 +2619,11 @@ body.mobile-device .transaction-table td {
   /* Fallback responsive table columns */
   @media (max-width: 600px) {
     .transaction-table .col-bd {
-      display: none;
+      display: none !important;
+      width: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      opacity: 0 !important;
     }
   }
   
@@ -2352,5 +2637,20 @@ body.mobile-device .transaction-table td {
     .transaction-table .col-date {
       display: none;
     }
+  }
+}
+
+/* Enhanced BD Modal positioning - maintains consistent distance from bottom */
+@media (max-width: 768px) {
+  .main.bd-panel-open {
+    padding-bottom: calc(42vh + env(safe-area-inset-bottom, 0px));
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@media (min-width: 769px) {
+  .main.bd-panel-open {
+    padding-bottom: 35vh;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
