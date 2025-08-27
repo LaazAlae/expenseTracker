@@ -834,65 +834,377 @@ body {
   display: none;
 }
 
-/* Mobile Menu System */
-.mobile-menu-btn {
-  padding: 8px 12px !important;
-  min-width: auto !important;
+/* PROFESSIONAL HAMBURGER MENU SYSTEM */
+
+/* Hamburger Button */
+.hamburger-menu-btn {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: white; /* Make hamburger white */
 }
 
-.mobile-menu {
+.hamburger-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+}
+
+.hamburger-menu-btn:active {
+  transform: scale(0.95);
+}
+
+/* Professional Hamburger Animation */
+.hamburger {
+  width: 24px;
+  height: 18px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.hamburger-line {
+  width: 100%;
+  height: 2.5px; /* Slightly thicker for better visibility */
+  background: white; /* Explicitly white */
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+}
+
+.hamburger-active .hamburger-line:nth-child(1) {
+  transform: translateY(8px) rotate(45deg);
+}
+
+.hamburger-active .hamburger-line:nth-child(2) {
+  opacity: 0;
+  transform: scale(0);
+}
+
+.hamburger-active .hamburger-line:nth-child(3) {
+  transform: translateY(-8px) rotate(-45deg);
+}
+
+/* Professional Menu Dropdown */
+.professional-menu {
   position: absolute;
-  top: 100%;
-  right: 0;
+  top: calc(100% + 8px);
+  right: 8px;
   background: white;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1), 0 8px 25px rgba(0, 0, 0, 0.08);
   z-index: 1000;
-  min-width: 200px;
-  animation: slideDown 0.2s ease;
+  min-width: 280px;
+  overflow: hidden;
+  animation: menuSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
 }
 
-.mobile-menu-user {
-  padding: 12px 16px;
+@keyframes menuSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.menu-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 20px 24px 16px;
   border-bottom: 1px solid #e5e7eb;
-  font-size: 12px;
-  color: #6b7280;
-  background: #f9fafb;
-  border-radius: 8px 8px 0 0;
 }
 
-.mobile-menu-item {
+.menu-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.menu-user-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+  letter-spacing: -0.025em;
+}
+
+.menu-user-role {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Edit Toggle inside Menu */
+.menu-edit-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.menu-toggle-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.menu-toggle {
+  position: relative;
+  width: 48px;
+  height: 28px;
+  background: #e5e7eb;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+
+.menu-toggle:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.menu-toggle-active {
+  background: #10b981;
+}
+
+.menu-toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 24px;
+  height: 24px;
+  background: white;
+  border-radius: 50%;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.menu-toggle-active .menu-toggle-slider {
+  transform: translateX(20px);
+}
+
+.menu-items {
+  padding: 12px 0;
+}
+
+.menu-item {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: 16px;
+  padding: 16px 24px;
   background: none;
   border: none;
   text-align: left;
   cursor: pointer;
-  transition: background-color 0.2s;
-  font-size: 14px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 16px;
   color: #374151;
+  font-weight: 500;
+  position: relative;
 }
 
-.mobile-menu-item:hover {
-  background: #f3f4f6;
+.menu-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: transparent;
+  transition: background 0.2s ease;
 }
 
-.mobile-menu-item.active {
-  background: #fef3c7;
-  color: #92400e;
+.menu-item:hover {
+  background: #f9fafb;
+  color: #1f2937;
+  padding-left: 28px;
 }
 
-.mobile-menu-item.logout {
+.menu-item:hover::before {
+  background: #3b82f6;
+}
+
+.menu-item-danger {
   color: #dc2626;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #f3f4f6;
+  margin-top: 8px;
 }
 
-.mobile-menu-item.logout:hover {
+.menu-item-danger:hover {
   background: #fef2f2;
+  color: #b91c1c;
+}
+
+.menu-item-danger:hover::before {
+  background: #dc2626;
+}
+
+.menu-item span {
+  font-weight: 500;
+}
+
+/* Menu Overlay */
+.menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+  z-index: 999;
+}
+
+/* IPHONE-STYLE EDIT TOGGLE */
+.edit-toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-right: 16px;
+}
+
+.edit-toggle-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
+  opacity: 0.9;
+}
+
+.edit-toggle {
+  position: relative;
+  width: 52px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  overflow: hidden;
+}
+
+.edit-toggle:focus {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+}
+
+.edit-toggle-active {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+.edit-toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 24px;
+  height: 24px;
+  background: white;
+  border-radius: 50%;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.edit-toggle-active .edit-toggle-slider {
+  transform: translateX(20px);
+}
+
+/* PROFESSIONAL ACTION BAR */
+.action-bar {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  padding: 16px 0;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin-bottom: 20px;
+}
+
+.btn-action {
+  flex: 1;
+  max-width: 200px;
+  min-width: 160px;
+  height: 48px;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-transform: none;
+}
+
+.btn-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.btn-action:active {
+  transform: translateY(0);
+}
+
+/* Add Funds Button in Budget Card */
+.btn-add-funds {
+  margin-top: 16px;
+  width: auto;
+  min-width: 140px;
+  height: 40px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-add-funds:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* Fund Addition Styling */
+.fund-addition-cell {
+  position: relative;
+}
+
+.fund-addition-cell:hover {
+  background: #f0fdf4 !important;
+  cursor: pointer;
+}
+
+.fund-addition-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #059669;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 4px 0;
+  transition: all 0.2s ease;
+}
+
+.fund-addition-row:hover .fund-addition-label {
+  color: #047857;
 }
 
 @keyframes slideDown {
@@ -1301,22 +1613,104 @@ body {
     display: flex !important;
   }
   
-  /* Mobile Header */
+  /* Mobile Header - Perfect centering with hamburger on right */
   .header {
-    padding: 12px 16px;
+    padding: 16px;
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center everything */
   }
   
   .header h1 {
     font-size: 18px;
-    flex: 1;
+    margin: 0;
     text-align: center;
+    flex: 1;
   }
   
   .header-actions {
     position: absolute;
+    right: 16px; /* Hamburger on the right */
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  
+  /* Mobile Professional Menu */
+  .professional-menu {
     right: 16px;
-    gap: 4px;
+    top: calc(100% + 12px);
+    min-width: calc(100vw - 32px);
+    max-width: 320px;
+  }
+  
+  .menu-header {
+    padding: 16px 20px 12px;
+  }
+  
+  .menu-user-name {
+    font-size: 16px;
+  }
+  
+  .menu-item {
+    padding: 16px 20px;
+    font-size: 15px;
+  }
+  
+  /* Mobile Edit Toggle */
+  .edit-toggle-container {
+    margin-right: 12px;
+  }
+  
+  .edit-toggle-label {
+    font-size: 13px;
+  }
+  
+  .edit-toggle {
+    width: 46px;
+    height: 28px;
+  }
+  
+  .edit-toggle-slider {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .edit-toggle-active .edit-toggle-slider {
+    transform: translateX(18px);
+  }
+  
+  /* Mobile Action Bar - Much smaller buttons */
+  .action-bar {
+    margin: 0 20px 16px 20px;
+    padding: 8px;
+    gap: 8px;
+    border-radius: 12px;
+  }
+  
+  .btn-action {
+    min-width: auto;
+    flex: 1;
+    height: 36px; /* Much smaller height */
+    font-size: 12px; /* Smaller font */
+    border-radius: 8px;
+    padding: 0 8px;
+    font-weight: 500;
+  }
+  
+  /* Mobile Budget Card */
+  .budget-card {
+    text-align: center;
+    padding: 20px 16px;
+  }
+  
+  .btn-add-funds {
+    width: auto;
+    min-width: 120px; /* Much smaller add funds button */
+    height: 34px;
+    font-size: 12px;
+    margin: 16px auto 0;
+    padding: 0 16px;
   }
   
   /* Mobile Main Content */
@@ -1435,33 +1829,76 @@ body {
     font-size: 13px;
   }
   
-  /* Mobile BD Assignment Panel */
+  /* Mobile BD Assignment Panel - Fixed positioning to not hide transactions */
   .bd-assignment-panel {
-    border-radius: 12px 12px 0 0;
+    position: fixed;
+    bottom: 0;
+    left: 8px;
+    right: 8px;
+    max-height: 40vh; /* Limit height to 40% of viewport */
+    border-radius: 16px 16px 0 0;
+    z-index: 1000;
   }
   
   .bd-panel-header {
-    padding: 16px 20px 10px;
+    padding: 16px 20px 12px;
+    text-align: center;
   }
   
   .bd-panel-header h3 {
     font-size: 16px;
+    margin-bottom: 6px;
+  }
+  
+  .bd-panel-header p {
+    font-size: 13px;
+    margin: 0;
   }
   
   .bd-panel-content {
-    padding: 16px 20px;
+    padding: 16px 20px 20px;
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
     gap: 12px;
+    text-align: center;
+  }
+  
+  .bd-selection-info {
+    align-items: center;
+    text-align: center;
+  }
+  
+  .selected-count {
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+  
+  .selected-transactions {
+    font-size: 12px;
   }
   
   .bd-panel-actions {
     width: 100%;
-    justify-content: stretch;
+    max-width: 340px;
+    gap: 10px;
   }
   
   .bd-panel-actions .btn {
     flex: 1;
+    height: 42px; /* Smaller buttons */
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 10px;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+  }
+  
+  /* Add bottom padding to main content when BD panel is open */
+  .main.bd-panel-open {
+    padding-bottom: 240px; /* Make room for BD panel */
   }
   
   /* Mobile Admin Panel */
@@ -1494,24 +1931,69 @@ body {
 /* Small Mobile Phones */
 @media (max-width: 480px) {
   .header {
-    padding: 10px 12px;
+    padding: 14px 16px;
   }
   
   .header h1 {
     font-size: 16px;
+    font-weight: 700;
   }
   
   .main {
-    padding: 8px 12px;
-    gap: 12px;
+    padding: 12px 16px;
+    gap: 16px;
   }
   
   .budget-card {
-    padding: 16px 12px;
+    padding: 20px 16px;
+    border-radius: 16px;
   }
   
   .budget-amount {
-    font-size: 28px;
+    font-size: 32px;
+    margin: 12px 0 16px;
+  }
+  
+  /* Small Mobile Action Bar */
+  .action-bar {
+    padding: 8px;
+    gap: 8px;
+    border-radius: 12px;
+    margin: 0 16px 16px 16px;
+  }
+  
+  .btn-action {
+    height: 34px; /* Even smaller on small screens */
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 0 6px;
+  }
+  
+  .btn-add-funds {
+    height: 32px;
+    font-size: 11px;
+    min-width: 100px;
+  }
+  
+  /* Small Mobile Professional Menu */
+  .professional-menu {
+    min-width: calc(100vw - 24px);
+    right: 12px;
+  }
+  
+  .edit-toggle {
+    width: 44px;
+    height: 26px;
+  }
+  
+  .edit-toggle-slider {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .edit-toggle-active .edit-toggle-slider {
+    transform: translateX(18px);
   }
   
   .transaction-table {

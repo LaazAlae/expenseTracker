@@ -422,85 +422,85 @@ function App() {
     React.createElement('div', { className: 'header' },
       React.createElement('h1', null, `Welcome ${currentUser?.username || 'User'}`),
       
-      // Desktop Header Actions
-      React.createElement('div', { className: 'header-actions desktop-only' },
-        currentUser ? React.createElement('span', { className: 'header-user' }, 
-          `${currentUser.username}${currentUser.isAdmin ? ' (Admin)' : ''}`
-        ) : '',
-        React.createElement('button', { 
-          onClick: () => setEditMode(!editMode),
-          className: `btn ${editMode ? 'btn-warning' : 'btn-secondary'} btn-header`,
-          dangerouslySetInnerHTML: { __html: `${icon('edit', 18)} ${editMode ? 'Exit Edit' : 'Edit Mode'}` }
-        }),
-        currentUser?.isAdmin && React.createElement('button', { 
-          onClick: () => setShowSettings(!showSettings),
-          className: 'btn btn-info btn-header',
-          dangerouslySetInnerHTML: { __html: `${icon('settings', 18)} Settings` }
-        }),
-        React.createElement('button', { 
-          onClick: exportToExcel, 
-          className: 'btn btn-success btn-header',
-          dangerouslySetInnerHTML: { __html: `${icon('export', 18)} Export` }
-        }),
-        React.createElement('button', { 
-          onClick: handleLogout, 
-          className: 'btn btn-header',
-          dangerouslySetInnerHTML: { __html: `${icon('logout', 18)} Logout` }
-        })
-      ),
-
-      // Mobile Header Actions
-      React.createElement('div', { className: 'header-actions mobile-only' },
+      // Professional Hamburger Menu for ALL screen sizes
+      React.createElement('div', { className: 'header-actions' },
+        // Professional Hamburger Menu Button
         React.createElement('button', { 
           onClick: () => setShowMobileMenu(!showMobileMenu),
-          className: 'btn btn-header mobile-menu-btn',
-          dangerouslySetInnerHTML: { __html: icon('menu', 24) }
-        })
+          className: 'hamburger-menu-btn',
+          'aria-label': 'Open Menu',
+          'aria-expanded': showMobileMenu
+        },
+          React.createElement('span', { className: `hamburger ${showMobileMenu ? 'hamburger-active' : ''}` },
+            React.createElement('span', { className: 'hamburger-line' }),
+            React.createElement('span', { className: 'hamburger-line' }),
+            React.createElement('span', { className: 'hamburger-line' })
+          )
+        )
       ),
 
-      // Mobile Dropdown Menu
-      showMobileMenu && React.createElement('div', { className: 'mobile-menu' },
-        currentUser ? React.createElement('div', { className: 'mobile-menu-user' }, 
-          `${currentUser.username}${currentUser.isAdmin ? ' (Admin)' : ''}`
-        ) : '',
-        React.createElement('button', { 
-          onClick: () => {
-            setEditMode(!editMode);
-            setShowMobileMenu(false);
-          },
-          className: `mobile-menu-item ${editMode ? 'active' : ''}`,
-          dangerouslySetInnerHTML: { __html: `${icon('edit', 18)} ${editMode ? 'Exit Edit Mode' : 'Edit Mode'}` }
-        }),
-        currentUser?.isAdmin && React.createElement('button', { 
-          onClick: () => {
-            setShowSettings(!showSettings);
-            setShowMobileMenu(false);
-          },
-          className: 'mobile-menu-item',
-          dangerouslySetInnerHTML: { __html: `${icon('settings', 18)} Settings` }
-        }),
-        React.createElement('button', { 
-          onClick: () => {
-            exportToExcel();
-            setShowMobileMenu(false);
-          },
-          className: 'mobile-menu-item',
-          dangerouslySetInnerHTML: { __html: `${icon('export', 18)} Export Excel` }
-        }),
-        React.createElement('button', { 
-          onClick: () => {
-            handleLogout();
-            setShowMobileMenu(false);
-          },
-          className: 'mobile-menu-item logout',
-          dangerouslySetInnerHTML: { __html: `${icon('logout', 18)} Logout` }
-        })
-      )
+      // Professional Dropdown Menu
+      showMobileMenu && React.createElement('div', { className: 'professional-menu' },
+        React.createElement('div', { className: 'menu-header' },
+          React.createElement('div', { className: 'menu-user-info' },
+            React.createElement('div', { className: 'menu-user-name' }, currentUser?.username || 'User'),
+            React.createElement('div', { className: 'menu-user-role' }, 
+              currentUser?.isAdmin ? 'Administrator' : 'User'
+            )
+          ),
+          // Edit Mode Toggle inside menu
+          React.createElement('div', { className: 'menu-edit-toggle' },
+            React.createElement('span', { className: 'menu-toggle-label' }, 'Edit Mode'),
+            React.createElement('button', { 
+              onClick: () => {
+                setEditMode(!editMode);
+                setShowMobileMenu(false);
+              },
+              className: `menu-toggle ${editMode ? 'menu-toggle-active' : ''}`,
+              'aria-label': editMode ? 'Exit Edit Mode' : 'Enter Edit Mode'
+            },
+              React.createElement('div', { className: 'menu-toggle-slider' })
+            )
+          )
+        ),
+        React.createElement('div', { className: 'menu-items' },
+          currentUser?.isAdmin && React.createElement('button', { 
+            onClick: () => {
+              setShowSettings(!showSettings);
+              setShowMobileMenu(false);
+            },
+            className: 'menu-item',
+            dangerouslySetInnerHTML: { __html: `${icon('settings', 20)} <span>Admin Settings</span>` }
+          }),
+          React.createElement('button', { 
+            onClick: () => {
+              exportToExcel();
+              setShowMobileMenu(false);
+            },
+            className: 'menu-item',
+            dangerouslySetInnerHTML: { __html: `${icon('export', 20)} <span>Export to Excel</span>` }
+          }),
+          React.createElement('button', { 
+            onClick: () => {
+              handleLogout();
+              setShowMobileMenu(false);
+            },
+            className: 'menu-item menu-item-danger',
+            dangerouslySetInnerHTML: { __html: `${icon('logout', 20)} <span>Sign Out</span>` }
+          })
+        )
+      ),
+
+      // Menu Overlay
+      showMobileMenu && React.createElement('div', { 
+        className: 'menu-overlay',
+        onClick: () => setShowMobileMenu(false)
+      })
     ),
 
     error && React.createElement('div', { className: 'error-message' }, error),
 
-    React.createElement('div', { className: 'main' },
+    React.createElement('div', { className: `main ${showBDCreation ? 'bd-panel-open' : ''}` },
       React.createElement('div', { className: 'budget-card' },
         React.createElement('h2', null, 'Available Budget'),
         React.createElement('div', {
@@ -508,25 +508,28 @@ function App() {
         }, `$${availableBudget.toFixed(2)}`),
         React.createElement('button', {
           onClick: () => setShowAddFunds(true),
-          className: 'btn-link'
-        }, 'Add Funds')
+          className: 'btn btn-success btn-add-funds',
+          dangerouslySetInnerHTML: { __html: `${icon('money', 18)} Add Funds` }
+        })
+      ),
+
+      // Professional Action Bar
+      React.createElement('div', { className: 'action-bar' },
+        React.createElement('button', {
+          onClick: () => setShowTransactionForm(true),
+          className: 'btn btn-primary btn-action',
+          dangerouslySetInnerHTML: { __html: `${icon('add', 18)} New Transaction` }
+        }),
+        React.createElement('button', {
+          onClick: handleBDCreation,
+          className: `btn btn-action ${showBDCreation ? 'btn-warning' : 'btn-secondary'}`,
+          dangerouslySetInnerHTML: { __html: `${icon('bd', 18)} ${showBDCreation ? 'Cancel BD' : 'Assign BD#'}` }
+        })
       ),
 
       React.createElement('div', { className: 'transaction-section' },
         React.createElement('div', { className: 'transaction-header' },
-          React.createElement('h2', null, 'Transactions'),
-          React.createElement('div', { className: 'transaction-actions' },
-            React.createElement('button', {
-              onClick: () => setShowTransactionForm(true),
-              className: 'btn btn-primary',
-              dangerouslySetInnerHTML: { __html: `${icon('add', 18)} <span>New Transaction</span>` }
-            }),
-            React.createElement('button', {
-              onClick: handleBDCreation,
-              className: `btn ${showBDCreation ? 'btn-warning' : 'btn-secondary'}`,
-              dangerouslySetInnerHTML: { __html: `${icon('bd', 18)} <span>${showBDCreation ? 'Cancel BD' : 'Assign BD Numbers'}</span>` }
-            })
-          )
+          React.createElement('h2', null, 'Transaction History')
         ),
         
         budgetState.transactions.length === 0 ?
@@ -562,17 +565,19 @@ function App() {
                       isPositiveTransaction ? '-' : transaction.beneficiary
                     ),
                     React.createElement('td', { 
-                      className: 'col-article',
+                      className: `col-article ${isPositiveTransaction ? 'fund-addition-cell' : ''}`,
                       onClick: isPositiveTransaction && !editMode ? (e) => {
                         e.stopPropagation();
                         setSelectedTransaction(transaction);
-                      } : undefined,
-                      style: isPositiveTransaction && !editMode ? { 
-                        cursor: 'pointer', 
-                        color: '#2563eb', 
-                        textDecoration: 'underline' 
-                      } : {}
-                    }, isPositiveTransaction ? 'Fund Addition' : transaction.itemDescription),
+                      } : undefined
+                    }, 
+                      isPositiveTransaction ? 
+                        React.createElement('span', { 
+                          className: 'fund-addition-label',
+                          dangerouslySetInnerHTML: { __html: `${icon('money', 16)} Fund Addition` }
+                        }) :
+                        transaction.itemDescription
+                    ),
                     React.createElement('td', { 
                       className: 'col-amount',
                       style: isPositiveTransaction ? { color: 'green', fontWeight: 'bold' } : { color: 'red', fontWeight: 'bold' }
