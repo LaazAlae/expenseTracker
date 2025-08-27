@@ -48,20 +48,19 @@ function App() {
   const [bdNumber, setBdNumber] = useState('');
   const [showBDNumberPrompt, setShowBDNumberPrompt] = useState(false);
 
+  // Check authentication on load
   useEffect(() => {
     const token = localStorage.getItem('authToken');
-    if (token) {
+    const user = localStorage.getItem('currentUser');
+    
+    if (token && user) {
       try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        if (payload.exp && payload.exp < Date.now() / 1000) {
-          localStorage.removeItem('authToken');
-          setLoading(false);
-          return;
-        }
+        setCurrentUser(JSON.parse(user));
         setIsAuthenticated(true);
-        loadData();
+        fetchData();
       } catch (err) {
         localStorage.removeItem('authToken');
+        localStorage.removeItem('currentUser');
         setLoading(false);
       }
     } else {
@@ -69,85 +68,120 @@ function App() {
     }
   }, []);
 
-  const loadData = async () => {
+  const fetchData = async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      if (!token) return;
-
-      const response = await fetch(`${API_URL}/api/user-data`, {
+      const authToken = localStorage.getItem('authToken');
+      console.log('Fetching data with token:', authToken ? 'present' : 'missing');
+      
+      const response = await fetch('/api/user-data', {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+          'Authorization': `Bearer ${authToken}`
+        }
       });
-
-      if (response.status === 401) {
-        localStorage.removeItem('authToken');
-        setIsAuthenticated(false);
-        return;
+      
+      console.log('Response status:', response.status);
+      
+      if (response.ok) {
+        const userData = await response.json();
+        setData(userData);
+      } else {
+        if (response.status === 401) {
+          // Token is invalid, clear auth
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('currentUser');
+          setIsAuthenticated(false);
+          setCurrentUser(null);
+        }
+        throw new Error('Failed to fetch data');
       }
-
-      if (!response.ok) {
-        throw new Error('Failed to load data');
-      }
-
-      const userData = await response.json();
-      setData(userData);
-      setLoading(false);
     } catch (err) {
-      setError('Failed to load data');
+      console.error('Fetch data error:', err);
+      setError('Erreur lors du chargement des données');
+    } finally {
       setLoading(false);
     }
   };
 
-  const handleAuth = (token, user) => {
-    setIsAuthenticated(true);
+  const handleAuth = (user) => {
     setCurrentUser(user);
-    setError('');
-    loadData();
+    setIsAuthenticated(true);
+    setLoading(true);
+    fetchData();
   };
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('currentUser');
     setIsAuthenticated(false);
     setCurrentUser(null);
-    setError('');
+    setData({
+      budget: 0,
+      transactions: [],
+      beneficiaries: [],
+      itemDescriptions: ['Sky Cap'],
+      flightNumbers: ['AT200', 'AT201']
+    });
   };
 
   const handleAddFunds = async () => {
-    const amount = parseFloat(fundsAmount);
-    if (isNaN(amount) || amount <= 0) {
+    if (!fundsAmount || parseFloat(fundsAmount) <= 0) {
       showNotification('Veuillez saisir un montant valide', 'error');
       return;
     }
 
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${API_URL}/api/update-budget`, {
+      const authToken = localStorage.getItem('authToken');
+      const response = await fetch('/api/update-budget', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
         },
-        body: JSON.stringify({ budget: data.budget + amount }),
+        body: JSON.stringify({
+          budget: data.budget + parseFloat(fundsAmount)
+        })
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Échec de l\'ajout de fonds');
+      if (response.ok) {
+        showNotification('Fonds ajoutés avec succès', 'success');
+        setFundsAmount('');
+        setShowAddFunds(false);
+        fetchData();
+      } else {
+        throw new Error('Failed to add funds');
       }
+    } catch (err) {
+      showNotification('Erreur lors de l\'ajout des fonds', 'error');
+    }
+  };
 
-      setFundsAmount('');
-      setShowAddFunds(false);
-      loadData();
-      showNotification(`Fonds ajoutés avec succès: $${amount.toFixed(2)}`, 'success');
+  const handleAddTransaction = async (transactionData) => {
+    try {
+      const authToken = localStorage.getItem('authToken');
+      const response = await fetch('/api/add-transaction', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify(transactionData)
+      });
+
+      if (response.ok) {
+        showNotification('Transaction ajoutée avec succès', 'success');
+        setShowTransactionForm(false);
+        fetchData();
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add transaction');
+      }
     } catch (err) {
       showNotification(err.message, 'error');
     }
   };
 
   const handleBDCreation = () => {
-    setShowBDCreation(true);
+    setShowBDCreation(!showBDCreation);
     setSelectedForBD(new Set());
   };
 
@@ -176,112 +210,71 @@ function App() {
     }
 
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${API_URL}/api/assign-bd-number`, {
+      const authToken = localStorage.getItem('authToken');
+      const response = await fetch('/api/assign-bd-number', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify({
           transactionIds: Array.from(selectedForBD),
           bdNumber: bdNumber.trim()
-        }),
+        })
       });
 
-      if (!response.ok) {
+      if (response.ok) {
+        const result = await response.json();
+        showNotification(result.message, 'success');
+        setShowBDNumberPrompt(false);
+        setShowBDCreation(false);
+        setSelectedForBD(new Set());
+        setBdNumber('');
+        fetchData();
+      } else {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Échec de l\'attribution du numéro BD');
+        throw new Error(errorData.error || 'Failed to assign BD number');
       }
-
-      const count = selectedForBD.size;
-      setSelectedForBD(new Set());
-      setBdNumber('');
-      setShowBDCreation(false);
-      setShowBDNumberPrompt(false);
-      loadData();
-      showNotification(`Numéro BD attribué à ${count} transaction${count > 1 ? 's' : ''}`, 'success');
     } catch (err) {
       showNotification(err.message, 'error');
     }
   };
 
   const cancelBDCreation = () => {
-    setSelectedForBD(new Set());
-    setBdNumber('');
     setShowBDCreation(false);
-    setShowBDNumberPrompt(false);
+    setSelectedForBD(new Set());
   };
 
-  const handleAddTransaction = async (transaction) => {
+  const exportToExcel = async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${API_URL}/api/add-transaction`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(transaction),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Échec de l\'ajout de la transaction');
-      }
-
-      setShowTransactionForm(false);
-      loadData();
-      showNotification('Transaction ajoutée avec succès', 'success');
-    } catch (err) {
-      showNotification(err.message, 'error');
-    }
-  };
-
-  const exportToExcel = () => {
-    try {
+      const workbook = XLSX.utils.book_new();
       const worksheetData = [
-        ['Date', 'Bénéficiaire', 'Description Item', 'Facture N', 'Date de Facture', 'Montant', 'Solde Restant', 'N de Vol', 'Bagages', 'Observations', 'Numéro BD', 'Nom d\'utilisateur'],
-        ...data.transactions.map(transaction => [
-          new Date(transaction.dateOfReimbursement).toLocaleDateString('fr-FR'),
-          transaction.beneficiary || '-',
-          transaction.itemDescription || '-',
-          transaction.invoiceNumber || '-',
-          transaction.dateOfPurchase ? new Date(transaction.dateOfPurchase).toLocaleDateString('fr-FR') : '-',
-          transaction.amount || '-',
-          '-', // Solde Restant - always dash
-          transaction.flightNumber || '-',
-          transaction.numberOfLuggage || '-',
-          transaction.observations || '-',
-          transaction.bdNumber || '-',
-          transaction.username || currentUser?.username || 'Inconnu'
-        ])
+        ['Date de Remboursement', 'Bénéficiaire', 'Description Article', 'Numéro Facture', 'Date d\'Achat', 'Montant', 'Observations', 'Numéro de Vol', 'Nombre de Bagages', 'BD#']
       ];
 
+      data.transactions
+        .filter(t => t.type !== 'fund_addition')
+        .forEach(transaction => {
+          worksheetData.push([
+            transaction.dateOfReimbursement || '-',
+            transaction.beneficiary || '-',
+            transaction.itemDescription || '-',
+            transaction.invoiceNumber || '-',
+            transaction.dateOfPurchase || '-',
+            transaction.amount || 0,
+            transaction.observations || '-',
+            transaction.flightNumber || '-',
+            transaction.numberOfLuggage || '-',
+            transaction.bdNumber || '-'
+          ]);
+        });
+
       const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-      
-      // Apply gray background to dash cells
-      const range = XLSX.utils.decode_range(worksheet['!ref']);
-      for (let R = range.s.r + 1; R <= range.e.r; ++R) {
-        for (let C = range.s.c; C <= range.e.c; ++C) {
-          const cellAddress = XLSX.utils.encode_cell({r: R, c: C});
-          const cell = worksheet[cellAddress];
-          if (cell && cell.v === '-') {
-            worksheet[cellAddress].s = {
-              fill: {
-                fgColor: { rgb: "E8E8E8" }
-              }
-            };
-          }
-        }
-      }
-      
-      const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Transactions');
-      XLSX.writeFile(workbook, `rapport-depenses-${new Date().toISOString().split('T')[0]}.xlsx`);
-      showNotification('Rapport Excel exporté avec succès', 'success');
+      XLSX.writeFile(workbook, `transactions_${new Date().toISOString().split('T')[0]}.xlsx`);
+      showNotification('Fichier Excel exporté avec succès', 'success');
     } catch (err) {
-      showNotification('Échec de l\'export vers Excel', 'error');
+      showNotification('Erreur lors de l\'export Excel', 'error');
     }
   };
 
@@ -292,16 +285,14 @@ function App() {
   if (loading) {
     return React.createElement('div', { className: 'app' },
       React.createElement('div', { style: { padding: '50px', textAlign: 'center' } },
-'Chargement...'
+        'Chargement...'
       )
     );
   }
 
   const totalExpenses = data.transactions
-    .filter(transaction => transaction.type !== 'fund_addition')
-    .reduce((sum, transaction) => sum + transaction.amount, 0);
-  
-  // Budget already includes fund additions from server, so just subtract expenses
+    .filter(t => t.type !== 'fund_addition')
+    .reduce((sum, t) => sum + t.amount, 0);
   const remainingBudget = data.budget - totalExpenses;
 
   return React.createElement('div', { className: 'app' },
@@ -330,83 +321,100 @@ function App() {
         }, `$${remainingBudget.toFixed(2)}`),
         React.createElement('button', {
           onClick: () => setShowAddFunds(true),
-          className: 'btn btn-primary'
-        }, 
-          React.createElement('span', { className: 'icon icon-money' }),
-          'Ajouter des Fonds'
-        )
+          className: 'btn-link'
+        }, 'Ajouter des Fonds')
       ),
 
       React.createElement('div', { className: 'transaction-section' },
         React.createElement('div', { className: 'transaction-header' },
           React.createElement('h2', null, 'Transactions'),
-          React.createElement('button', {
-            onClick: handleBDCreation,
-            className: 'btn'
-          }, 
-            React.createElement('span', { className: 'icon icon-bd' }),
-            'Créer BD'
+          React.createElement('div', { style: { display: 'flex', gap: '8px' } },
+            React.createElement('button', {
+              onClick: () => setShowTransactionForm(true),
+              className: 'btn btn-primary'
+            }, 
+              React.createElement('span', { className: 'icon icon-add' }),
+              'Nouvelle Transaction'
+            ),
+            React.createElement('button', {
+              onClick: handleBDCreation,
+              className: 'btn'
+            }, 
+              React.createElement('span', { className: 'icon icon-bd' }),
+              'Créer BD'
+            )
           )
         ),
         
         data.transactions.length === 0 ?
           React.createElement('div', { className: 'empty-state' }, 'Aucune transaction pour le moment') :
-          React.createElement('table', { className: 'transaction-table' },
-            React.createElement('thead', null,
-              React.createElement('tr', null,
-                React.createElement('th', null, 'Date'),
-                React.createElement('th', null, 'Bénéficiaire'),
-                React.createElement('th', null, 'Article'),
-                React.createElement('th', null, 'Montant'),
-                React.createElement('th', null, 'BD#'),
-                showBDCreation && React.createElement('th', null, 'Sélectionner')
-              )
-            ),
-            React.createElement('tbody', null,
-              data.transactions.map(transaction => {
-                const hasBD = transaction.bdNumber;
-                const isSelected = selectedForBD.has(transaction.id);
-
-                const isPositiveTransaction = transaction.type === 'fund_addition';
-                
-                return React.createElement('tr', {
-                  key: transaction.id,
-                  onClick: showBDCreation ? undefined : () => setSelectedTransaction(transaction),
-                  className: isPositiveTransaction ? 'fund-addition-row' : ''
-                },
-                  React.createElement('td', null,
-                    new Date(transaction.dateOfReimbursement).toLocaleDateString()
-                  ),
-                  React.createElement('td', null, isPositiveTransaction ? '-' : transaction.beneficiary),
-                  React.createElement('td', null, transaction.itemDescription),
-                  React.createElement('td', { 
-                    style: isPositiveTransaction ? { color: 'green', fontWeight: 'bold' } : { color: 'red', fontWeight: 'bold' }
-                  }, `${isPositiveTransaction ? '+' : '-'}$${transaction.amount.toFixed(2)}`),
-                  React.createElement('td', null, transaction.bdNumber || '-'),
-                  showBDCreation && React.createElement('td', {
-                    onClick: (e) => {
-                      e.stopPropagation();
-                      if (!hasBD && !isPositiveTransaction) toggleTransactionForBD(transaction.id);
-                    }
+          React.createElement('div', { className: 'transaction-table-container' },
+            React.createElement('table', { className: 'transaction-table' },
+              React.createElement('thead', null,
+                React.createElement('tr', null,
+                  React.createElement('th', { className: 'col-date' }, 'Date'),
+                  React.createElement('th', { className: 'col-beneficiary' }, 'Bénéficiaire'),
+                  React.createElement('th', { className: 'col-article' }, 'Article'),
+                  React.createElement('th', { className: 'col-amount' }, 'Montant'),
+                  React.createElement('th', { className: 'col-bd' }, 'BD#'),
+                  showBDCreation && React.createElement('th', null, 'Sélectionner')
+                )
+              ),
+              React.createElement('tbody', null,
+                data.transactions.map(transaction => {
+                  const hasBD = transaction.bdNumber;
+                  const isSelected = selectedForBD.has(transaction.id);
+                  const isPositiveTransaction = transaction.type === 'fund_addition';
+                  
+                  return React.createElement('tr', {
+                    key: transaction.id,
+                    onClick: showBDCreation || isPositiveTransaction ? undefined : () => setSelectedTransaction(transaction),
+                    className: isPositiveTransaction ? 'fund-addition-row' : ''
                   },
-                    React.createElement('div', {
-                      className: `bd-select-button ${isSelected ? 'selected' : ''} ${hasBD || isPositiveTransaction ? 'disabled' : ''}`
+                    React.createElement('td', { className: 'col-date' },
+                      new Date(transaction.dateOfReimbursement).toLocaleDateString()
+                    ),
+                    React.createElement('td', { className: 'col-beneficiary' }, 
+                      isPositiveTransaction ? '-' : transaction.beneficiary
+                    ),
+                    React.createElement('td', { 
+                      className: 'col-article',
+                      onClick: isPositiveTransaction ? (e) => {
+                        e.stopPropagation();
+                        setSelectedTransaction(transaction);
+                      } : undefined,
+                      style: isPositiveTransaction ? { 
+                        cursor: 'pointer', 
+                        color: '#2563eb', 
+                        textDecoration: 'underline' 
+                      } : {}
+                    }, isPositiveTransaction ? 'Ajout de fonds' : transaction.itemDescription),
+                    React.createElement('td', { 
+                      className: 'col-amount',
+                      style: isPositiveTransaction ? { color: 'green', fontWeight: 'bold' } : { color: 'red', fontWeight: 'bold' }
+                    }, `${isPositiveTransaction ? '+' : '-'}$${transaction.amount.toFixed(2)}`),
+                    React.createElement('td', { className: 'col-bd' }, transaction.bdNumber || '-'),
+                    showBDCreation && React.createElement('td', {
+                      onClick: (e) => {
+                        e.stopPropagation();
+                        if (!hasBD && !isPositiveTransaction) toggleTransactionForBD(transaction.id);
+                      }
                     },
-                      isPositiveTransaction ? '−' : (hasBD ? '✓' : (isSelected ? '−' : '+'))
+                      React.createElement('div', {
+                        className: `bd-select-button ${isSelected ? 'selected' : ''} ${hasBD || isPositiveTransaction ? 'disabled' : ''}`
+                      },
+                        isPositiveTransaction ? '−' : (hasBD ? '✓' : (isSelected ? '−' : '+'))
+                      )
                     )
-                  )
-                );
-              })
+                  );
+                })
+              )
             )
           )
       )
     ),
 
-    React.createElement('button', {
-      onClick: () => setShowTransactionForm(true),
-      className: 'fab'
-    }, React.createElement('span', { className: 'icon icon-add' })),
-
+    // Modals
     showAddFunds && React.createElement('div', { className: 'modal-overlay' },
       React.createElement('div', { className: 'modal' },
         React.createElement('div', { className: 'modal-header' },

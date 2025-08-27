@@ -639,3 +639,8 @@ function TransactionDetails({ transaction, onClose }) {
     )
   );
 }
+
+// Make components available globally
+window.TransactionForm = TransactionForm;
+window.TransactionDetails = TransactionDetails;
+window.AuthForm = AuthForm;

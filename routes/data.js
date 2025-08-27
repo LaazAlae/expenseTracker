@@ -18,7 +18,7 @@ const transactionValidation = [
   body('beneficiary').trim().isLength({ min: 1, max: 100 }),
   body('itemDescription').trim().isLength({ min: 1, max: 200 }),
   body('invoiceNumber').trim().isLength({ min: 1, max: 50 }),
-  body('amount').isNumeric().isFloat({ min: 0.01, max: 999999 }),
+  body('amount').isNumeric().isFloat({ min: 0.01, max: 999999999 }),
   body('dateOfReimbursement').isISO8601(),
   body('dateOfPurchase').isISO8601(),
   body('observations').optional().isLength({ max: 500 }),
