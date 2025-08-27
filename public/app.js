@@ -500,8 +500,8 @@ function App() {
 
     error && React.createElement('div', { className: 'error-message' }, error),
 
-    React.createElement('div', { className: `main ${showBDCreation ? 'bd-panel-open' : ''}` },
-      React.createElement('div', { className: `budget-card ${showBDCreation ? 'compact-mode' : ''}` },
+    React.createElement('div', { className: 'main' },
+      React.createElement('div', { className: 'budget-card' },
         React.createElement('h2', null, 'Available Budget'),
         React.createElement('div', {
           className: `budget-amount${availableBudget <= 0 ? ' negative' : ''}`
@@ -514,7 +514,7 @@ function App() {
       ),
 
       // Professional Action Bar
-      React.createElement('div', { className: `action-bar ${showBDCreation ? 'bd-modal-active' : ''}` },
+      React.createElement('div', { className: 'action-bar' },
         React.createElement('button', {
           onClick: () => setShowTransactionForm(true),
           className: 'btn btn-primary btn-action',
@@ -527,7 +527,7 @@ function App() {
         })
       ),
 
-      React.createElement('div', { className: `transaction-section ${showBDCreation ? 'bd-modal-active' : ''}` },
+      React.createElement('div', { className: 'transaction-section' },
         React.createElement('div', { className: 'transaction-header' },
           React.createElement('h2', null, 'Transaction History')
         ),
@@ -664,37 +664,13 @@ function App() {
       onCancel: () => setEditingTransaction(null)
     }),
 
-    showBDCreation && React.createElement('div', { className: 'bd-assignment-panel' },
-      React.createElement('div', { className: 'bd-panel-header' },
-        React.createElement('h3', { dangerouslySetInnerHTML: { __html: `${icon('bd', 24)} BD Number Assignment` } }),
-        React.createElement('p', null, 'Select transactions to assign BD numbers. You can reassign existing BD numbers.')
-      ),
-      React.createElement('div', { className: 'bd-panel-content' },
-        React.createElement('div', { className: 'bd-selection-info' },
-          React.createElement('span', { className: 'selected-count' }, 
-            `${selectedForBD.size} transaction${selectedForBD.size !== 1 ? 's' : ''} selected`
-          ),
-          selectedForBD.size > 0 && React.createElement('span', { className: 'selected-transactions' },
-            'Ready for BD assignment'
-          )
-        ),
-        React.createElement('div', { className: 'bd-panel-actions' },
-          React.createElement('button', {
-            onClick: submitBDSelection,
-            className: 'btn btn-primary btn-lg',
-            disabled: selectedForBD.size === 0,
-            dangerouslySetInnerHTML: { __html: `${icon('check', 18)} Assign BD Number` }
-          }),
-          React.createElement('button', {
-            onClick: () => {
-              setShowBDCreation(false);
-              setSelectedForBD(new Set());
-            },
-            className: 'btn btn-secondary btn-lg',
-            dangerouslySetInnerHTML: { __html: `${icon('cancel', 18)} Cancel` }
-          })
-        )
-      )
+    showBDCreation && React.createElement('div', { className: 'bd-confirm-panel' },
+      React.createElement('button', {
+        onClick: submitBDSelection,
+        disabled: selectedForBD.size === 0,
+        className: 'btn btn-primary btn-confirm-bd',
+        dangerouslySetInnerHTML: { __html: `${icon('check', 16)} Confirm Selection (${selectedForBD.size})` }
+      })
     ),
 
     showBDNumberPrompt && React.createElement(BDNumberModal, {

@@ -825,11 +825,6 @@ body {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .header {
-    padding: 12px 16px;
-    flex-direction: column;
-    gap: 8px;
-  }
   
   .main {
     padding: 16px 12px;
@@ -1304,18 +1299,90 @@ body {
   align-items: center;
 }
 
-/* BD Assignment Panel */
-.bd-assignment-panel {
+/* Small BD Confirm Panel */
+.bd-confirm-panel {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
   background: white;
-  border-top: 3px solid #3b82f6;
-  border-radius: 16px 16px 0 0;
-  box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.1);
+  border-radius: 25px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   z-index: 500;
-  animation: slideUp 0.3s ease;
+  animation: slideUpFromBottom 0.3s ease;
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.btn-confirm-bd {
+  height: 36px;
+  min-width: 160px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 18px;
+  padding: 0 16px;
+  border: none;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: white;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-confirm-bd:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+.btn-confirm-bd:disabled {
+  opacity: 0.5;
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.btn-cancel-bd {
+  height: 36px;
+  min-width: 80px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 18px;
+  padding: 0 14px;
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #6b7280;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-cancel-bd:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .bd-confirm-panel {
+    position: fixed !important;
+    bottom: 16px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    animation: mobileSlideUpFromBottom 0.3s ease !important;
+    padding: 6px;
+    gap: 6px;
+  }
+  
+  .btn-confirm-bd {
+    height: 32px;
+    min-width: 140px;
+    font-size: 12px;
+    padding: 0 12px;
+  }
+  
+  .btn-cancel-bd {
+    height: 32px;
+    min-width: 70px;
+    font-size: 12px;
+    padding: 0 10px;
+  }
 }
 
 .bd-panel-header {
@@ -1378,14 +1445,29 @@ body {
   font-weight: 600;
 }
 
-@keyframes slideUp {
+@keyframes slideUpFromBottom {
   from {
     opacity: 0;
-    transform: translateY(100%);
+    transform: translateX(-50%) translateY(100%);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes mobileSlideUpFromBottom {
+  0% {
+    opacity: 0;
+    bottom: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  100% {
+    opacity: 1;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
   }
 }
 
@@ -1475,21 +1557,21 @@ body {
 }
 
 .btn-secondary {
-  background: #6b7280;
-  border: 1px solid #6b7280;
+  background: #99afdb;
+  border: 1px solid #c0cbe1;
 }
 
 .btn-secondary:hover {
-  background: #4b5563;
+  background: #a2badb;
 }
 
 .btn-warning {
-  background: #f59e0b;
-  border: 1px solid #f59e0b;
+  background: #f17474;
+  border: 1px solid #edb0b0;
 }
 
 .btn-warning:hover {
-  background: #d97706;
+  background: #f18a8a;
 }
 
 .btn-info {
@@ -1503,7 +1585,7 @@ body {
 
 .btn-danger {
   background: #ef4444;
-  border: 1px solid #ef4444;
+  border: 1px solid #d88f8f;
 }
 
 .btn-danger:hover {
@@ -1715,6 +1797,16 @@ body {
     align-items: center;
   }
   
+  .hamburger-menu-btn {
+    margin: 0;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+  }
+  
   /* Mobile Professional Menu */
   .professional-menu {
     right: 16px;
@@ -1738,7 +1830,10 @@ body {
   
   /* Mobile Edit Toggle */
   .edit-toggle-container {
-    margin-right: 12px;
+    margin: 0 8px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
   
   .edit-toggle-label {
@@ -1985,167 +2080,11 @@ body {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
-  /* Budget card shrinking when BD panel is open */
-  .budget-card.compact-mode {
-    padding: 12px 16px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    transform: scale(0.85);
-    margin-bottom: 8px;
-  }
-  
-  .budget-card.compact-mode h2 {
-    font-size: clamp(9px, 2vw, 11px);
-    margin-bottom: 4px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .budget-card.compact-mode .budget-amount {
-    font-size: clamp(18px, 4vw, 24px);
-    margin: 4px 0 8px 0;
-  }
-  
-  .budget-card.compact-mode .btn-add-funds {
-    height: clamp(24px, 4vw, 28px);
-    font-size: clamp(8px, 2vw, 10px);
-    min-width: clamp(80px, 15vw, 90px);
-    margin-top: 8px;
-    padding: 0 clamp(8px, 2vw, 12px);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  /* Transaction section adjustments */
-  .transaction-section.bd-modal-active {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  /* Action bar adjustments */
-  .action-bar.bd-modal-active {
-    padding: 6px 0;
-    margin-bottom: 6px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .action-bar.bd-modal-active .btn-action {
-    height: 28px;
-    font-size: 9px;
-  }
 }
 
-/* Desktop layout adjustments for BD panel */
-@media (min-width: 769px) {
-  .main.bd-panel-open {
-    padding-bottom: 0;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .budget-card.compact-mode {
-    padding: 16px 20px;
-    transform: scale(0.9);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    margin-bottom: 12px;
-  }
-  
-  .budget-card.compact-mode h2 {
-    font-size: clamp(10px, 2.5vw, 12px);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .budget-card.compact-mode .budget-amount {
-    font-size: clamp(24px, 4vw, 32px);
-    margin: 8px 0 12px 0;
-  }
-  
-  .transaction-section.bd-modal-active {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .action-bar.bd-modal-active {
-    padding: 10px 0;
-    margin-bottom: 12px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .action-bar.bd-modal-active .btn-action {
-    height: 36px;
-    font-size: 11px;
-  }
-}
 
-/* Edge detection for ultra-responsive BD modal */
-@media (max-height: 700px) {
-  .budget-card.compact-mode {
-    transform: scale(0.8);
-    padding: 10px 14px;
-  }
-  
-  .budget-card.compact-mode .budget-amount {
-    font-size: clamp(16px, 3.5vw, 22px);
-  }
-  
-  .transaction-section.bd-modal-active {
-    /* No max-height restrictions - let content flow naturally */
-  }
-  
-  .action-bar.bd-modal-active {
-    padding: 4px 0;
-    margin-bottom: 4px;
-  }
-  
-  .action-bar.bd-modal-active .btn-action {
-    height: 26px;
-    font-size: 8px;
-  }
-}
 
-/* Edge detection for very small screens */
-@media (max-height: 600px) {
-  .budget-card.compact-mode {
-    transform: scale(0.75);
-    padding: 8px 12px;
-  }
-  
-  .budget-card.compact-mode h2 {
-    font-size: 10px;
-    margin-bottom: 2px;
-  }
-  
-  .budget-card.compact-mode .budget-amount {
-    font-size: clamp(14px, 3vw, 18px);
-    margin: 2px 0 4px 0;
-  }
-  
-  .budget-card.compact-mode .btn-add-funds {
-    height: clamp(20px, 3.5vw, 24px);
-    font-size: clamp(7px, 1.8vw, 9px);
-    min-width: clamp(70px, 12vw, 80px);
-    padding: 0 clamp(6px, 1.5vw, 8px);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .transaction-section.bd-modal-active {
-    /* No max-height restrictions - let content flow naturally */
-  }
-  
-  .action-bar.bd-modal-active .btn-action {
-    height: 24px;
-    font-size: 7px;
-  }
-}
 
-/* Landscape mode edge detection */
-@media (max-height: 500px) and (orientation: landscape) {
-  .budget-card.compact-mode {
-    transform: scale(0.7);
-    padding: 6px 10px;
-  }
-  
-  .budget-card.compact-mode .budget-amount {
-    font-size: clamp(12px, 2.5vw, 16px);
-  }
-  
-  .transaction-section.bd-modal-active {
-    /* No max-height restrictions - let content flow naturally */
-  }
 
 /* Mobile Admin Panel */
 @media (max-width: 768px) {
@@ -2177,14 +2116,6 @@ body {
 
 /* Small Mobile Phones */
 @media (max-width: 480px) {
-  .header {
-    padding: 14px 16px;
-  }
-  
-  .header h1 {
-    font-size: 16px;
-    font-weight: 700;
-  }
   
   .main {
     padding: 12px 16px;
@@ -2640,17 +2571,4 @@ body.mobile-device .transaction-table td {
   }
 }
 
-/* Enhanced BD Modal positioning - maintains consistent distance from bottom */
-@media (max-width: 768px) {
-  .main.bd-panel-open {
-    padding-bottom: calc(42vh + env(safe-area-inset-bottom, 0px));
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-}
-
-@media (min-width: 769px) {
-  .main.bd-panel-open {
-    padding-bottom: 35vh;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-}
+/* No content pushing needed for floating confirm panel */
