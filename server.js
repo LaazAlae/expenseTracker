@@ -1,18 +1,21 @@
 const express = require('express');
+const http = require('http');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const compression = require('compression');
 const path = require('path');
 const authRoutes = require('./routes/auth');
-const dataRoutes = require('./routes/data');
 const { loadData } = require('./services/database');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 const { setupProcessSecurity } = require('./security/process');
+const websocketManager = require('./services/websocket');
+const budgetManager = require('./services/budget-manager');
 
 // Initialize process security
 setupProcessSecurity();
 
 const app = express();
+const server = http.createServer(app);
 
 // Security middleware
 app.use(helmet({
@@ -58,9 +61,8 @@ app.use(express.static('public', {
   }
 }));
 
-// Routes
+// Routes (only auth routes now, data handled by WebSocket)
 app.use('/api', authRoutes);
-app.use('/api', dataRoutes);
 
 // Serve main application
 app.get('/', (req, res) => {
@@ -73,9 +75,18 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 
+// Initialize WebSocket
+websocketManager.initialize(server);
+
 // Initialize and start server
-loadData().then(() => {
-  app.listen(PORT, () => {
-    console.log(` Secure expense tracker running on port ${PORT}`);
+loadData().then(async () => {
+  // Clean up old budget fields for consistency
+  await budgetManager.cleanupOldBudgetFields();
+  
+  server.listen(PORT, () => {
+    console.log(`🚀 Secure expense tracker running on port ${PORT}`);
+    console.log(`🔒 WebSocket enabled for real-time communication`);
+    console.log(`💰 Centralized budget management active`);
+    console.log(`🔧 Ready for enterprise-grade consistency!`);
   });
 }).catch(console.error);

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Suivi des Dépenses</title>
+  <title>Enterprise Expense Tracker</title>
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
@@ -12,6 +12,7 @@
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
   
   <script>
     const { useState, useEffect } = React;

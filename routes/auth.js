@@ -26,62 +26,11 @@ const loginValidation = [
   body('password').notEmpty()
 ];
 
-// Register endpoint
-router.post('/register', registerValidation, async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ error: errors.array()[0].msg });
-    }
-
-    const { username, password } = req.body;
-    const cleanUsername = sanitize(username);
-    
-    const data = getData();
-    
-    if (data.users[cleanUsername]) {
-      return res.status(400).json({ error: 'Username already exists' });
-    }
-    
-    const hashedPassword = await bcrypt.hash(password, 12);
-    const userId = Date.now().toString();
-    
-    data.users[cleanUsername] = {
-      id: userId,
-      username: cleanUsername,
-      password: hashedPassword,
-      createdAt: new Date().toISOString(),
-      loginAttempts: 0,
-      lockUntil: null
-    };
-    
-    data.userData[userId] = {
-      budget: 0,
-      transactions: [],
-      beneficiaries: [],
-      itemDescriptions: ['Sky Cap'],
-      flightNumbers: ['AT200', 'AT201']
-    };
-    
-    await saveData();
-    
-    const token = jwt.sign(
-      { userId, username: cleanUsername },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    );
-    
-    // Clear sensitive variables from memory
-    clearSensitiveVariables(password);
-    
-    res.json({ 
-      token, 
-      user: { id: userId, username: cleanUsername }
-    });
-  } catch (err) {
-    console.error('Registration error:', err);
-    res.status(500).json({ error: 'Registration failed' });
-  }
+// Registration disabled - invite-only system
+router.post('/register', (req, res) => {
+  res.status(403).json({ 
+    error: 'Registration is disabled. Please contact an administrator for an invitation.' 
+  });
 });
 
 // Login endpoint
@@ -129,8 +78,12 @@ router.post('/login', loginValidation, async (req, res) => {
     const token = jwt.sign(
       { userId: user.id, username: user.username },
       JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '30d' } // Extended session for persistence
     );
+
+    // Update last login
+    user.lastLogin = new Date().toISOString();
+    await saveData();
     
     // Clear sensitive variables from memory
     clearSensitiveVariables(password);
@@ -142,6 +95,46 @@ router.post('/login', loginValidation, async (req, res) => {
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+// Token validation endpoint for session persistence
+router.post('/validate-token', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+    
+    const data = getData();
+    const user = Object.values(data.users).find(u => u.id === decoded.userId);
+    
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+
+    // Check if account is locked
+    if (user.lockUntil && user.lockUntil > Date.now()) {
+      return res.status(429).json({ error: 'Account temporarily locked' });
+    }
+
+    // Return user data with admin status
+    const isAdmin = user.id === Object.values(data.users)[0]?.id;
+    
+    res.json({
+      valid: true,
+      user: { 
+        id: user.id, 
+        username: user.username,
+        isAdmin 
+      }
+    });
+  } catch (err) {
+    console.error('Token validation error:', err);
+    res.status(401).json({ error: 'Invalid token' });
   }
 });
 
