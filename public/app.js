@@ -937,6 +937,293 @@ if (window.PerformanceObserver) {
   }
 }
 
+// PROFESSIONAL MOBILE MODAL MANAGEMENT SYSTEM
+class MobileModalManager {
+  constructor() {
+    this.isModalOpen = false;
+    this.currentModal = null;
+    this.originalBodyStyle = {};
+    this.keyboardHeight = 0;
+    this.lastFocusedElement = null;
+    
+    this.setupEventListeners();
+  }
+  
+  setupEventListeners() {
+    // Keyboard detection for mobile
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', () => {
+        const keyboardHeight = window.innerHeight - window.visualViewport.height;
+        this.keyboardHeight = Math.max(0, keyboardHeight);
+        document.documentElement.style.setProperty('--keyboard-height', `${this.keyboardHeight}px`);
+        
+        if (this.keyboardHeight > 0) {
+          document.body.classList.add('keyboard-visible');
+        } else {
+          document.body.classList.remove('keyboard-visible');
+        }
+      });
+    }
+    
+    // Handle orientation changes
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        this.updateViewportDimensions();
+        if (this.isModalOpen) {
+          this.repositionModal();
+        }
+      }, 100);
+    });
+    
+    // Handle resize events
+    window.addEventListener('resize', () => {
+      this.updateViewportDimensions();
+    });
+    
+    // Prevent background scroll when modal is open
+    document.addEventListener('touchmove', (e) => {
+      if (this.isModalOpen && !this.isScrollableElement(e.target)) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+  }
+  
+  openModal(modalElement) {
+    this.isModalOpen = true;
+    this.currentModal = modalElement;
+    this.lastFocusedElement = document.activeElement;
+    
+    // Store original body styles
+    this.originalBodyStyle = {
+      overflow: document.body.style.overflow,
+      position: document.body.style.position,
+      width: document.body.style.width,
+      height: document.body.style.height
+    };
+    
+    // Lock scroll and position
+    document.body.classList.add('modal-open');
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    
+    // Add mobile-specific classes (but don't interfere with positioning)
+    if (responsiveManager.isMobile) {
+      modalElement.classList.add('mobile-active');
+      modalElement.querySelector('.modal-overlay')?.classList.add('mobile-active');
+    }
+    
+    // Update viewport dimensions but let CSS handle positioning
+    this.updateViewportDimensions();
+    
+    // Focus management
+    setTimeout(() => {
+      const firstFocusable = modalElement.querySelector('input, button, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (firstFocusable) {
+        firstFocusable.focus();
+      }
+    }, 100);
+  }
+  
+  closeModal() {
+    if (!this.isModalOpen) return;
+    
+    this.isModalOpen = false;
+    
+    // Restore original body styles
+    Object.keys(this.originalBodyStyle).forEach(key => {
+      if (this.originalBodyStyle[key]) {
+        document.body.style[key] = this.originalBodyStyle[key];
+      } else {
+        document.body.style[key] = '';
+      }
+    });
+    
+    document.body.classList.remove('modal-open');
+    
+    // Remove mobile classes
+    if (this.currentModal) {
+      this.currentModal.classList.remove('mobile-active');
+      this.currentModal.querySelector('.modal-overlay')?.classList.remove('mobile-active');
+    }
+    
+    // Restore focus
+    if (this.lastFocusedElement) {
+      this.lastFocusedElement.focus();
+    }
+    
+    this.currentModal = null;
+    this.lastFocusedElement = null;
+  }
+  
+  updateViewportDimensions() {
+    const actualWidth = window.innerWidth;
+    const actualHeight = window.innerHeight;
+    
+    document.documentElement.style.setProperty('--actual-width', `${actualWidth}px`);
+    document.documentElement.style.setProperty('--actual-height', `${actualHeight}px`);
+    document.documentElement.style.setProperty('--vh', `${actualHeight * 0.01}px`);
+  }
+  
+  repositionModal() {
+    if (!this.currentModal) return;
+    
+    const modal = this.currentModal.querySelector('.modal');
+    if (!modal) return;
+    
+    // DON'T MANUALLY POSITION - Let CSS flexbox handle centering
+    // Just update viewport dimensions for CSS calculations
+    this.updateViewportDimensions();
+    
+    // Only adjust for keyboard if present
+    if (this.keyboardHeight > 0) {
+      const overlay = this.currentModal;
+      if (overlay) {
+        overlay.style.paddingBottom = `${this.keyboardHeight}px`;
+      }
+    }
+  }
+  
+  isScrollableElement(element) {
+    const scrollableSelectors = [
+      '.modal-body',
+      '.autocomplete-dropdown',
+      '[data-scrollable]'
+    ];
+    
+    let current = element;
+    while (current && current !== document.body) {
+      if (scrollableSelectors.some(selector => current.matches && current.matches(selector))) {
+        return true;
+      }
+      current = current.parentElement;
+    }
+    return false;
+  }
+}
+
+// Add mobile modal manager to the existing responsive manager
+if (responsiveManager) {
+  responsiveManager.modalManager = new MobileModalManager();
+  
+  // Add modal management methods
+  responsiveManager.openModal = function(modalElement) {
+    this.modalManager.openModal(modalElement);
+  };
+  
+  responsiveManager.closeModal = function() {
+    this.modalManager.closeModal();
+  };
+}
+
+// AUTO-DETECT AND ENHANCE EXISTING MODALS
+function enhanceModalForMobile(modalElement) {
+  if (!responsiveManager.isMobile) return;
+  
+  const modal = modalElement.querySelector('.modal');
+  const inputs = modalElement.querySelectorAll('input, select, textarea');
+  
+  // Add mobile classes
+  modalElement.classList.add('mobile-enhanced');
+  modal?.classList.add('mobile-optimized');
+  
+  // Enhance form inputs for mobile
+  inputs.forEach(input => {
+    // Ensure proper input type for mobile keyboards
+    if (input.type === 'text' && input.name && input.name.includes('email')) {
+      input.type = 'email';
+    }
+    if (input.type === 'text' && input.name && input.name.includes('phone')) {
+      input.type = 'tel';
+    }
+    
+    // Add mobile-friendly attributes
+    input.setAttribute('autocomplete', input.getAttribute('autocomplete') || 'off');
+    input.setAttribute('autocorrect', 'off');
+    input.setAttribute('autocapitalize', 'off');
+    input.setAttribute('spellcheck', 'false');
+    
+    // Ensure minimum touch target size
+    if (getComputedStyle(input).minHeight < '44px') {
+      input.style.minHeight = '44px';
+    }
+  });
+  
+  // Enhance buttons for mobile
+  const buttons = modalElement.querySelectorAll('button, .btn');
+  buttons.forEach(button => {
+    if (getComputedStyle(button).minHeight < '44px') {
+      button.style.minHeight = '44px';
+    }
+    if (getComputedStyle(button).minWidth < '44px') {
+      button.style.minWidth = '44px';
+    }
+  });
+}
+
+// AUTO-ENHANCE ALL EXISTING MODALS ON PAGE LOAD
+document.addEventListener('DOMContentLoaded', () => {
+  const existingModals = document.querySelectorAll('.modal-overlay');
+  existingModals.forEach(enhanceModalForMobile);
+});
+
+// OBSERVE FOR NEW MODALS BEING ADDED TO DOM
+if (window.MutationObserver) {
+  const modalObserver = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node.nodeType === 1) { // Element node
+          if (node.classList?.contains('modal-overlay')) {
+            enhanceModalForMobile(node);
+            if (responsiveManager.isMobile) {
+              responsiveManager.openModal(node);
+            }
+          } else {
+            // Check for modal-overlay descendants
+            const modals = node.querySelectorAll?.('.modal-overlay');
+            modals?.forEach(enhanceModalForMobile);
+          }
+        }
+      });
+    });
+  });
+  
+  modalObserver.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+}
+
+// ENHANCED MOBILE-SPECIFIC OPTIMIZATIONS
+if (responsiveManager.isMobile) {
+  // Enhanced keyboard handling for modals
+  document.addEventListener('focusin', (e) => {
+    if (responsiveManager.modalManager?.isModalOpen && e.target.matches('input, textarea, select')) {
+      setTimeout(() => {
+        if (e.target.scrollIntoView) {
+          e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    }
+  });
+  
+  // Handle modal close on overlay click
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal-overlay') && responsiveManager.modalManager?.isModalOpen) {
+      responsiveManager.closeModal();
+    }
+  });
+  
+  // Handle escape key for modal close
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && responsiveManager.modalManager?.isModalOpen) {
+      responsiveManager.closeModal();
+    }
+  });
+}
+
+console.log('✅ Professional mobile modal system initialized');
 console.log('✅ Real-time responsive system initialized');
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
