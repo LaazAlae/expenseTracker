@@ -1335,8 +1335,8 @@ if (responsiveManager.isMobile) {
   });
 }
 
-console.log('✅ Professional mobile modal system initialized');
-console.log('✅ Real-time responsive system initialized');
+console.log('ˇ Professional mobile modal system initialized');
+console.log('ˇ Real-time responsive system initialized');
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(React.createElement(App));
