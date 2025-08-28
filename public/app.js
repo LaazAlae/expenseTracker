@@ -382,11 +382,11 @@ function App() {
       budgetState.transactions.forEach(transaction => {
         if (transaction.type === 'fund_addition') {
           worksheetData.push([
-            new Date(transaction.dateOfReimbursement).toLocaleDateString() || '-',
+            new Date(transaction.dateOfReimbursement).toLocaleDateString('en-US', {timeZone: 'America/New_York'}) || '-',
             '-',
             'Fund Addition',
             '-',
-            new Date(transaction.dateOfPurchase).toLocaleDateString() || '-',
+            new Date(transaction.dateOfPurchase).toLocaleDateString('en-US', {timeZone: 'America/New_York'}) || '-',
             `$${transaction.amount.toFixed(2)}`,
             `$${runningTotal.toFixed(2)}`,
             '-',
@@ -397,11 +397,11 @@ function App() {
         } else {
           runningTotal -= transaction.amount;
           worksheetData.push([
-            new Date(transaction.dateOfReimbursement).toLocaleDateString() || '-',
+            new Date(transaction.dateOfReimbursement).toLocaleDateString('en-US', {timeZone: 'America/New_York'}) || '-',
             transaction.beneficiary || '-',
             transaction.itemDescription || '-',
             transaction.invoiceNumber || '-',
-            new Date(transaction.dateOfPurchase).toLocaleDateString() || '-',
+            new Date(transaction.dateOfPurchase).toLocaleDateString('en-US', {timeZone: 'America/New_York'}) || '-',
             `$${transaction.amount.toFixed(2)}`,
             `$${runningTotal.toFixed(2)}`,
             transaction.flightNumber || '-',
@@ -590,7 +590,7 @@ function App() {
                     className: isPositiveTransaction ? 'fund-addition-row' : ''
                   },
                     React.createElement('td', { className: 'col-date' },
-                      new Date(transaction.dateOfReimbursement).toLocaleDateString()
+                      new Date(transaction.dateOfReimbursement).toLocaleDateString('en-US', {timeZone: 'America/New_York'})
                     ),
                     React.createElement('td', { className: 'col-beneficiary' }, 
                       isPositiveTransaction ? '-' : transaction.beneficiary
