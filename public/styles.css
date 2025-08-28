@@ -18,9 +18,10 @@ body {
   max-width: 100vw;
   margin: 0;
   padding: 0;
-  /* Mobile safe area background - notch and home indicator */
-  background: #1e40af;
-  /* Prevent elastic scrolling and over-scroll */
+  /* Mobile safe area background - exact header blue */
+  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+  /* COMPLETELY PREVENT PAGE SCROLL - PWA FIX */
+  position: fixed !important;
   overscroll-behavior: none;
   overscroll-behavior-y: none;
   overscroll-behavior-x: none;
@@ -201,7 +202,7 @@ body {
 
 .transaction-table-container {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: auto !important;
   overflow-x: hidden;
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
