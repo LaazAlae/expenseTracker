@@ -390,7 +390,7 @@ function App() {
 
       // Detailed transactions sheet
       const worksheetData = [
-        ['Date de Remboursement', 'Bénéficiaire', 'Description Article', 'Numéro Facture', 'Date d\'Achat', 'Montant', 'Observations', 'Numéro de Vol', 'Nombre de Bagages', 'BD#']
+        ['Date of Reimbursement', 'Beneficiary', 'Item Description', 'Invoice Number', 'Date of Purchase', 'Amount', 'Amount Left', 'Flight Number', 'Number of Luggage', 'Observations', 'Username']
       ];
 
       budgetState.transactions
@@ -403,10 +403,11 @@ function App() {
             transaction.invoiceNumber || '-',
             transaction.dateOfPurchase || '-',
             transaction.amount || 0,
-            transaction.observations || '-',
+            budgetState.availableBudget || 0,
             transaction.flightNumber || '-',
             transaction.numberOfLuggage || '-',
-            transaction.bdNumber || '-'
+            transaction.observations || '-',
+            currentUser?.username || '-'
           ]);
         });
 

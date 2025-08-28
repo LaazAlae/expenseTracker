@@ -3879,8 +3879,8 @@ body.is-touch-device .modal .delete-option {
     max-height: calc(100svh - 40px) !important;
   }
 }
-  
-  /* Focus states for better mobile UX */
+
+/* Focus states for better mobile UX */
   .modal .form-input:focus,
   .modal .form-select:focus {
     transform: scale(1.02) !important;
