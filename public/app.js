@@ -1058,12 +1058,35 @@ class MobileModalManager {
   }
   
   updateViewportDimensions() {
+    // REAL MOBILE BROWSER VIEWPORT DETECTION
     const actualWidth = window.innerWidth;
-    const actualHeight = window.innerHeight;
+    let actualHeight = window.innerHeight;
     
+    // Handle different mobile browser viewport behaviors
+    if (window.visualViewport) {
+      actualHeight = window.visualViewport.height;
+    }
+    
+    // iOS Safari dynamic viewport handling
+    if (window.navigator.userAgent.includes('Safari') && window.navigator.userAgent.includes('Mobile')) {
+      // Use the smaller of innerHeight or visualViewport for iOS
+      actualHeight = Math.min(window.innerHeight, window.visualViewport?.height || window.innerHeight);
+    }
+    
+    // Set CSS custom properties for real device dimensions
     document.documentElement.style.setProperty('--actual-width', `${actualWidth}px`);
     document.documentElement.style.setProperty('--actual-height', `${actualHeight}px`);
     document.documentElement.style.setProperty('--vh', `${actualHeight * 0.01}px`);
+    document.documentElement.style.setProperty('--vw', `${actualWidth * 0.01}px`);
+    
+    // Real viewport units for modern browsers
+    if (CSS.supports('height', '100dvh')) {
+      document.documentElement.style.setProperty('--dvh', '100dvh');
+      document.documentElement.style.setProperty('--svh', '100svh');
+    } else {
+      document.documentElement.style.setProperty('--dvh', `${actualHeight}px`);
+      document.documentElement.style.setProperty('--svh', `${actualHeight}px`);
+    }
   }
   
   repositionModal() {
@@ -1117,16 +1140,55 @@ if (responsiveManager) {
   };
 }
 
-// AUTO-DETECT AND ENHANCE EXISTING MODALS
+// REAL MOBILE DEVICE MODAL ENHANCEMENT
 function enhanceModalForMobile(modalElement) {
   if (!responsiveManager.isMobile) return;
   
   const modal = modalElement.querySelector('.modal');
+  const modalBody = modalElement.querySelector('.modal-body');
   const inputs = modalElement.querySelectorAll('input, select, textarea');
   
   // Add mobile classes
   modalElement.classList.add('mobile-enhanced');
   modal?.classList.add('mobile-optimized');
+  
+  // DYNAMIC CONTENT SIZING FOR REAL DEVICES
+  function adjustModalSizing() {
+    if (!modal) return;
+    
+    // Get real viewport dimensions
+    const viewportHeight = window.visualViewport?.height || window.innerHeight;
+    const viewportWidth = window.visualViewport?.width || window.innerWidth;
+    
+    // Calculate available space for modal content
+    const headerHeight = modalElement.querySelector('.modal-header')?.offsetHeight || 60;
+    const footerHeight = modalElement.querySelector('.modal-footer')?.offsetHeight || 60;
+    const padding = 40; // Total padding around modal
+    
+    const availableHeight = viewportHeight - headerHeight - footerHeight - padding;
+    const availableWidth = viewportWidth - 20; // Side padding
+    
+    // Ensure modal body can fit content
+    if (modalBody) {
+      modalBody.style.maxHeight = `${Math.max(200, availableHeight)}px`;
+      modalBody.style.minHeight = 'fit-content';
+    }
+    
+    // Adjust modal size to fit content properly
+    modal.style.maxWidth = `${Math.min(availableWidth, 600)}px`;
+    modal.style.width = `${Math.min(availableWidth, 600)}px`;
+    
+    // Force reflow to ensure proper sizing
+    modal.offsetHeight;
+  }
+  
+  // Apply initial sizing
+  requestAnimationFrame(adjustModalSizing);
+  
+  // Re-adjust on viewport changes (keyboard, rotation)
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', adjustModalSizing);
+  }
   
   // Enhance form inputs for mobile
   inputs.forEach(input => {
@@ -1148,6 +1210,9 @@ function enhanceModalForMobile(modalElement) {
     if (getComputedStyle(input).minHeight < '44px') {
       input.style.minHeight = '44px';
     }
+    
+    // Prevent viewport zoom on focus (iOS)
+    input.style.fontSize = 'max(16px, 1em)';
   });
   
   // Enhance buttons for mobile
@@ -1159,7 +1224,24 @@ function enhanceModalForMobile(modalElement) {
     if (getComputedStyle(button).minWidth < '44px') {
       button.style.minWidth = '44px';
     }
+    
+    // Better touch handling
+    button.style.touchAction = 'manipulation';
   });
+  
+  // CONTENT OVERFLOW DETECTION
+  const observer = new ResizeObserver(() => {
+    adjustModalSizing();
+    
+    // Check if content is overflowing
+    if (modalBody) {
+      const isOverflowing = modalBody.scrollHeight > modalBody.clientHeight;
+      modal.classList.toggle('content-overflowing', isOverflowing);
+    }
+  });
+  
+  if (modal) observer.observe(modal);
+  if (modalBody) observer.observe(modalBody);
 }
 
 // AUTO-ENHANCE ALL EXISTING MODALS ON PAGE LOAD
