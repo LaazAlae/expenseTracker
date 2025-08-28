@@ -38,8 +38,12 @@ const limiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit login/register attempts
-  message: { error: 'Too many authentication attempts, please try again later' }
+  max: 20, // limit per device - increased from 5 to 20
+  message: { error: 'Too many authentication attempts from this device, please try again later' },
+  keyGenerator: (req) => {
+    // Use IP + User-Agent for better device identification
+    return req.ip + ':' + (req.get('User-Agent') || '');
+  }
 });
 
 app.use(limiter);

@@ -65,7 +65,7 @@ class EnhancedSecurity {
   }
 
   // Advanced rate limiting with progressive delays
-  checkRateLimit(identifier, action, maxAttempts = 5, windowMs = 60000) {
+  checkRateLimit(identifier, action, maxAttempts = 10, windowMs = 300000) {
     const key = `${identifier}:${action}`;
     const now = Date.now();
     
