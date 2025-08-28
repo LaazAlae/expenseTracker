@@ -142,6 +142,25 @@ function App() {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
+  // ENSURE SCROLL RESTORATION WHEN MODALS CLOSE
+  useEffect(() => {
+    if (!showTransactionForm && !selectedTransaction && !showAddFunds && !editingTransaction && !showBDNumberPrompt && !showSettings) {
+      // Force restore body scroll when all modals are closed
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      
+      // Close mobile modal manager if active
+      if (window.responsiveManager?.modalManager?.isModalOpen) {
+        window.responsiveManager.modalManager.closeModal();
+      }
+    }
+  }, [showTransactionForm, selectedTransaction, showAddFunds, editingTransaction, showBDNumberPrompt, showSettings]);
+
   // Check authentication on load
   useEffect(() => {
     const token = localStorage.getItem('authToken');
@@ -555,7 +574,7 @@ function App() {
                   
                   return React.createElement('tr', {
                     key: transaction.id,
-                    onClick: showBDCreation || isPositiveTransaction || editMode ? undefined : () => setSelectedTransaction(transaction),
+                    onClick: showBDCreation || editMode ? undefined : () => setSelectedTransaction(transaction),
                     className: isPositiveTransaction ? 'fund-addition-row' : ''
                   },
                     React.createElement('td', { className: 'col-date' },
@@ -565,11 +584,7 @@ function App() {
                       isPositiveTransaction ? '-' : transaction.beneficiary
                     ),
                     React.createElement('td', { 
-                      className: `col-article ${isPositiveTransaction ? 'fund-addition-cell' : ''}`,
-                      onClick: isPositiveTransaction && !editMode ? (e) => {
-                        e.stopPropagation();
-                        setSelectedTransaction(transaction);
-                      } : undefined
+                      className: `col-article ${isPositiveTransaction ? 'fund-addition-cell' : ''}`
                     }, 
                       isPositiveTransaction ? 
                         React.createElement('span', { 
@@ -1031,16 +1046,19 @@ class MobileModalManager {
     
     this.isModalOpen = false;
     
+    // FORCE RESTORE SCROLL
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.width = '';
+    document.body.style.height = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    
     // Restore original body styles
     Object.keys(this.originalBodyStyle).forEach(key => {
-      if (this.originalBodyStyle[key]) {
-        document.body.style[key] = this.originalBodyStyle[key];
-      } else {
-        document.body.style[key] = '';
-      }
+      document.body.style[key] = this.originalBodyStyle[key] || '';
     });
-    
-    document.body.classList.remove('modal-open');
     
     // Remove mobile classes
     if (this.currentModal) {
