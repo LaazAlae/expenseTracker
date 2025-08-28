@@ -1046,7 +1046,7 @@ function AdminPanel({ onClose }) {
               onClick: generatePassword,
               className: 'btn btn-secondary',
               title: 'Generate random password'
-            }, '🎲'),
+            }, 'Generate'),
             React.createElement('button', {
               onClick: handleCreateUser,
               className: 'btn btn-success'
@@ -1103,7 +1103,7 @@ function AdminPanel({ onClose }) {
                         onClick: () => handleResetPassword(user.id),
                         className: 'btn btn-sm btn-warning',
                         title: 'Reset Password'
-                      }, '🔑'),
+                      }, 'Reset'),
                       React.createElement('button', {
                         onClick: () => handleDeleteUser(user.id),
                         className: 'btn btn-sm btn-danger',

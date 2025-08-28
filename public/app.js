@@ -214,6 +214,7 @@ function App() {
     });
 
     socket.on('funds_added', (data) => {
+      console.log('WebSocket: Funds added', data);
       setBudgetState(data.budgetState);
       showNotification('Funds added successfully', 'success');
       setFundsAmount('');
@@ -221,6 +222,7 @@ function App() {
     });
 
     socket.on('transaction_added', (data) => {
+      console.log('WebSocket: Transaction added', data);
       setBudgetState(data.budgetState);
       showNotification('Transaction added successfully', 'success');
       setShowTransactionForm(false);
@@ -306,6 +308,7 @@ function App() {
       return;
     }
 
+    console.log('Sending add_funds event:', { amount: parseFloat(fundsAmount) });
     wsManager.emit('add_funds', {
       amount: parseFloat(fundsAmount)
     });
