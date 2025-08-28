@@ -370,48 +370,59 @@ function App() {
   const exportToExcel = async () => {
     try {
       const workbook = XLSX.utils.book_new();
-      
-      // Summary sheet with budget information
-      const summaryData = [
-        ['EXPENSE TRACKER SUMMARY', '', '', ''],
-        ['Report Date:', new Date().toLocaleDateString(), '', ''],
-        ['User:', currentUser?.username || 'Unknown', '', ''],
-        ['', '', '', ''],
-        ['BUDGET OVERVIEW', '', '', ''],
-        ['Total Funds Added:', `$${budgetState.totalFundsAdded.toFixed(2)}`, '', ''],
-        ['Total Expenses:', `$${budgetState.totalExpenses.toFixed(2)}`, '', ''],
-        ['Available Budget:', `$${budgetState.availableBudget.toFixed(2)}`, '', ''],
-        ['Transaction Count:', budgetState.transactions.length.toString(), '', ''],
-        ['', '', '', '']
-      ];
-      
-      const summaryWorksheet = XLSX.utils.aoa_to_sheet(summaryData);
-      XLSX.utils.book_append_sheet(workbook, summaryWorksheet, 'Summary');
 
-      // Detailed transactions sheet
+      // Transactions sheet with all transactions including fund additions
       const worksheetData = [
         ['Date of Reimbursement', 'Beneficiary', 'Item Description', 'Invoice Number', 'Date of Purchase', 'Amount', 'Amount Left', 'Flight Number', 'Number of Luggage', 'Observations', 'Username']
       ];
 
-      budgetState.transactions
-        .filter(t => t.type !== 'fund_addition')
-        .forEach(transaction => {
+      // Calculate amount left at time of each transaction
+      let runningTotal = budgetState.totalFundsAdded;
+      
+      budgetState.transactions.forEach(transaction => {
+        if (transaction.type === 'fund_addition') {
           worksheetData.push([
-            transaction.dateOfReimbursement || '-',
+            new Date(transaction.dateOfReimbursement).toLocaleDateString() || '-',
+            '-',
+            'Fund Addition',
+            '-',
+            new Date(transaction.dateOfPurchase).toLocaleDateString() || '-',
+            `$${transaction.amount.toFixed(2)}`,
+            `$${runningTotal.toFixed(2)}`,
+            '-',
+            '-',
+            '-',
+            currentUser?.username || '-'
+          ]);
+        } else {
+          runningTotal -= transaction.amount;
+          worksheetData.push([
+            new Date(transaction.dateOfReimbursement).toLocaleDateString() || '-',
             transaction.beneficiary || '-',
             transaction.itemDescription || '-',
             transaction.invoiceNumber || '-',
-            transaction.dateOfPurchase || '-',
-            transaction.amount || 0,
-            budgetState.availableBudget || 0,
+            new Date(transaction.dateOfPurchase).toLocaleDateString() || '-',
+            `$${transaction.amount.toFixed(2)}`,
+            `$${runningTotal.toFixed(2)}`,
             transaction.flightNumber || '-',
             transaction.numberOfLuggage || '-',
             transaction.observations || '-',
             currentUser?.username || '-'
           ]);
-        });
+        }
+      });
 
       const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+      
+      // Auto-size columns
+      const colWidths = worksheetData[0].map((_, colIndex) => {
+        const maxLength = Math.max(
+          ...worksheetData.map(row => (row[colIndex] || '').toString().length)
+        );
+        return { wch: Math.min(Math.max(maxLength + 2, 10), 50) };
+      });
+      worksheet['!cols'] = colWidths;
+      
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Transactions');
       
       XLSX.writeFile(workbook, `expense_report_${new Date().toISOString().split('T')[0]}.xlsx`);
