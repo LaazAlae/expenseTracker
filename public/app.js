@@ -662,20 +662,20 @@ function App() {
       )
     ),
 
-    // NEW ULTIMATE RESPONSIVE MODAL SYSTEM
-    showAddFunds && React.createElement(window.AddFundsModal, {
+    // COMPLETELY ISOLATED MODAL SYSTEM - NO CONFLICTS
+    showAddFunds && React.createElement(window.IsolatedModals.AddFundsModal, {
       isOpen: true,
       onClose: () => setShowAddFunds(false),
       onAdd: handleAddFunds
     }),
 
-    showTransactionForm && React.createElement(window.TransactionFormModal, {
+    showTransactionForm && React.createElement(window.IsolatedModals.TransactionFormModal, {
       isOpen: true,
       onClose: () => setShowTransactionForm(false),
       onSubmit: handleAddTransaction
     }),
 
-    selectedTransaction && !editingTransaction && React.createElement(window.TransactionDetailsModal, {
+    selectedTransaction && !editingTransaction && React.createElement(window.IsolatedModals.TransactionDetailsModal, {
       isOpen: true,
       onClose: () => setSelectedTransaction(null),
       transaction: selectedTransaction,
@@ -700,14 +700,14 @@ function App() {
       })
     ),
 
-    showBDNumberPrompt && React.createElement(window.BDNumberModal, {
+    showBDNumberPrompt && React.createElement(window.IsolatedModals.BDNumberModal, {
       isOpen: true,
       onClose: () => setShowBDNumberPrompt(false),
       onConfirm: confirmBDCreation,
       count: selectedForBD.size
     }),
 
-    showSettings && currentUser?.isAdmin && React.createElement(window.AdminPanelModal, {
+    showSettings && currentUser?.isAdmin && React.createElement(window.IsolatedModals.AdminPanelModal, {
       isOpen: true,
       onClose: () => setShowSettings(false)
     })
