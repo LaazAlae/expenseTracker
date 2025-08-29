@@ -37,16 +37,21 @@ function BaseModal({ isOpen, onClose, title, children, size = 'medium', actions 
       className: `modal modal-${size}`,
       onClick: (e) => e.stopPropagation()
     },
-      React.createElement('div', { className: 'modal-header' },
-        React.createElement('h3', { className: 'modal-title' }, title),
-        React.createElement('button', {
-          className: 'modal-close',
-          onClick: onClose,
-          type: 'button'
-        }, '×')
-      ),
-      React.createElement('div', { className: 'modal-body' }, children),
-      actions && React.createElement('div', { className: 'modal-footer' }, actions)
+      React.createElement('div', {
+        className: 'modal-content',
+        onClick: (e) => e.stopPropagation()
+      },
+        React.createElement('div', { className: 'modal-header' },
+          React.createElement('h3', { className: 'modal-title' }, title),
+          React.createElement('button', {
+            className: 'modal-close',
+            onClick: onClose,
+            type: 'button'
+          }, '×')
+        ),
+        React.createElement('div', { className: 'modal-body' }, children),
+        actions && React.createElement('div', { className: 'modal-footer' }, actions)
+      )
     )
   );
 }
