@@ -134,7 +134,7 @@
     
     const handleSubmit = async () => {
       const numAmount = parseFloat(amount);
-      if (!amount || numAmount <= 0) {
+      if (!amount || amount.trim() === '' || isNaN(numAmount) || numAmount <= 0) {
         setError('Please enter a valid amount');
         return;
       }
@@ -197,7 +197,7 @@
     );
   };
   
-  // Transaction Form Modal - isolated
+  // Transaction Form Modal - isolated with smart features
   IM.TransactionFormModal = function({ isOpen, onClose, onSubmit }) {
     const [formData, setFormData] = React.useState({
       beneficiary: '',
@@ -212,6 +212,12 @@
     });
     const [errors, setErrors] = React.useState({});
     const [loading, setLoading] = React.useState(false);
+    const [showFlightFields, setShowFlightFields] = React.useState(false);
+    const [inputHistory, setInputHistory] = React.useState({
+      beneficiary: JSON.parse(localStorage.getItem('beneficiaryHistory') || '[]'),
+      itemDescription: JSON.parse(localStorage.getItem('itemDescriptionHistory') || '["Sky Cap"]'),
+      flightNumber: ['AT201', 'AT202']
+    });
     
     React.useEffect(() => {
       if (isOpen) {
@@ -228,14 +234,119 @@
         });
         setErrors({});
         setLoading(false);
+        setShowFlightFields(false);
       }
     }, [isOpen]);
     
+    React.useEffect(() => {
+      setShowFlightFields(formData.itemDescription?.toLowerCase().includes('sky cap'));
+    }, [formData.itemDescription]);
+    
     const updateField = (field, value) => {
+      // Auto-capitalize names
+      if (field === 'beneficiary') {
+        const words = value.split(' ');
+        value = words.map(word => 
+          word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        ).join(' ');
+      }
+      
       setFormData(prev => ({ ...prev, [field]: value }));
       if (errors[field]) {
         setErrors(prev => ({ ...prev, [field]: '' }));
       }
+      
+      // Save to history
+      if (value && value.trim() && ['beneficiary', 'itemDescription'].includes(field)) {
+        const history = inputHistory[field] || [];
+        const newHistory = [value, ...history.filter(item => item !== value)].slice(0, 10);
+        setInputHistory(prev => ({ ...prev, [field]: newHistory }));
+        localStorage.setItem(`${field}History`, JSON.stringify(newHistory));
+      }
+    };
+    
+    const removeFromHistory = (field, item) => {
+      const newHistory = inputHistory[field].filter(histItem => histItem !== item);
+      setInputHistory(prev => ({ ...prev, [field]: newHistory }));
+      localStorage.setItem(`${field}History`, JSON.stringify(newHistory));
+    };
+    
+    const SmartInput = ({ field, label, type = 'text', required = false, ...props }) => {
+      const [showDropdown, setShowDropdown] = React.useState(false);
+      const history = inputHistory[field] || [];
+      
+      return React.createElement('div', { className: 'im-form-field' },
+        React.createElement('label', { 
+          className: 'im-form-label',
+          'data-icon': field === 'beneficiary' ? 'user' : field === 'itemDescription' ? 'item' : field === 'flightNumber' ? 'plane' : 'document'
+        }, label, required && React.createElement('span', { className: 'im-required' }, ' *')),
+        React.createElement('div', { className: 'im-smart-input-wrapper', style: { position: 'relative' } },
+          React.createElement('input', {
+            type,
+            value: formData[field] || '',
+            onChange: (e) => updateField(field, e.target.value),
+            onFocus: () => history.length > 0 && setShowDropdown(true),
+            onBlur: () => setTimeout(() => setShowDropdown(false), 200),
+            className: `im-form-input ${errors[field] ? 'im-error' : ''}`,
+            required,
+            ...props
+          }),
+          showDropdown && history.length > 0 && React.createElement('div', { 
+            className: 'im-history-dropdown',
+            style: {
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              right: 0,
+              background: '#fff',
+              border: '1px solid #d1d5db',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              zIndex: 1000,
+              maxHeight: '200px',
+              overflow: 'auto'
+            }
+          },
+            history.map((item, index) => 
+              React.createElement('div', {
+                key: index,
+                className: 'im-history-item',
+                style: {
+                  padding: '8px 12px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  borderBottom: index < history.length - 1 ? '1px solid #f3f4f6' : 'none'
+                },
+                onClick: () => {
+                  updateField(field, item);
+                  setShowDropdown(false);
+                }
+              },
+                React.createElement('span', null, item),
+                React.createElement('button', {
+                  type: 'button',
+                  onClick: (e) => {
+                    e.stopPropagation();
+                    removeFromHistory(field, item);
+                  },
+                  style: {
+                    background: 'none',
+                    border: 'none',
+                    color: '#ef4444',
+                    cursor: 'pointer',
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    fontSize: '12px'
+                  }
+                }, '×')
+              )
+            )
+          )
+        ),
+        errors[field] && React.createElement('div', { className: 'im-form-error' }, errors[field])
+      );
     };
     
     const validate = () => {
@@ -292,34 +403,16 @@
     },
       errors.general && React.createElement('div', { className: 'im-form-error im-general-error' }, errors.general),
       React.createElement('div', { className: 'im-form-grid' },
-        React.createElement('div', { className: 'im-form-field' },
-          React.createElement('label', { 
-            className: 'im-form-label',
-            'data-icon': 'user'
-          }, 'Beneficiary', React.createElement('span', { className: 'im-required' }, ' *')),
-          React.createElement('input', {
-            type: 'text',
-            value: formData.beneficiary || '',
-            onChange: (e) => updateField('beneficiary', e.target.value),
-            className: `im-form-input ${errors.beneficiary ? 'im-error' : ''}`,
-            required: true
-          }),
-          errors.beneficiary && React.createElement('div', { className: 'im-form-error' }, errors.beneficiary)
-        ),
-        React.createElement('div', { className: 'im-form-field' },
-          React.createElement('label', { 
-            className: 'im-form-label',
-            'data-icon': 'item'
-          }, 'Item Description', React.createElement('span', { className: 'im-required' }, ' *')),
-          React.createElement('input', {
-            type: 'text',
-            value: formData.itemDescription || '',
-            onChange: (e) => updateField('itemDescription', e.target.value),
-            className: `im-form-input ${errors.itemDescription ? 'im-error' : ''}`,
-            required: true
-          }),
-          errors.itemDescription && React.createElement('div', { className: 'im-form-error' }, errors.itemDescription)
-        ),
+        React.createElement(SmartInput, {
+          field: 'beneficiary',
+          label: 'Beneficiary',
+          required: true
+        }),
+        React.createElement(SmartInput, {
+          field: 'itemDescription',
+          label: 'Item Description',
+          required: true
+        }),
         React.createElement('div', { className: 'im-form-field' },
           React.createElement('label', { 
             className: 'im-form-label',
@@ -376,19 +469,11 @@
           }),
           errors.dateOfReimbursement && React.createElement('div', { className: 'im-form-error' }, errors.dateOfReimbursement)
         ),
-        React.createElement('div', { className: 'im-form-field' },
-          React.createElement('label', { 
-            className: 'im-form-label',
-            'data-icon': 'plane'
-          }, 'Flight Number'),
-          React.createElement('input', {
-            type: 'text',
-            value: formData.flightNumber || '',
-            onChange: (e) => updateField('flightNumber', e.target.value),
-            className: 'im-form-input'
-          })
-        ),
-        React.createElement('div', { className: 'im-form-field' },
+        showFlightFields && React.createElement(SmartInput, {
+          field: 'flightNumber',
+          label: 'Flight Number'
+        }),
+        showFlightFields && React.createElement('div', { className: 'im-form-field' },
           React.createElement('label', { 
             className: 'im-form-label',
             'data-icon': 'luggage'
@@ -570,6 +655,314 @@
     );
   };
   
+  // Transaction Edit Modal - isolated editing functionality
+  IM.TransactionEditModal = function({ isOpen, onClose, transaction, onSave }) {
+    const [formData, setFormData] = React.useState({});
+    const [errors, setErrors] = React.useState({});
+    const [loading, setLoading] = React.useState(false);
+    const [showFlightFields, setShowFlightFields] = React.useState(false);
+    const [inputHistory, setInputHistory] = React.useState({
+      beneficiary: JSON.parse(localStorage.getItem('beneficiaryHistory') || '[]'),
+      itemDescription: JSON.parse(localStorage.getItem('itemDescriptionHistory') || '["Sky Cap"]'),
+      flightNumber: ['AT201', 'AT202']
+    });
+    
+    React.useEffect(() => {
+      if (isOpen && transaction) {
+        setFormData({
+          beneficiary: transaction.beneficiary || '',
+          itemDescription: transaction.itemDescription || '',
+          invoiceNumber: transaction.invoiceNumber || '',
+          dateOfPurchase: transaction.dateOfPurchase?.split('T')[0] || '',
+          dateOfReimbursement: transaction.dateOfReimbursement?.split('T')[0] || new Date().toISOString().split('T')[0],
+          amount: transaction.amount?.toString() || '',
+          observations: transaction.observations || '',
+          flightNumber: transaction.flightNumber || '',
+          numberOfLuggage: transaction.numberOfLuggage?.toString() || ''
+        });
+        setErrors({});
+        setLoading(false);
+      }
+    }, [isOpen, transaction]);
+    
+    React.useEffect(() => {
+      setShowFlightFields(formData.itemDescription?.toLowerCase().includes('sky cap'));
+    }, [formData.itemDescription]);
+    
+    const updateField = (field, value) => {
+      // Auto-capitalize names
+      if (field === 'beneficiary') {
+        const words = value.split(' ');
+        value = words.map(word => 
+          word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+        ).join(' ');
+      }
+      
+      setFormData(prev => ({ ...prev, [field]: value }));
+      if (errors[field]) {
+        setErrors(prev => ({ ...prev, [field]: '' }));
+      }
+      
+      // Save to history
+      if (value && value.trim() && ['beneficiary', 'itemDescription'].includes(field)) {
+        const history = inputHistory[field] || [];
+        const newHistory = [value, ...history.filter(item => item !== value)].slice(0, 10);
+        setInputHistory(prev => ({ ...prev, [field]: newHistory }));
+        localStorage.setItem(`${field}History`, JSON.stringify(newHistory));
+      }
+    };
+    
+    const removeFromHistory = (field, item) => {
+      const newHistory = inputHistory[field].filter(histItem => histItem !== item);
+      setInputHistory(prev => ({ ...prev, [field]: newHistory }));
+      localStorage.setItem(`${field}History`, JSON.stringify(newHistory));
+    };
+    
+    const validate = () => {
+      const newErrors = {};
+      if (transaction.type !== 'fund_addition') {
+        if (!formData.beneficiary?.trim()) newErrors.beneficiary = 'Beneficiary is required';
+        if (!formData.itemDescription?.trim()) newErrors.itemDescription = 'Item description is required';
+        if (!formData.amount || parseFloat(formData.amount) <= 0) newErrors.amount = 'Valid amount is required';
+        if (!formData.dateOfPurchase) newErrors.dateOfPurchase = 'Purchase date is required';
+      }
+      if (!formData.dateOfReimbursement) newErrors.dateOfReimbursement = 'Reimbursement date is required';
+      return newErrors;
+    };
+    
+    const handleSubmit = async () => {
+      const newErrors = validate();
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        return;
+      }
+      
+      setLoading(true);
+      try {
+        const updates = {};
+        Object.keys(formData).forEach(key => {
+          const value = formData[key];
+          if (value !== undefined && value !== null && value !== '') {
+            if (key === 'amount' || key === 'numberOfLuggage') {
+              updates[key] = parseFloat(value) || value;
+            } else {
+              updates[key] = value;
+            }
+          }
+        });
+        await onSave(updates);
+        onClose();
+      } catch (err) {
+        setErrors({ general: 'Failed to update transaction. Please try again.' });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    const SmartInput = ({ field, label, type = 'text', required = false, ...props }) => {
+      const [showDropdown, setShowDropdown] = React.useState(false);
+      const history = inputHistory[field] || [];
+      
+      return React.createElement('div', { className: 'im-form-field' },
+        React.createElement('label', { 
+          className: 'im-form-label',
+          'data-icon': field === 'beneficiary' ? 'user' : field === 'itemDescription' ? 'item' : field === 'amount' ? 'amount' : field.includes('date') ? 'calendar' : field === 'flightNumber' ? 'plane' : field === 'numberOfLuggage' ? 'luggage' : field === 'observations' ? 'notes' : 'document'
+        }, label, required && React.createElement('span', { className: 'im-required' }, ' *')),
+        React.createElement('div', { className: 'im-smart-input-wrapper', style: { position: 'relative' } },
+          React.createElement('input', {
+            type,
+            value: formData[field] || '',
+            onChange: (e) => updateField(field, e.target.value),
+            onFocus: () => history.length > 0 && setShowDropdown(true),
+            onBlur: () => setTimeout(() => setShowDropdown(false), 200),
+            className: `im-form-input ${errors[field] ? 'im-error' : ''}`,
+            required,
+            ...props
+          }),
+          showDropdown && history.length > 0 && React.createElement('div', { 
+            className: 'im-history-dropdown',
+            style: {
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              right: 0,
+              background: '#fff',
+              border: '1px solid #d1d5db',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              zIndex: 1000,
+              maxHeight: '200px',
+              overflow: 'auto'
+            }
+          },
+            history.map((item, index) => 
+              React.createElement('div', {
+                key: index,
+                className: 'im-history-item',
+                style: {
+                  padding: '8px 12px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  borderBottom: index < history.length - 1 ? '1px solid #f3f4f6' : 'none'
+                },
+                onClick: () => {
+                  updateField(field, item);
+                  setShowDropdown(false);
+                }
+              },
+                React.createElement('span', null, item),
+                React.createElement('button', {
+                  type: 'button',
+                  onClick: (e) => {
+                    e.stopPropagation();
+                    removeFromHistory(field, item);
+                  },
+                  style: {
+                    background: 'none',
+                    border: 'none',
+                    color: '#ef4444',
+                    cursor: 'pointer',
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    fontSize: '12px'
+                  }
+                }, '×')
+              )
+            )
+          )
+        ),
+        errors[field] && React.createElement('div', { className: 'im-form-error' }, errors[field])
+      );
+    };
+    
+    const actions = React.createElement('div', { className: 'im-modal-actions' },
+      React.createElement('button', {
+        className: 'im-btn im-btn-secondary',
+        onClick: onClose,
+        disabled: loading
+      }, 'Cancel'),
+      React.createElement('button', {
+        className: 'im-btn im-btn-primary',
+        onClick: handleSubmit,
+        disabled: loading
+      }, loading ? 'Saving...' : 'Save Changes')
+    );
+    
+    const titleWithIcon = React.createElement('div', {
+      'data-icon': transaction?.type === 'fund_addition' ? 'funds' : 'transaction'
+    }, transaction?.type === 'fund_addition' ? 'Edit Fund Addition' : 'Edit Transaction');
+    
+    return React.createElement(IM.BaseModal, {
+      isOpen,
+      onClose,
+      title: titleWithIcon,
+      size: 'large',
+      actions
+    },
+      errors.general && React.createElement('div', { className: 'im-form-error im-general-error' }, errors.general),
+      React.createElement('div', { className: 'im-form-grid' },
+        transaction?.type !== 'fund_addition' && React.createElement(SmartInput, {
+          field: 'beneficiary',
+          label: 'Beneficiary',
+          required: true
+        }),
+        React.createElement(SmartInput, {
+          field: 'itemDescription',
+          label: 'Item Description',
+          required: transaction?.type !== 'fund_addition'
+        }),
+        transaction?.type !== 'fund_addition' && React.createElement('div', { className: 'im-form-field' },
+          React.createElement('label', { 
+            className: 'im-form-label',
+            'data-icon': 'invoice'
+          }, 'Invoice Number'),
+          React.createElement('input', {
+            type: 'text',
+            value: formData.invoiceNumber || '',
+            onChange: (e) => updateField('invoiceNumber', e.target.value),
+            className: 'im-form-input'
+          })
+        ),
+        React.createElement('div', { className: 'im-form-field' },
+          React.createElement('label', { 
+            className: 'im-form-label',
+            'data-icon': 'amount'
+          }, 'Amount', React.createElement('span', { className: 'im-required' }, ' *')),
+          React.createElement('input', {
+            type: 'number',
+            value: formData.amount || '',
+            onChange: (e) => updateField('amount', e.target.value),
+            className: `im-form-input ${errors.amount ? 'im-error' : ''}`,
+            step: '0.01',
+            min: '0.01',
+            required: true
+          }),
+          errors.amount && React.createElement('div', { className: 'im-form-error' }, errors.amount)
+        ),
+        transaction?.type !== 'fund_addition' && React.createElement('div', { className: 'im-form-field' },
+          React.createElement('label', { 
+            className: 'im-form-label',
+            'data-icon': 'calendar'
+          }, 'Purchase Date', React.createElement('span', { className: 'im-required' }, ' *')),
+          React.createElement('input', {
+            type: 'date',
+            value: formData.dateOfPurchase || '',
+            onChange: (e) => updateField('dateOfPurchase', e.target.value),
+            className: `im-form-input ${errors.dateOfPurchase ? 'im-error' : ''}`,
+            required: true
+          }),
+          errors.dateOfPurchase && React.createElement('div', { className: 'im-form-error' }, errors.dateOfPurchase)
+        ),
+        React.createElement('div', { className: 'im-form-field' },
+          React.createElement('label', { 
+            className: 'im-form-label',
+            'data-icon': 'calendar'
+          }, 'Reimbursement Date', React.createElement('span', { className: 'im-required' }, ' *')),
+          React.createElement('input', {
+            type: 'date',
+            value: formData.dateOfReimbursement || '',
+            onChange: (e) => updateField('dateOfReimbursement', e.target.value),
+            className: `im-form-input ${errors.dateOfReimbursement ? 'im-error' : ''}`,
+            required: true
+          }),
+          errors.dateOfReimbursement && React.createElement('div', { className: 'im-form-error' }, errors.dateOfReimbursement)
+        ),
+        showFlightFields && React.createElement(SmartInput, {
+          field: 'flightNumber',
+          label: 'Flight Number'
+        }),
+        showFlightFields && React.createElement('div', { className: 'im-form-field' },
+          React.createElement('label', { 
+            className: 'im-form-label',
+            'data-icon': 'luggage'
+          }, 'Number of Luggage'),
+          React.createElement('input', {
+            type: 'number',
+            value: formData.numberOfLuggage || '',
+            onChange: (e) => updateField('numberOfLuggage', e.target.value),
+            className: 'im-form-input',
+            min: '1'
+          })
+        ),
+        React.createElement('div', { className: 'im-form-field im-full-width' },
+          React.createElement('label', { 
+            className: 'im-form-label',
+            'data-icon': 'notes'
+          }, 'Observations'),
+          React.createElement('textarea', {
+            value: formData.observations || '',
+            onChange: (e) => updateField('observations', e.target.value),
+            className: 'im-form-textarea',
+            rows: 3,
+            placeholder: 'Optional notes...'
+          })
+        )
+      )
+    );
+  };
+  
   // Admin Panel Modal - isolated with real-time updates
   IM.AdminPanelModal = function({ isOpen, onClose }) {
     const [users, setUsers] = React.useState([]);
@@ -743,6 +1136,17 @@
   window.IsolatedModals.TransactionFormModal = IM.TransactionFormModal;
   window.IsolatedModals.TransactionDetailsModal = IM.TransactionDetailsModal;
   window.IsolatedModals.BDNumberModal = IM.BDNumberModal;
+  window.IsolatedModals.TransactionEditModal = IM.TransactionEditModal;
   window.IsolatedModals.AdminPanelModal = IM.AdminPanelModal;
+  
+  // Override global TransactionEditModal to use our isolated version
+  window.TransactionEditModal = function({ transaction, onSave, onCancel }) {
+    return React.createElement(IM.TransactionEditModal, {
+      isOpen: !!transaction,
+      onClose: onCancel,
+      transaction: transaction,
+      onSave: onSave
+    });
+  };
   
 })();
