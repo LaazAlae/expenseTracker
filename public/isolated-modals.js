@@ -71,11 +71,11 @@
     };
     
     return React.createElement('div', {
-      className: `isolated-modal-backdrop-unique isolated-modal-size-${size}-unique`,
+      className: `absolute-modal-overlay-final absolute-modal-${size}-final`,
       onClick: handleOverlayClick
     },
       React.createElement('div', {
-        className: 'isolated-modal-wrapper-unique'
+        className: 'absolute-modal-box-final'
       },
         React.createElement('div', {
           className: 'im-modal-header'

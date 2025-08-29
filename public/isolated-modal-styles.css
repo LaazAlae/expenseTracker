@@ -7,52 +7,46 @@
   box-sizing: border-box;
 }
 
-/* Modal Overlay - PERFECT CENTERING WITH NOTCH SUPPORT */
-.isolated-modal-backdrop-unique {
+/* ABSOLUTE MODAL OVERLAY - CANNOT BE OVERRIDDEN */
+.absolute-modal-overlay-final {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  background: rgba(0, 0, 0, 0.7) !important;
-  z-index: 99999 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 30px !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(0, 0, 0, 0.75) !important;
+  z-index: 999999 !important;
+  display: block !important;
+  padding: 0 !important;
   margin: 0 !important;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
   overflow: hidden !important;
-  /* Support for devices with notch */
-  padding-top: max(30px, env(safe-area-inset-top)) !important;
-  padding-bottom: max(30px, env(safe-area-inset-bottom)) !important;
-  padding-left: max(30px, env(safe-area-inset-left)) !important;
-  padding-right: max(30px, env(safe-area-inset-right)) !important;
+  box-sizing: border-box !important;
 }
 
-/* Modal Container - FIXED SIZE WITH INTERNAL SCROLL */
-.isolated-modal-wrapper-unique {
+/* ABSOLUTE MODAL BOX - FORCE CENTERED POSITIONING */
+.absolute-modal-box-final {
+  position: absolute !important;
+  top: 50px !important;
+  left: 50% !important;
+  width: 90% !important;
+  max-width: 500px !important;
+  height: calc(100vh - 100px) !important;
+  max-height: 600px !important;
   background: #ffffff !important;
   border-radius: 16px !important;
-  box-shadow: 
-    0 32px 64px rgba(0, 0, 0, 0.2),
-    0 16px 32px rgba(0, 0, 0, 0.1),
-    0 0 1px rgba(0, 0, 0, 0.1) !important;
-  width: 100% !important;
-  max-width: 500px !important;
-  max-height: calc(100vh - 60px) !important;
-  height: auto !important;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25) !important;
+  transform: translateX(-50%) !important;
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
-  transform: scale(1) !important;
   opacity: 1 !important;
-  animation: isolated-modal-entrance-anim 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  z-index: 1000000 !important;
+  box-sizing: border-box !important;
   margin: 0 !important;
-  position: relative !important;
-  flex-shrink: 0 !important;
+  padding: 0 !important;
 }
 
 @keyframes isolated-modal-entrance-anim {
@@ -66,16 +60,19 @@
   }
 }
 
-.isolated-modal-size-small-unique .isolated-modal-wrapper-unique {
+.absolute-modal-small-final .absolute-modal-box-final {
   max-width: 420px !important;
+  max-height: 500px !important;
 }
 
-.isolated-modal-size-medium-unique .isolated-modal-wrapper-unique {
+.absolute-modal-medium-final .absolute-modal-box-final {
   max-width: 640px !important;
+  max-height: 600px !important;
 }
 
-.isolated-modal-size-large-unique .isolated-modal-wrapper-unique {
+.absolute-modal-large-final .absolute-modal-box-final {
   max-width: 860px !important;
+  max-height: 700px !important;
 }
 
 /* Modal Header - PROFESSIONAL STYLING */
@@ -212,7 +209,7 @@
   transform: rotate(90deg) !important;
 }
 
-/* Modal Body - INTERNAL SCROLLING ONLY */
+/* Modal Body - FORCE INTERNAL SCROLLING ONLY */
 .im-modal-body {
   padding: 28px !important;
   overflow-y: auto !important;
@@ -223,6 +220,8 @@
   min-height: 0 !important;
   scrollbar-width: thin !important;
   scrollbar-color: rgba(0, 0, 0, 0.2) transparent !important;
+  position: relative !important;
+  z-index: 1 !important;
 }
 
 /* Custom scrollbar for webkit browsers */
@@ -481,25 +480,21 @@
 
 /* ABSOLUTE MOBILE ISOLATION - NO CONFLICTS */
 @media screen and (max-width: 768px) {
-  .isolated-modal-backdrop-unique {
-    padding: 30px 15px !important;
-    align-items: flex-start !important;
-    padding-top: 50px !important;
-    padding-bottom: 50px !important;
-    min-height: 100vh !important;
-    box-sizing: border-box !important;
+  .absolute-modal-overlay-final {
+    width: 100vw !important;
+    height: 100vh !important;
   }
   
-  .isolated-modal-wrapper-unique {
-    margin: 0 auto !important;
-    width: 100% !important;
-    max-width: calc(100vw - 30px) !important;
-    max-height: calc(100vh - 100px) !important;
-    min-height: auto !important;
+  .absolute-modal-box-final {
+    top: 40px !important;
+    left: 50% !important;
+    width: calc(100vw - 40px) !important;
+    max-width: calc(100vw - 40px) !important;
+    height: calc(100vh - 80px) !important;
+    max-height: calc(100vh - 80px) !important;
+    transform: translateX(-50%) !important;
     border-radius: 12px !important;
-    position: relative !important;
-    top: 0 !important;
-    transform: none !important;
+    position: absolute !important;
   }
   
   .im-form-grid {
@@ -522,17 +517,17 @@
     gap: 12px !important;
   }
   
-  /* CENTER CREATE USER BUTTON - FORCE CENTERING */
-  .isolated-admin-section-unique .isolated-form-row-unique + .isolated-btn-unique,
+  /* CENTER CREATE USER BUTTON - ABSOLUTE CENTERING */
   .im-admin-section .im-form-row + .im-btn,
   .im-admin-section > .im-btn:last-child {
-    align-self: center !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    width: 100% !important;
+    position: relative !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 200px !important;
     max-width: 200px !important;
     display: block !important;
     text-align: center !important;
+    margin: 24px 0 !important;
   }
   
   /* Fix button text overflow on mobile */
@@ -822,6 +817,51 @@
   background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="%23ffffff" viewBox="0 0 24 24"><path d="M17,7H22V17H17V19A1,1 0 0,0 18,20H20V22H17.5C16.95,22 16,21.55 16,21C16,21.55 15.05,22 14.5,22H12V20H14A1,1 0 0,0 15,19V5A1,1 0 0,0 14,4H12V2H14.5C15.05,2 16,2.45 16,3C16,2.45 16.95,2 17.5,2H20V4H18A1,1 0 0,0 17,5V7M2,7H13V9H4V15H13V17H2V7M20,9H17V15H20V9M18,10H19V14H18V10Z"/></svg>') !important;
 }
 
+/* FINAL ABSOLUTE OVERRIDE - FORCE NO BOTTOM TOUCH */
+.absolute-modal-overlay-final {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 999999 !important;
+  display: block !important;
+  overflow: hidden !important;
+}
+
+.absolute-modal-box-final {
+  position: absolute !important;
+  top: 50px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 90% !important;
+  max-width: 500px !important;
+  height: calc(100vh - 100px) !important;
+  max-height: 600px !important;
+  z-index: 1000000 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* MOBILE ABSOLUTE OVERRIDE */
+@media screen and (max-width: 768px) {
+  .absolute-modal-box-final {
+    top: 30px !important;
+    width: calc(100vw - 30px) !important;
+    height: calc(100vh - 60px) !important;
+    max-height: calc(100vh - 60px) !important;
+  }
+}
+
+@media screen and (max-height: 600px) {
+  .absolute-modal-box-final {
+    top: 20px !important;
+    height: calc(100vh - 40px) !important;
+    max-height: calc(100vh - 40px) !important;
+  }
+}
+
 .im-btn-success {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
   color: #ffffff !important;
@@ -845,19 +885,23 @@
   background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="%23ffffff" viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>') !important;
 }
 
-/* MOBILE OPTIMIZATIONS - PERFECT SIZING */
+/* FORCE ABSOLUTE MOBILE POSITIONING - NO BOTTOM TOUCH */
 @media screen and (max-width: 768px) {
-  .isolated-modal-backdrop-unique {
-    padding: 16px !important;
+  .absolute-modal-overlay-final {
+    width: 100vw !important;
+    height: 100vh !important;
   }
   
-  .isolated-modal-wrapper-unique {
-    width: 100% !important;
-    max-width: none !important;
-    max-height: calc(100vh - 100px) !important;
+  .absolute-modal-box-final {
+    top: 30px !important;
+    left: 50% !important;
+    width: calc(100vw - 30px) !important;
+    max-width: calc(100vw - 30px) !important;
+    height: calc(100vh - 60px) !important;
+    max-height: calc(100vh - 60px) !important;
+    transform: translateX(-50%) !important;
     border-radius: 12px !important;
-    margin: 50px auto !important;
-    transform: none !important;
+    position: absolute !important;
   }
   
   .im-modal-header {
@@ -869,7 +913,10 @@
   }
   
   .im-modal-body {
-    padding: 24px !important;
+    padding: 20px !important;
+    max-height: calc(100vh - 180px) !important;
+    overflow-y: auto !important;
+    flex: 1 !important;
   }
   
   .im-modal-footer {
@@ -922,18 +969,16 @@
   }
 }
 
-/* SMALL SCREEN / KEYBOARD OPEN - PERFECT CENTERING */
+/* SHORT SCREEN ABSOLUTE POSITIONING */
 @media screen and (max-height: 600px) {
-  .isolated-modal-backdrop-unique {
-    align-items: center !important;
-    padding: 15px !important;
+  .absolute-modal-overlay-final {
+    height: 100vh !important;
   }
   
-  .isolated-modal-wrapper-unique {
-    max-height: calc(100vh - 30px) !important;
-    margin: 0 !important;
-    transform: none !important;
-    position: relative !important;
+  .absolute-modal-box-final {
+    top: 20px !important;
+    height: calc(100vh - 40px) !important;
+    max-height: calc(100vh - 40px) !important;
   }
   
   .im-modal-header {
@@ -943,6 +988,8 @@
   .im-modal-body {
     padding: 16px !important;
     max-height: calc(100vh - 120px) !important;
+    overflow-y: auto !important;
+    flex: 1 !important;
   }
   
   .im-modal-footer {
