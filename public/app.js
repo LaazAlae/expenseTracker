@@ -662,26 +662,23 @@ function App() {
       )
     ),
 
-    // Modals
-    showAddFunds && React.createElement(AddFundsModal, {
-      fundsAmount,
-      setFundsAmount,
-      onAdd: handleAddFunds,
-      onCancel: () => setShowAddFunds(false)
+    // NEW ULTIMATE RESPONSIVE MODAL SYSTEM
+    showAddFunds && React.createElement(window.AddFundsModal, {
+      isOpen: true,
+      onClose: () => setShowAddFunds(false),
+      onAdd: handleAddFunds
     }),
 
-    showTransactionForm && React.createElement(TransactionForm, {
-      onSubmit: handleAddTransaction,
-      onCancel: () => setShowTransactionForm(false),
-      beneficiaries: budgetState.beneficiaries,
-      itemDescriptions: budgetState.itemDescriptions,
-      flightNumbers: budgetState.flightNumbers
+    showTransactionForm && React.createElement(window.TransactionFormModal, {
+      isOpen: true,
+      onClose: () => setShowTransactionForm(false),
+      onSubmit: handleAddTransaction
     }),
 
-    selectedTransaction && !editingTransaction && React.createElement(TransactionDetails, {
-      transaction: selectedTransaction,
+    selectedTransaction && !editingTransaction && React.createElement(window.TransactionDetailsModal, {
+      isOpen: true,
       onClose: () => setSelectedTransaction(null),
-      editMode: editMode,
+      transaction: selectedTransaction,
       onEdit: () => {
         handleEditTransaction(selectedTransaction);
         setSelectedTransaction(null);
@@ -703,14 +700,15 @@ function App() {
       })
     ),
 
-    showBDNumberPrompt && React.createElement(BDNumberModal, {
-      bdNumber,
-      setBdNumber,
+    showBDNumberPrompt && React.createElement(window.BDNumberModal, {
+      isOpen: true,
+      onClose: () => setShowBDNumberPrompt(false),
       onConfirm: confirmBDCreation,
-      onCancel: () => setShowBDNumberPrompt(false)
+      count: selectedForBD.size
     }),
 
-    showSettings && currentUser?.isAdmin && React.createElement(AdminPanel, {
+    showSettings && currentUser?.isAdmin && React.createElement(window.AdminPanelModal, {
+      isOpen: true,
       onClose: () => setShowSettings(false)
     })
   );

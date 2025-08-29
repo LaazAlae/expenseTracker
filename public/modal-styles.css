@@ -1,35 +1,49 @@
-/* PROFESSIONAL MODAL SYSTEM - COMPLETE STYLES */
+/* SIMPLE CLEAN MODAL STYLES - NO PERFORMANCE ISSUES */
 
-/* Base Modal Styles */
+/* Base Modal Overlay */
 .modal-overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 10000;
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 1000;
   padding: 20px;
   box-sizing: border-box;
 }
 
+/* Modal Container */
 .modal {
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
   max-height: 90vh;
+  width: 100%;
+  max-width: 500px;
   overflow: hidden;
 }
 
-.modal-sm { width: 400px; max-width: 100%; }
-.modal-md { width: 600px; max-width: 100%; }
-.modal-lg { width: 800px; max-width: 100%; }
+.modal-small {
+  max-width: 400px;
+}
+
+.modal-medium {
+  max-width: 600px;
+}
+
+.modal-large {
+  max-width: 800px;
+}
 
 /* Modal Header */
 .modal-header {
-  padding: 20px 24px;
+  padding: 20px 24px 16px;
   border-bottom: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
@@ -53,7 +67,11 @@
   padding: 4px;
   line-height: 1;
   border-radius: 4px;
-  transition: all 0.15s ease;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .modal-close:hover {
@@ -83,7 +101,11 @@
 
 /* Form Styles */
 .form-field {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+}
+
+.form-field:last-child {
+  margin-bottom: 0;
 }
 
 .form-label {
@@ -106,7 +128,7 @@
   border-radius: 6px;
   font-size: 16px;
   background: white;
-  transition: border-color 0.15s ease;
+  color: #111827;
   box-sizing: border-box;
 }
 
@@ -117,8 +139,16 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.form-input.error {
+.form-input.error,
+.form-textarea.error {
   border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
 }
 
 .form-error {
@@ -127,16 +157,11 @@
   color: #ef4444;
 }
 
-.form-textarea {
-  resize: vertical;
-  min-height: 80px;
-}
-
 /* Form Grid */
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 16px;
 }
 
 .form-grid .full-width {
@@ -146,11 +171,12 @@
 .form-row {
   display: flex;
   gap: 16px;
-  align-items: end;
+  align-items: flex-end;
 }
 
 .form-row .form-field {
   flex: 1;
+  margin-bottom: 0;
 }
 
 /* Password Input */
@@ -167,13 +193,14 @@
 .details-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 16px;
 }
 
 .detail-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  background: #f9fafb;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
 }
 
 .detail-item.full-width {
@@ -181,28 +208,30 @@
 }
 
 .detail-item label {
-  font-size: 14px;
+  display: block;
+  font-size: 12px;
   font-weight: 500;
   color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  margin-bottom: 4px;
 }
 
 .detail-value {
-  font-size: 16px;
+  font-size: 14px;
   color: #111827;
-  padding: 8px 0;
+  font-weight: 500;
 }
 
 /* Admin Styles */
 .admin-content {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 24px;
 }
 
 .admin-section h4 {
-  margin: 0 0 16px 0;
+  margin: 0 0 12px 0;
   font-size: 16px;
   font-weight: 600;
   color: #111827;
@@ -211,7 +240,7 @@
 .user-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   max-height: 300px;
   overflow-y: auto;
 }
@@ -220,15 +249,27 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
+  padding: 12px;
   background: #f9fafb;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
 }
 
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .user-name {
   font-weight: 500;
   color: #111827;
+  font-size: 14px;
+}
+
+.user-meta {
+  font-size: 12px;
+  color: #6b7280;
 }
 
 .user-actions {
@@ -238,23 +279,24 @@
 
 /* Button Styles */
 .btn {
-  padding: 10px 20px;
+  padding: 8px 16px;
   border: none;
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   text-decoration: none;
   box-sizing: border-box;
+  min-height: 36px;
 }
 
 .btn-sm {
   padding: 6px 12px;
   font-size: 13px;
+  min-height: 32px;
 }
 
 .btn-primary {
@@ -302,25 +344,25 @@
   background: #dc2626;
 }
 
+/* Prevent body scroll when modal is open */
+body.modal-open {
+  overflow: hidden;
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
   .modal-overlay {
     padding: 16px;
   }
   
-  .modal {
-    max-height: calc(100vh - 32px);
-  }
-  
-  .modal-sm,
-  .modal-md,
-  .modal-lg {
-    width: 100%;
+  .modal-small,
+  .modal-medium,
+  .modal-large {
     max-width: 100%;
   }
   
   .modal-header {
-    padding: 16px 20px;
+    padding: 16px 20px 12px;
   }
   
   .modal-body {
@@ -333,17 +375,17 @@
   
   .form-grid {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 12px;
   }
   
   .form-row {
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
   }
   
   .details-grid {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 12px;
   }
   
   .modal-actions {
@@ -363,40 +405,5 @@
   
   .user-actions {
     justify-content: center;
-  }
-}
-
-/* Prevent body scroll when modal is open */
-body.modal-open {
-  overflow: hidden;
-}
-
-/* Focus trap styles */
-.modal:focus {
-  outline: none;
-}
-
-/* Animation */
-.modal-overlay {
-  animation: fadeIn 0.2s ease;
-}
-
-.modal {
-  animation: slideIn 0.25s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideIn {
-  from { 
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to { 
-    opacity: 1;
-    transform: translateY(0);
   }
 }
