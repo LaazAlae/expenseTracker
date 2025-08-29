@@ -85,7 +85,7 @@
             className: 'im-modal-close',
             onClick: onClose,
             type: 'button'
-          }, '×')
+          })
         ),
         React.createElement('div', { className: 'im-modal-body' }, children),
         actions && React.createElement('div', { className: 'im-modal-footer' }, actions)
@@ -714,9 +714,10 @@
               React.createElement('div', { key: user.id, className: 'im-user-item' },
                 React.createElement('div', { className: 'im-user-info' },
                   React.createElement('span', { className: 'im-user-name' }, user.username),
-                  React.createElement('span', { className: 'im-user-meta' }, 
-                    user.lastLogin ? `Last: ${new Date(user.lastLogin).toLocaleDateString()}` : 'Never logged in'
-                  )
+                  React.createElement('span', { 
+                    className: 'im-user-meta',
+                    'data-icon': 'clock'
+                  }, user.lastLogin ? `Last: ${new Date(user.lastLogin).toLocaleDateString()}` : 'Never logged in')
                 ),
                 React.createElement('div', { className: 'im-user-actions' },
                   React.createElement('button', {
