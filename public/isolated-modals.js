@@ -166,24 +166,34 @@
       }, loading ? 'Adding...' : 'Add Funds')
     );
     
+    const titleWithIcon = React.createElement('div', {
+      'data-icon': 'funds'
+    }, 'Add Funds');
+    
     return React.createElement(IM.BaseModal, {
       isOpen,
       onClose,
-      title: 'Add Funds',
+      title: titleWithIcon,
       size: 'small',
       actions
     },
-      React.createElement(IM.FormInput, {
-        label: 'Amount',
-        value: amount,
-        onChange: setAmount,
-        type: 'number',
-        placeholder: '0.00',
-        step: '0.01',
-        min: '0.01',
-        required: true,
-        error
-      })
+      React.createElement('div', { className: 'im-form-field' },
+        React.createElement('label', { 
+          className: 'im-form-label',
+          'data-icon': 'amount'
+        }, 'Amount', React.createElement('span', { className: 'im-required' }, ' *')),
+        React.createElement('input', {
+          type: 'number',
+          value: amount || '',
+          onChange: (e) => setAmount(e.target.value),
+          className: `im-form-input ${error ? 'im-error' : ''}`,
+          placeholder: '0.00',
+          step: '0.01',
+          min: '0.01',
+          required: true
+        }),
+        error && React.createElement('div', { className: 'im-form-error' }, error)
+      )
     );
   };
   
@@ -269,74 +279,133 @@
       }, loading ? 'Adding...' : 'Add Transaction')
     );
     
+    const titleWithIcon = React.createElement('div', {
+      'data-icon': 'transaction'
+    }, 'New Transaction');
+    
     return React.createElement(IM.BaseModal, {
       isOpen,
       onClose,
-      title: 'New Transaction',
+      title: titleWithIcon,
       size: 'large',
       actions
     },
       errors.general && React.createElement('div', { className: 'im-form-error im-general-error' }, errors.general),
       React.createElement('div', { className: 'im-form-grid' },
-        React.createElement(IM.FormInput, {
-          label: 'Beneficiary',
-          value: formData.beneficiary,
-          onChange: (value) => updateField('beneficiary', value),
-          required: true,
-          error: errors.beneficiary
-        }),
-        React.createElement(IM.FormInput, {
-          label: 'Item Description',
-          value: formData.itemDescription,
-          onChange: (value) => updateField('itemDescription', value),
-          required: true,
-          error: errors.itemDescription
-        }),
-        React.createElement(IM.FormInput, {
-          label: 'Invoice Number',
-          value: formData.invoiceNumber,
-          onChange: (value) => updateField('invoiceNumber', value)
-        }),
-        React.createElement(IM.FormInput, {
-          label: 'Amount',
-          value: formData.amount,
-          onChange: (value) => updateField('amount', value),
-          type: 'number',
-          step: '0.01',
-          min: '0.01',
-          required: true,
-          error: errors.amount
-        }),
-        React.createElement(IM.FormInput, {
-          label: 'Purchase Date',
-          value: formData.dateOfPurchase,
-          onChange: (value) => updateField('dateOfPurchase', value),
-          type: 'date',
-          required: true,
-          error: errors.dateOfPurchase
-        }),
-        React.createElement(IM.FormInput, {
-          label: 'Reimbursement Date',
-          value: formData.dateOfReimbursement,
-          onChange: (value) => updateField('dateOfReimbursement', value),
-          type: 'date',
-          required: true,
-          error: errors.dateOfReimbursement
-        }),
-        React.createElement(IM.FormInput, {
-          label: 'Flight Number',
-          value: formData.flightNumber,
-          onChange: (value) => updateField('flightNumber', value)
-        }),
-        React.createElement(IM.FormInput, {
-          label: 'Number of Luggage',
-          value: formData.numberOfLuggage,
-          onChange: (value) => updateField('numberOfLuggage', value),
-          type: 'number',
-          min: '1'
-        }),
+        React.createElement('div', { className: 'im-form-field' },
+          React.createElement('label', { 
+            className: 'im-form-label',
+            'data-icon': 'user'
+          }, 'Beneficiary', React.createElement('span', { className: 'im-required' }, ' *')),
+          React.createElement('input', {
+            type: 'text',
+            value: formData.beneficiary || '',
+            onChange: (e) => updateField('beneficiary', e.target.value),
+            className: `im-form-input ${errors.beneficiary ? 'im-error' : ''}`,
+            required: true
+          }),
+          errors.beneficiary && React.createElement('div', { className: 'im-form-error' }, errors.beneficiary)
+        ),
+        React.createElement('div', { className: 'im-form-field' },
+          React.createElement('label', { 
+            className: 'im-form-label',
+            'data-icon': 'item'
+          }, 'Item Description', React.createElement('span', { className: 'im-required' }, ' *')),
+          React.createElement('input', {
+            type: 'text',
+            value: formData.itemDescription || '',
+            onChange: (e) => updateField('itemDescription', e.target.value),
+            className: `im-form-input ${errors.itemDescription ? 'im-error' : ''}`,
+            required: true
+          }),
+          errors.itemDescription && React.createElement('div', { className: 'im-form-error' }, errors.itemDescription)
+        ),
+        React.createElement('div', { className: 'im-form-field' },
+          React.createElement('label', { 
+            className: 'im-form-label',
+            'data-icon': 'invoice'
+          }, 'Invoice Number'),
+          React.createElement('input', {
+            type: 'text',
+            value: formData.invoiceNumber || '',
+            onChange: (e) => updateField('invoiceNumber', e.target.value),
+            className: 'im-form-input'
+          })
+        ),
+        React.createElement('div', { className: 'im-form-field' },
+          React.createElement('label', { 
+            className: 'im-form-label',
+            'data-icon': 'amount'
+          }, 'Amount', React.createElement('span', { className: 'im-required' }, ' *')),
+          React.createElement('input', {
+            type: 'number',
+            value: formData.amount || '',
+            onChange: (e) => updateField('amount', e.target.value),
+            className: `im-form-input ${errors.amount ? 'im-error' : ''}`,
+            step: '0.01',
+            min: '0.01',
+            required: true
+          }),
+          errors.amount && React.createElement('div', { className: 'im-form-error' }, errors.amount)
+        ),
+        React.createElement('div', { className: 'im-form-field' },
+          React.createElement('label', { 
+            className: 'im-form-label',
+            'data-icon': 'calendar'
+          }, 'Purchase Date', React.createElement('span', { className: 'im-required' }, ' *')),
+          React.createElement('input', {
+            type: 'date',
+            value: formData.dateOfPurchase || '',
+            onChange: (e) => updateField('dateOfPurchase', e.target.value),
+            className: `im-form-input ${errors.dateOfPurchase ? 'im-error' : ''}`,
+            required: true
+          }),
+          errors.dateOfPurchase && React.createElement('div', { className: 'im-form-error' }, errors.dateOfPurchase)
+        ),
+        React.createElement('div', { className: 'im-form-field' },
+          React.createElement('label', { 
+            className: 'im-form-label',
+            'data-icon': 'calendar'
+          }, 'Reimbursement Date', React.createElement('span', { className: 'im-required' }, ' *')),
+          React.createElement('input', {
+            type: 'date',
+            value: formData.dateOfReimbursement || '',
+            onChange: (e) => updateField('dateOfReimbursement', e.target.value),
+            className: `im-form-input ${errors.dateOfReimbursement ? 'im-error' : ''}`,
+            required: true
+          }),
+          errors.dateOfReimbursement && React.createElement('div', { className: 'im-form-error' }, errors.dateOfReimbursement)
+        ),
+        React.createElement('div', { className: 'im-form-field' },
+          React.createElement('label', { 
+            className: 'im-form-label',
+            'data-icon': 'plane'
+          }, 'Flight Number'),
+          React.createElement('input', {
+            type: 'text',
+            value: formData.flightNumber || '',
+            onChange: (e) => updateField('flightNumber', e.target.value),
+            className: 'im-form-input'
+          })
+        ),
+        React.createElement('div', { className: 'im-form-field' },
+          React.createElement('label', { 
+            className: 'im-form-label',
+            'data-icon': 'luggage'
+          }, 'Number of Luggage'),
+          React.createElement('input', {
+            type: 'number',
+            value: formData.numberOfLuggage || '',
+            onChange: (e) => updateField('numberOfLuggage', e.target.value),
+            className: 'im-form-input',
+            min: '1'
+          })
+        ),
         React.createElement('div', { className: 'im-form-field im-full-width' },
-          React.createElement('label', { className: 'im-form-label' }, 'Observations'),
+          React.createElement('label', { 
+            className: 'im-form-label',
+            'data-icon': 'notes'
+          }, 'Observations'),
           React.createElement('textarea', {
             value: formData.observations,
             onChange: (e) => updateField('observations', e.target.value),
@@ -366,10 +435,14 @@
       }, 'Edit')
     );
     
+    const titleWithIcon = React.createElement('div', {
+      'data-icon': isPositiveTransaction ? 'funds' : 'details'
+    }, isPositiveTransaction ? 'Fund Addition Details' : 'Transaction Details');
+    
     return React.createElement(IM.BaseModal, {
       isOpen,
       onClose,
-      title: isPositiveTransaction ? 'Fund Addition Details' : 'Transaction Details',
+      title: titleWithIcon,
       size: 'medium',
       actions
     },
@@ -468,21 +541,32 @@
       }, loading ? 'Assigning...' : 'Assign BD Number')
     );
     
+    const titleWithIcon = React.createElement('div', {
+      'data-icon': 'document'
+    }, `Assign BD Number to ${count || 0} Transaction${(count || 0) !== 1 ? 's' : ''}`);
+    
     return React.createElement(IM.BaseModal, {
       isOpen,
       onClose,
-      title: `Assign BD Number to ${count || 0} Transaction${(count || 0) !== 1 ? 's' : ''}`,
+      title: titleWithIcon,
       size: 'small',
       actions
     },
-      React.createElement(IM.FormInput, {
-        label: 'BD Number',
-        value: bdNumber,
-        onChange: setBdNumber,
-        placeholder: 'Enter BD number (e.g., BD-2025-001)',
-        required: true,
-        error
-      })
+      React.createElement('div', { className: 'im-form-field' },
+        React.createElement('label', { 
+          className: 'im-form-label',
+          'data-icon': 'document'
+        }, 'BD Number', React.createElement('span', { className: 'im-required' }, ' *')),
+        React.createElement('input', {
+          type: 'text',
+          value: bdNumber || '',
+          onChange: (e) => setBdNumber(e.target.value),
+          className: `im-form-input ${error ? 'im-error' : ''}`,
+          placeholder: 'Enter BD number (e.g., BD-2025-001)',
+          required: true
+        }),
+        error && React.createElement('div', { className: 'im-form-error' }, error)
+      )
     );
   };
   
@@ -567,10 +651,14 @@
       }
     };
     
+    const titleWithIcon = React.createElement('div', {
+      'data-icon': 'settings'
+    }, 'Admin Panel - User Management');
+    
     return React.createElement(IM.BaseModal, {
       isOpen,
       onClose,
-      title: 'Admin Panel - User Management',
+      title: titleWithIcon,
       size: 'large'
     },
       React.createElement('div', { className: 'im-admin-content' },
@@ -578,14 +666,24 @@
           React.createElement('h4', null, 'Create New User'),
           errors.general && React.createElement('div', { className: 'im-form-error im-general-error' }, errors.general),
           React.createElement('div', { className: 'im-form-row' },
-            React.createElement(IM.FormInput, {
-              label: 'Username',
-              value: newUser.username,
-              onChange: (value) => setNewUser(prev => ({ ...prev, username: value })),
-              required: true
-            }),
             React.createElement('div', { className: 'im-form-field' },
-              React.createElement('label', { className: 'im-form-label' }, 'Password *'),
+              React.createElement('label', { 
+                className: 'im-form-label',
+                'data-icon': 'user'
+              }, 'Username', React.createElement('span', { className: 'im-required' }, ' *')),
+              React.createElement('input', {
+                type: 'text',
+                value: newUser.username || '',
+                onChange: (e) => setNewUser(prev => ({ ...prev, username: e.target.value })),
+                className: 'im-form-input',
+                required: true
+              })
+            ),
+            React.createElement('div', { className: 'im-form-field' },
+              React.createElement('label', { 
+                className: 'im-form-label',
+                'data-icon': 'password'
+              }, 'Password', React.createElement('span', { className: 'im-required' }, ' *')),
               React.createElement('div', { className: 'im-password-input' },
                 React.createElement('input', {
                   type: 'text',
@@ -597,7 +695,8 @@
                 React.createElement('button', {
                   type: 'button',
                   onClick: generatePassword,
-                  className: 'im-btn im-btn-sm im-btn-secondary'
+                  className: 'im-btn im-btn-sm im-btn-secondary',
+                  'data-icon': 'generate'
                 }, 'Generate')
               )
             )
