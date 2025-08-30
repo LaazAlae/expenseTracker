@@ -870,25 +870,7 @@
       if (isOpen) {
         setBdNumber('');
         setError('');
-        
-        // Get existing BD numbers from current transactions
-        if (window.wsManager && window.wsManager.getStatus && window.wsManager.getStatus().connected) {
-          // Try to get existing BD numbers from global state or WebSocket
-          const existingBDs = [];
-          
-          // Check if we have access to current budget state
-          if (window.currentBudgetState && window.currentBudgetState.transactions) {
-            const bdNumbers = window.currentBudgetState.transactions
-              .filter(t => t.bdNumber)
-              .map(t => t.bdNumber)
-              .filter((bd, index, arr) => arr.indexOf(bd) === index) // unique
-              .sort();
-            setExistingBdNumbers(bdNumbers);
-          } else {
-            // Fallback - common BD number patterns
-            setExistingBdNumbers(['BD001', 'BD002', 'BD003', 'BD004', 'BD005']);
-          }
-        }
+        setExistingBdNumbers([]);
       }
     }, [isOpen]);
     
@@ -933,28 +915,13 @@
       size: 'small',
       actions
     },
-      existingBdNumbers.length > 0 && React.createElement('div', { className: 'im-form-field' },
-        React.createElement('label', { className: 'im-form-label' }, 'Existing BD Numbers (click to use):'),
-        React.createElement('div', { className: 'im-bd-suggestions' },
-          existingBdNumbers.map((bd, index) =>
-            React.createElement('button', {
-              key: `bd_${index}`,
-              type: 'button',
-              className: 'im-btn im-btn-outline',
-              onClick: () => setBdNumber(bd),
-              style: { margin: '2px', fontSize: '12px' }
-            }, bd)
-          )
-        )
-      ),
       React.createElement(UIEMS.UltraSmartInputComponent, {
         field: 'bdNumber',
         label: 'BD Number',
         value: bdNumber,
         onChange: setBdNumber,
-        placeholder: 'Enter new BD number (e.g., BD006)',
-        required: true,
-        history: existingBdNumbers
+        placeholder: 'Enter BD number (e.g., 400)',
+        required: true
       }),
       error && React.createElement('div', { className: 'im-form-error' }, error)
     );
