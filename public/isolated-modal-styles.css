@@ -144,21 +144,21 @@
 }
 
 .im-modal-close {
-  background: none !important;
+  background: rgba(0, 0, 0, 0.05) !important;
   border: none !important;
-  font-size: 24px !important;
   color: #64748b !important;
   cursor: pointer !important;
-  padding: 8px !important;
+  padding: 0 !important;
   line-height: 1 !important;
   border-radius: 8px !important;
-  width: 44px !important;
-  height: 44px !important;
+  width: 32px !important;
+  height: 32px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   transition: all 0.2s ease !important;
   position: relative !important;
+  flex-shrink: 0 !important;
 }
 
 .im-modal-close {
@@ -181,14 +181,6 @@
   margin-left: auto !important;
 }
 
-.im-modal-close::before {
-  content: '' !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  color: #64748b !important;
-  display: block !important;
-  line-height: 1 !important;
-}
 
 /* SINGLE CLOSE BUTTON ONLY - NO DUPLICATES */
 .im-modal-header {
@@ -204,14 +196,11 @@
   display: none !important;
 }
 
-/* Remove × text completely, use only CSS icon */
-.im-modal-close {
-  position: relative !important;
-  flex-shrink: 0 !important;
-  margin-left: auto !important;
-  font-size: 0 !important;
-  text-indent: -9999px !important;
-  overflow: hidden !important;
+/* Perfect icon centering */
+.im-modal-close svg {
+  width: 18px !important;
+  height: 18px !important;
+  stroke-width: 2.5 !important;
 }
 
 /* Perfect title alignment */

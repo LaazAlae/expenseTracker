@@ -71,6 +71,25 @@ body {
   /* Prevent over-scroll and elastic bounce */
   overscroll-behavior: none;
   overscroll-behavior-y: none;
+  /* PWA bottom area fix */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* PWA mode specific styling */
+body.pwa-mode .app {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+  position: relative;
+}
+
+body.pwa-mode .app::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-bottom, 34px);
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  z-index: -1;
 }
 
 /* Professional Icons */
