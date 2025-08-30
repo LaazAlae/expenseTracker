@@ -255,11 +255,26 @@
       
       // Authentication success
       this.socket.on('authenticated', (data) => {
-        console.log('BSS: Authentication successful');
+        console.log('BSS: Authentication successful', data);
+        
+        // Update the bulletproof state manager
         this.stateManager.updateState({
           currentUser: data.user,
-          budgetState: data.budgetState
+          budgetState: data.budgetState,
+          version: data.version || 1
         }, 'websocket_auth');
+        
+        // CRITICAL: Also directly call the UI callback for initial state
+        if (window.bulletproofStateCallback) {
+          console.log('BSS: Calling UI callback for authentication');
+          window.bulletproofStateCallback({
+            currentUser: data.user,
+            budgetState: data.budgetState,
+            version: data.version || 1
+          }, {}, 'websocket_auth');
+        } else {
+          console.warn('BSS: bulletproofStateCallback not found during auth!');
+        }
       });
       
       this.socket.on('auth_error', (data) => {
@@ -305,10 +320,24 @@
           console.log(`BSS: Received ${event}:`, data);
           
           if (data.budgetState) {
+            // Update the bulletproof state manager
             this.stateManager.updateState({
               budgetState: data.budgetState,
+              currentUser: data.user || this.stateManager.getState().currentUser,
               version: data.version
             }, `websocket_${event}`);
+            
+            // CRITICAL: Also directly call the UI callback to ensure React updates
+            if (window.bulletproofStateCallback) {
+              console.log(`BSS: Calling UI callback for ${event}`);
+              window.bulletproofStateCallback({
+                budgetState: data.budgetState,
+                currentUser: data.user || this.stateManager.getState().currentUser,
+                version: data.version
+              }, this.stateManager.getState(), `websocket_${event}`);
+            } else {
+              console.warn('BSS: bulletproofStateCallback not found - UI may not update!');
+            }
             
             // Broadcast to other tabs AND devices
             if (this.broadcastChannel) {

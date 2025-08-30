@@ -901,12 +901,38 @@
         loadUsers();
       }
     }, [isOpen]);
+
+    React.useEffect(() => {
+      if (!window.wsManager) return;
+
+      const handleUsersListUpdate = (event, data) => {
+        if (event === 'users_list' && data.users) {
+          setUsers(data.users);
+          setError('');
+        } else if (event === 'user_created' && data.user) {
+          setUsers(prev => [...prev, data.user]);
+          setError('');
+        } else if (event === 'user_deleted' && data.userId) {
+          setUsers(prev => prev.filter(u => u.id !== data.userId));
+          setError('');
+        } else if (event === 'password_reset') {
+          setError('');
+        }
+      };
+
+      // Register the callback
+      window.wsManager.onStateUpdate(handleUsersListUpdate);
+
+      return () => {
+        // Cleanup is handled by the new websocket system
+      };
+    }, []);
     
     const loadUsers = async () => {
       setLoading(true);
       try {
-        if (window.ultraWSManager) {
-          window.ultraWSManager.emit('get_users');
+        if (window.wsManager) {
+          window.wsManager.emit('admin_get_users');
         }
       } catch (err) {
         setError('Failed to load users');
@@ -922,8 +948,8 @@
       }
       
       try {
-        if (window.ultraWSManager) {
-          window.ultraWSManager.emit('create_user', newUser);
+        if (window.wsManager) {
+          window.wsManager.emit('admin_create_user', newUser);
           setNewUser({ username: '', isAdmin: false });
         }
       } catch (err) {
@@ -934,8 +960,8 @@
     const deleteUser = async (userId) => {
       if (confirm('Are you sure you want to delete this user?')) {
         try {
-          if (window.ultraWSManager) {
-            window.ultraWSManager.emit('delete_user', { userId });
+          if (window.wsManager) {
+            window.wsManager.emit('admin_delete_user', { userId });
           }
         } catch (err) {
           setError('Failed to delete user');
@@ -945,8 +971,8 @@
     
     const resetPassword = async (userId) => {
       try {
-        if (window.ultraWSManager) {
-          window.ultraWSManager.emit('reset_password', { userId });
+        if (window.wsManager) {
+          window.wsManager.emit('admin_reset_password', { userId });
         }
       } catch (err) {
         setError('Failed to reset password');
