@@ -39,45 +39,71 @@
 
   // Ultra Smart Input Component with Advanced Mobile Keyboard Handling
   UIEMS.UltraSmartInputComponent = function({ field, label, type = 'text', required = false, value, onChange, placeholder, step, min, max, history = [], onRemoveFromHistory, showConditionalFields = false }) {
-    const [dropdownVisible, setDropdownVisible] = React.useState(false);
-    const [inputIsFocused, setInputIsFocused] = React.useState(false);
-    const dropdownTimeoutRef = React.useRef(null);
-    const inputRef = React.useRef(null);
-    const inputId = React.useMemo(() => UIEMS.generateUniqueModalId(), []);
+    const [ultraDropdownVisibleState, setUltraDropdownVisibleState] = React.useState(false);
+    const [ultraInputFocusedState, setUltraInputFocusedState] = React.useState(false);
+    const [ultraDropdownPosition, setUltraDropdownPosition] = React.useState({ top: 0, left: 0, width: 0 });
+    const ultraDropdownTimeoutRef = React.useRef(null);
+    const ultraInputRef = React.useRef(null);
+    const ultraInputId = React.useMemo(() => UIEMS.generateUniqueModalId(), []);
     
+    // Calculate dropdown position for mobile fixed positioning
+    const ultraCalculateDropdownPosition = React.useCallback(() => {
+      if (ultraInputRef.current) {
+        const rect = ultraInputRef.current.getBoundingClientRect();
+        const isMobile = window.innerWidth <= 768;
+        
+        if (isMobile) {
+          // Use fixed positioning on mobile with viewport coordinates
+          setUltraDropdownPosition({
+            top: rect.bottom + window.scrollY + 2,
+            left: rect.left + window.scrollX,
+            width: rect.width
+          });
+        } else {
+          // Use relative positioning on desktop
+          setUltraDropdownPosition({
+            top: 0,
+            left: 0, 
+            width: 0
+          });
+        }
+      }
+    }, []);
+
     // Advanced focus/blur handling to prevent mobile keyboard flicker
-    const handleInputFocus = React.useCallback(() => {
-      setInputIsFocused(true);
+    const handleUltraInputFocus = React.useCallback(() => {
+      setUltraInputFocusedState(true);
       if (history.length > 0) {
+        ultraCalculateDropdownPosition();
         // Delay dropdown show to prevent keyboard conflicts
-        dropdownTimeoutRef.current = setTimeout(() => {
-          setDropdownVisible(true);
+        ultraDropdownTimeoutRef.current = setTimeout(() => {
+          setUltraDropdownVisibleState(true);
         }, 150); // Increased delay for mobile stability
       }
-    }, [history.length]);
+    }, [history.length, ultraCalculateDropdownPosition]);
 
-    const handleInputBlur = React.useCallback(() => {
+    const handleUltraInputBlur = React.useCallback(() => {
       // Delay blur processing to allow dropdown clicks
       setTimeout(() => {
-        setInputIsFocused(false);
-        setDropdownVisible(false);
+        setUltraInputFocusedState(false);
+        setUltraDropdownVisibleState(false);
       }, 200);
     }, []);
 
-    const handleDropdownSelect = React.useCallback((selectedValue) => {
-      if (dropdownTimeoutRef.current) {
-        clearTimeout(dropdownTimeoutRef.current);
+    const handleUltraDropdownSelect = React.useCallback((selectedValue) => {
+      if (ultraDropdownTimeoutRef.current) {
+        clearTimeout(ultraDropdownTimeoutRef.current);
       }
       onChange(selectedValue);
-      setDropdownVisible(false);
-      setInputIsFocused(false);
+      setUltraDropdownVisibleState(false);
+      setUltraInputFocusedState(false);
       // Keep focus on input for continued typing
-      if (inputRef.current) {
-        inputRef.current.focus();
+      if (ultraInputRef.current) {
+        ultraInputRef.current.focus();
       }
     }, [onChange]);
 
-    const handleInputChange = React.useCallback((e) => {
+    const handleUltraInputChange = React.useCallback((e) => {
       const newValue = e.target.value;
       
       // Auto-capitalization for names
@@ -92,30 +118,59 @@
       }
       
       // Show dropdown if there's history and input is focused
-      if (inputIsFocused && history.length > 0 && newValue.length > 0) {
+      if (ultraInputFocusedState && history.length > 0 && newValue.length > 0) {
         const filtered = history.filter(item => 
           item.toLowerCase().includes(newValue.toLowerCase())
         );
-        setDropdownVisible(filtered.length > 0);
+        ultraCalculateDropdownPosition();
+        setUltraDropdownVisibleState(filtered.length > 0);
       }
-    }, [field, onChange, inputIsFocused, history]);
+    }, [field, onChange, ultraInputFocusedState, history, ultraCalculateDropdownPosition]);
 
-    // Cleanup timeouts
+    // Cleanup timeouts and add resize listener for mobile positioning
     React.useEffect(() => {
-      return () => {
-        if (dropdownTimeoutRef.current) {
-          clearTimeout(dropdownTimeoutRef.current);
+      const handleResize = () => {
+        if (ultraDropdownVisibleState) {
+          ultraCalculateDropdownPosition();
         }
       };
-    }, []);
+      
+      window.addEventListener('resize', handleResize);
+      window.addEventListener('scroll', handleResize, true);
+      
+      return () => {
+        if (ultraDropdownTimeoutRef.current) {
+          clearTimeout(ultraDropdownTimeoutRef.current);
+        }
+        window.removeEventListener('resize', handleResize);
+        window.removeEventListener('scroll', handleResize, true);
+      };
+    }, [ultraDropdownVisibleState, ultraCalculateDropdownPosition]);
 
     // Conditional field logic
     const shouldShowConditionalFields = field === 'itemDescription' && 
       value && value.toLowerCase().includes('sky cap');
 
+    // Mobile dropdown positioning styles
+    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+    const ultraDropdownStyles = isMobile && ultraDropdownPosition.width > 0 ? {
+      position: 'fixed',
+      top: `${ultraDropdownPosition.top}px`,
+      left: `${ultraDropdownPosition.left}px`,
+      width: `${ultraDropdownPosition.width}px`,
+      zIndex: 9999999,
+      right: 'auto'
+    } : {
+      position: 'absolute',
+      top: '100%',
+      left: 0,
+      right: 0,
+      zIndex: 99999
+    };
+
     return React.createElement('div', { className: 'im-form-field' },
       React.createElement('label', { 
-        htmlFor: inputId, 
+        htmlFor: ultraInputId, 
         className: 'im-form-label',
         'data-icon': field
       },
@@ -123,18 +178,18 @@
         required && React.createElement('span', { className: 'im-required' }, ' *')
       ),
       React.createElement('div', { 
-        className: 'im-input-container',
-        style: { position: 'relative' }
+        className: 'im-input-container ultra-mobile-input-container',
+        style: { position: 'relative', zIndex: isMobile ? 9999998 : 'auto' }
       },
         React.createElement('input', {
-          id: inputId,
-          ref: inputRef,
+          id: ultraInputId,
+          ref: ultraInputRef,
           type,
           value: value || '',
-          onChange: handleInputChange,
-          onFocus: handleInputFocus,
-          onBlur: handleInputBlur,
-          className: `im-form-input`,
+          onChange: handleUltraInputChange,
+          onFocus: handleUltraInputFocus,
+          onBlur: handleUltraInputBlur,
+          className: `im-form-input ultra-mobile-input`,
           placeholder,
           required,
           step,
@@ -145,24 +200,19 @@
           autoCapitalize: field === 'beneficiary' ? 'words' : 'off',
           spellCheck: 'false'
         }),
-        dropdownVisible && history.length > 0 && React.createElement('div', {
-          className: 'im-autocomplete-dropdown',
-          style: { 
-            zIndex: 99999, // Ultra-high z-index to show above everything
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            right: 0
-          }
+        ultraDropdownVisibleState && history.length > 0 && React.createElement('div', {
+          className: 'im-autocomplete-dropdown ultra-mobile-dropdown',
+          style: ultraDropdownStyles
         },
           history.filter(item => 
             item.toLowerCase().includes((value || '').toLowerCase())
           ).slice(0, 5).map((item, index) =>
             React.createElement('div', {
-              key: `${field}_${index}`,
-              className: 'im-dropdown-item',
-              onClick: () => handleDropdownSelect(item),
-              onMouseDown: (e) => e.preventDefault() // Prevent blur
+              key: `ultra_${field}_${index}_${Date.now()}`,
+              className: 'im-dropdown-item ultra-mobile-dropdown-item',
+              onClick: () => handleUltraDropdownSelect(item),
+              onMouseDown: (e) => e.preventDefault(), // Prevent blur
+              onTouchStart: (e) => e.preventDefault() // Prevent mobile scroll
             },
               React.createElement('span', { className: 'im-dropdown-text' }, item),
               React.createElement('button', {

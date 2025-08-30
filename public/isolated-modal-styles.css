@@ -1080,6 +1080,49 @@
   -webkit-backdrop-filter: blur(10px) !important;
 }
 
+/* MOBILE SPECIFIC DROPDOWN ULTRA-HIGH Z-INDEX FIX */
+@media screen and (max-width: 768px) {
+  .im-autocomplete-dropdown {
+    z-index: 9999999 !important;
+    position: fixed !important;
+    transform: translateY(0px) !important;
+    isolation: isolate !important;
+    will-change: transform !important;
+    -webkit-transform-style: preserve-3d !important;
+    transform-style: preserve-3d !important;
+  }
+  
+  /* Create new stacking context for mobile dropdown container */
+  .im-input-container,
+  .ultra-mobile-input-container {
+    position: relative !important;
+    z-index: 9999998 !important;
+    isolation: isolate !important;
+  }
+  
+  /* Ultra-mobile specific dropdown positioning */
+  .ultra-mobile-dropdown {
+    z-index: 9999999 !important;
+    position: fixed !important;
+    isolation: isolate !important;
+    will-change: transform !important;
+    -webkit-transform-style: preserve-3d !important;
+    transform-style: preserve-3d !important;
+    contain: layout style paint !important;
+  }
+  
+  .ultra-mobile-dropdown-item {
+    z-index: 9999999 !important;
+    isolation: isolate !important;
+    contain: layout style paint !important;
+  }
+  
+  .ultra-mobile-input {
+    z-index: 9999998 !important;
+    position: relative !important;
+  }
+}
+
 .im-dropdown-item {
   display: flex !important;
   align-items: center !important;
