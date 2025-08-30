@@ -191,15 +191,19 @@ function App() {
 
   const initializeBulletproofConnection = async (token) => {
     try {
-      // Setup state callback for UI updates
+      console.log('🔗 Setting up bulletproof connection...');
+      
+      // Setup state callback for UI updates BEFORE connecting
       window.bulletproofStateCallback = (newState, oldState, source) => {
-        console.log(`🔄 UI Update from ${source}:`, newState);
+        console.log(`🔄 UI Update from ${source}:`, { newState, oldState });
         
         if (newState.budgetState) {
+          console.log('📊 Updating budget state:', newState.budgetState);
           setBudgetState(newState.budgetState);
         }
         
         if (newState.currentUser) {
+          console.log('👤 Updating current user:', newState.currentUser);
           setCurrentUser(newState.currentUser);
         }
         
@@ -207,13 +211,13 @@ function App() {
         setLoading(false);
       };
       
-      // Connect the bulletproof system
-      await bulletproofWSManager.connect(token);
-      
       // Make bulletproof system available globally for admin panel
       window.wsManager = bulletproofWSManager;
       window.ultraWSManager = bulletproofWSManager;
       window.bulletproofWSManager = bulletproofWSManager;
+      
+      // Connect the bulletproof system
+      await bulletproofWSManager.connect(token);
       
       console.log('🚀 Bulletproof connection established successfully');
       
@@ -259,7 +263,15 @@ function App() {
       throw new Error('Invalid amount');
     }
 
-    console.log('Sending add_funds event:', { amount: parseFloat(amount) });
+    console.log('💰 Adding funds locally and sending to server:', { amount: parseFloat(amount) });
+    
+    // Optimistic UI update - add funds immediately
+    setBudgetState(prev => ({
+      ...prev,
+      totalFundsAdded: prev.totalFundsAdded + parseFloat(amount),
+      availableBudget: prev.availableBudget + parseFloat(amount)
+    }));
+    
     return new Promise((resolve, reject) => {
       try {
         bulletproofWSManager.emit('add_funds', {
@@ -267,12 +279,37 @@ function App() {
         });
         resolve();
       } catch (error) {
+        // Rollback optimistic update on error
+        setBudgetState(prev => ({
+          ...prev,
+          totalFundsAdded: prev.totalFundsAdded - parseFloat(amount),
+          availableBudget: prev.availableBudget - parseFloat(amount)
+        }));
         reject(error);
       }
     });
   };
 
   const handleAddTransaction = (transactionData) => {
+    console.log('📝 Adding transaction locally and sending to server:', transactionData);
+    
+    // Create optimistic transaction
+    const optimisticTransaction = {
+      id: 'temp_' + Date.now(),
+      ...transactionData,
+      dateOfReimbursement: transactionData.dateOfReimbursement || new Date().toISOString(),
+      dateOfPurchase: transactionData.dateOfPurchase || new Date().toISOString(),
+      amount: parseFloat(transactionData.amount)
+    };
+    
+    // Optimistic UI update - add transaction immediately
+    setBudgetState(prev => ({
+      ...prev,
+      transactions: [optimisticTransaction, ...prev.transactions],
+      totalExpenses: prev.totalExpenses + parseFloat(transactionData.amount),
+      availableBudget: prev.availableBudget - parseFloat(transactionData.amount)
+    }));
+    
     return new Promise((resolve, reject) => {
       try {
         if (!bulletproofWSManager.isConnected) {
@@ -281,6 +318,13 @@ function App() {
         bulletproofWSManager.emit('add_transaction', transactionData);
         resolve();
       } catch (error) {
+        // Rollback optimistic update on error
+        setBudgetState(prev => ({
+          ...prev,
+          transactions: prev.transactions.filter(t => t.id !== optimisticTransaction.id),
+          totalExpenses: prev.totalExpenses - parseFloat(transactionData.amount),
+          availableBudget: prev.availableBudget + parseFloat(transactionData.amount)
+        }));
         reject(error);
       }
     });

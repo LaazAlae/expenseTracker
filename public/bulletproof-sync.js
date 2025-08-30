@@ -35,13 +35,18 @@
       this.locks.set(lockKey, Date.now());
       
       try {
-        // Version check for conflict resolution
-        if (newState.version && newState.version < this.state.version) {
-          console.warn('BSS: Outdated state update rejected', { 
-            incoming: newState.version, 
-            current: this.state.version 
-          });
-          return false;
+        // Always accept WebSocket updates (they're authoritative)
+        if (source.startsWith('websocket_')) {
+          console.log(`BSS: Accepting authoritative WebSocket update from ${source}`);
+        } else {
+          // Version check for other sources
+          if (newState.version && newState.version < this.state.version) {
+            console.warn('BSS: Outdated state update rejected', { 
+              incoming: newState.version, 
+              current: this.state.version 
+            });
+            return false;
+          }
         }
         
         // Merge state intelligently
@@ -50,7 +55,7 @@
           ...this.state,
           ...newState,
           lastUpdateTime: Date.now(),
-          version: (this.state.version || 0) + 1
+          version: (newState.version || this.state.version || 0) + (source.startsWith('websocket_') ? 1 : 0)
         };
         
         console.log(`BSS: State updated from ${source}`, {
@@ -126,8 +131,10 @@
         this.broadcastChannel.onmessage = (event) => {
           const { type, data, source } = event.data;
           
+          console.log(`BSS: BroadcastChannel message received:`, { type, source, data });
+          
           if (type === 'state_update' && source !== this.connectionId) {
-            console.log('BSS: Received state update from another tab');
+            console.log('BSS: Processing state update from another tab/device');
             this.stateManager.updateState(data, 'broadcast_channel');
           }
           
@@ -135,6 +142,10 @@
             console.log('BSS: Connection status from another tab:', data);
           }
         };
+        
+        console.log('BSS: BroadcastChannel initialized with ID:', this.connectionId);
+      } else {
+        console.warn('BSS: BroadcastChannel not available in this browser');
       }
     }
     
@@ -259,6 +270,11 @@
       // State update handlers
       this.setupStateUpdateHandlers();
       
+      // Ping for current state after authentication
+      setTimeout(() => {
+        this.socket.emit('get_current_state');
+      }, 1000);
+      
       // Heartbeat
       this.socket.on('pong', () => {
         this.lastHeartbeat = Date.now();
@@ -294,12 +310,15 @@
               version: data.version
             }, `websocket_${event}`);
             
-            // Broadcast to other tabs
+            // Broadcast to other tabs AND devices
             if (this.broadcastChannel) {
+              console.log(`BSS: Broadcasting ${event} to other tabs/devices`);
               this.broadcastChannel.postMessage({
                 type: 'state_update',
                 data: { budgetState: data.budgetState, version: data.version },
-                source: this.connectionId
+                source: this.connectionId,
+                event: event,
+                timestamp: Date.now()
               });
             }
           }
@@ -429,8 +448,9 @@
     }
     
     emit(event, data) {
+      console.log(`BSS: Emitting ${event}:`, data);
+      
       if (this.isConnected && this.socket) {
-        console.log(`BSS: Emitting ${event}:`, data);
         this.socket.emit(event, { 
           ...data, 
           connectionId: this.connectionId,
@@ -438,7 +458,7 @@
         });
         return true;
       } else {
-        console.log(`BSS: Queuing ${event} (not connected):`, data);
+        console.log(`BSS: Queuing ${event} (not connected)`);
         this.messageQueue.push({ event, data, timestamp: Date.now() });
         
         // Show user feedback for queued actions
