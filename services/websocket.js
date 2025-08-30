@@ -163,10 +163,13 @@ class WebSocketManager {
           const result = await budgetManager.addFunds(socket.userId, amount, socket.username);
 
           if (result.success) {
-            // Broadcast to this user only with complete budget state
-            this.emitToUser(socket.userId, 'funds_added', {
+            // CRITICAL FIX: Broadcast to ALL connected users with the same budget state
+            // Since this is a shared expense tracker, everyone should see the same budget
+            this.emitToAll('funds_added', {
               transaction: result.transaction,
-              budgetState: result.budgetState
+              budgetState: result.budgetState, // Same budget state for all users
+              userId: socket.userId, // Who made the change
+              timestamp: Date.now()
             });
 
             // Log the operation
@@ -211,10 +214,12 @@ class WebSocketManager {
           const result = await budgetManager.addTransaction(socket.userId, sanitizedData, socket.username);
 
           if (result.success) {
-            // Broadcast to this user only with complete budget state
-            this.emitToUser(socket.userId, 'transaction_added', {
+            // CRITICAL FIX: Broadcast to ALL connected users for real-time sync
+            this.emitToAll('transaction_added', {
               transaction: result.transaction,
-              budgetState: result.budgetState
+              budgetState: result.budgetState,
+              userId: socket.userId, // Who made the change
+              timestamp: Date.now()
             });
 
             // Log the operation
@@ -260,10 +265,12 @@ class WebSocketManager {
           const result = await budgetManager.editTransaction(socket.userId, transactionId, sanitizedUpdates, socket.username);
 
           if (result.success) {
-            // Broadcast to this user only with complete budget state
-            this.emitToUser(socket.userId, 'transaction_updated', {
+            // CRITICAL FIX: Broadcast to ALL connected users for real-time sync
+            this.emitToAll('transaction_updated', {
               transaction: result.transaction,
-              budgetState: result.budgetState
+              budgetState: result.budgetState,
+              userId: socket.userId, // Who made the change
+              timestamp: Date.now()
             });
 
             // Log the operation
@@ -297,10 +304,12 @@ class WebSocketManager {
           const result = await budgetManager.deleteTransaction(socket.userId, transactionId, socket.username);
 
           if (result.success) {
-            // Broadcast to this user only with complete budget state
-            this.emitToUser(socket.userId, 'transaction_deleted', {
+            // CRITICAL FIX: Broadcast to ALL connected users for real-time sync
+            this.emitToAll('transaction_deleted', {
               transactionId,
-              budgetState: result.budgetState
+              budgetState: result.budgetState,
+              userId: socket.userId, // Who made the change
+              timestamp: Date.now()
             });
 
             // Log the operation
@@ -335,12 +344,14 @@ class WebSocketManager {
           const result = await budgetManager.assignBdNumbers(socket.userId, transactionIds, bdNumber, socket.username);
 
           if (result.success) {
-            // Broadcast to this user only with complete budget state
-            this.emitToUser(socket.userId, 'bd_assigned', {
+            // CRITICAL FIX: Broadcast to ALL connected users for real-time sync
+            this.emitToAll('bd_assigned', {
               bdNumber: result.bdNumber,
               transactionIds: result.transactionIds,
               count: result.updatedCount,
-              budgetState: result.budgetState
+              budgetState: result.budgetState,
+              userId: socket.userId, // Who made the change
+              timestamp: Date.now()
             });
 
             // Log the operation
