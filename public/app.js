@@ -445,7 +445,7 @@ function App() {
         })
       ),
 
-      React.createElement('div', { className: 'transaction-section' },
+      React.createElement('div', { className: `transaction-section ${showBDCreation ? 'bd-modal-active' : ''}` },
         React.createElement('div', { className: 'transaction-header' },
           React.createElement('h2', null, 'Transaction History')
         ),

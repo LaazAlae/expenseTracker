@@ -106,6 +106,15 @@
     const handleUltraInputChange = React.useCallback((e) => {
       const newValue = e.target.value;
       
+      // BD Number validation - only allow numbers and slashes
+      if (field === 'bdNumber') {
+        const bdPattern = /^[0-9/]*$/;
+        if (bdPattern.test(newValue)) {
+          onChange(newValue);
+        }
+        return;
+      }
+      
       // Auto-capitalization for names
       if (field === 'beneficiary') {
         const words = newValue.split(' ');
@@ -886,11 +895,15 @@
     const handleSubmit = (e) => {
       if (e) e.preventDefault();
       
+      console.log('[BD Modal] handleSubmit called with bdNumber:', bdNumber);
+      
       if (!bdNumber || !bdNumber.trim()) {
+        console.log('[BD Modal] Validation failed - empty bdNumber');
         setError('Please enter a BD number');
         return;
       }
       
+      console.log('[BD Modal] Validation passed, calling onConfirm with:', bdNumber.trim());
       setError('');
       if (onConfirm) {
         onConfirm(bdNumber.trim());
@@ -905,8 +918,7 @@
       }, 'Cancel'),
       React.createElement('button', {
         className: 'im-btn im-btn-primary',
-        onClick: handleSubmit,
-        disabled: !bdNumber || !bdNumber.trim()
+        onClick: handleSubmit
       }, 'Assign BD Number')
     );
     
