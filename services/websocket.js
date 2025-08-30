@@ -133,7 +133,7 @@ class WebSocketManager {
             budgetState
           });
 
-          console.log(`🔐 User ${user.username} authenticated on socket ${socket.id} from ${clientIP}`);
+          console.log(` User ${user.username} authenticated on socket ${socket.id} from ${clientIP}`);
         } catch (error) {
           console.error('Authentication error:', error);
           enhancedSecurity.logSecurityEvent('INVALID_TOKEN', {

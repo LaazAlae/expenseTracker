@@ -123,7 +123,7 @@ class EnhancedSecurity {
     
     // Log high-severity events immediately
     if (event.severity === 'HIGH' || event.severity === 'CRITICAL') {
-      console.warn(`🚨 SECURITY ALERT [${event.severity}]: ${eventType}`, details);
+      console.warn(` SECURITY ALERT [${event.severity}]: ${eventType}`, details);
       this.writeSecurityLogToFile(event);
     }
     

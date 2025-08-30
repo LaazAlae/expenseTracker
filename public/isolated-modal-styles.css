@@ -182,7 +182,7 @@
 }
 
 .im-modal-close::before {
-  content: '✕' !important;
+  content: '' !important;
   font-size: 14px !important;
   font-weight: 600 !important;
   color: #64748b !important;
@@ -768,7 +768,7 @@
 }
 
 .im-user-meta::before {
-  content: '🕒' !important;
+  content: '' !important;
   font-size: 12px !important;
 }
 

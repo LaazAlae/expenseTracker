@@ -10,7 +10,7 @@ async function createAdminUser() {
     // Check if admin already exists
     const existingUsers = Object.values(data.users);
     if (existingUsers.length > 0) {
-      console.log('✅ Admin user already exists:', existingUsers[0].username);
+      console.log(' Admin user already exists:', existingUsers[0].username);
       return;
     }
     
@@ -41,16 +41,16 @@ async function createAdminUser() {
     
     await saveData();
     
-    console.log('🎉 Admin user created successfully!');
-    console.log('📝 Credentials:');
+    console.log(' Admin user created successfully!');
+    console.log(' Credentials:');
     console.log(`   Username: ${adminUsername}`);
     console.log(`   Password: ${adminPassword}`);
     console.log('');
-    console.log('⚠️  IMPORTANT: Please change the admin password after first login!');
-    console.log('💡 You can now log in and create additional users from the admin panel.');
+    console.log('️  IMPORTANT: Please change the admin password after first login!');
+    console.log(' You can now log in and create additional users from the admin panel.');
     
   } catch (error) {
-    console.error('❌ Failed to create admin user:', error);
+    console.error(' Failed to create admin user:', error);
     process.exit(1);
   }
 }

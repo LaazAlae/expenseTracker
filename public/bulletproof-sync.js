@@ -717,8 +717,8 @@
   BSS.getState = () => BSS.stateManager.getState();
   BSS.requestRefresh = () => BSS.wsManager.requestStateRefresh();
   
-  console.log('✅ Bulletproof Sync System initialized');
-  console.log('✅ WebSocket + Polling hybrid ready');
-  console.log('✅ State management with locks active');
+  console.log(' Bulletproof Sync System initialized');
+  console.log(' WebSocket + Polling hybrid ready');
+  console.log(' State management with locks active');
   
 })();

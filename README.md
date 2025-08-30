@@ -1,10 +1,10 @@
-# 🏢 Enterprise Expense Tracker
+#  Enterprise Expense Tracker
 
 A government-level secure, industry-robust expense tracking application with real-time collaboration, comprehensive audit trails, and enterprise-grade security measures.
 
-## 🚀 Features
+##  Features
 
-### 🔐 Security & Authentication
+###  Security & Authentication
 - **Invite-only system** - No public registration, admin-managed users only
 - **30-day persistent sessions** - No more logging out on refresh
 - **Government-level security** with enhanced monitoring and threat detection
@@ -15,14 +15,14 @@ A government-level secure, industry-robust expense tracking application with rea
 - **Account lockout protection** with automatic unlock timers
 - **Session integrity validation** with token format verification
 
-### 💬 Real-time Communication
+###  Real-time Communication
 - **WebSocket-powered** - Everything happens in real-time
 - **User isolation** - Each user sees only their own data
 - **Live updates** - Changes sync instantly across all sessions
 - **Connection resilience** - Automatic reconnection with queued operations
 - **Background sync** - No data loss during network interruptions
 
-### 📊 Transaction Management
+###  Transaction Management
 - **Full CRUD operations** - Create, read, update, delete all transactions
 - **Edit mode** - Real-time editing of any transaction field
 - **Bulk BD assignment** - Assign BD numbers to multiple transactions
@@ -30,7 +30,7 @@ A government-level secure, industry-robust expense tracking application with rea
 - **Flight information tracking** - Special fields for Sky Cap transactions
 - **Fund management** - Add funds with full audit trail
 
-### 👑 Admin Panel
+###  Admin Panel
 - **User creation** with secure credential generation
 - **Password reset** functionality
 - **User management** (activate/deactivate/delete)
@@ -38,13 +38,13 @@ A government-level secure, industry-robust expense tracking application with rea
 - **Security event tracking** and analysis
 - **Account status management** (locked/active)
 
-### 📈 Data Export & Reporting
+###  Data Export & Reporting
 - **Excel export** with comprehensive transaction data
 - **Audit trail preservation** with modification history
 - **Real-time budget tracking** with visual indicators
 - **Transaction filtering** and sorting capabilities
 
-## 🛡️ Security Measures
+## ️ Security Measures
 
 ### Threat Protection
 - **Brute force detection** with automatic IP blocking
@@ -69,7 +69,7 @@ A government-level secure, industry-robust expense tracking application with rea
 - **Account lockout policies** after failed attempts
 - **IP-based access tracking** and geographic monitoring
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 - Node.js 16+
@@ -117,7 +117,7 @@ PORT=3000
 NODE_ENV=production
 ```
 
-## 📖 User Guide
+##  User Guide
 
 ### For Regular Users
 
@@ -159,7 +159,7 @@ NODE_ENV=production
    - Track user activity and login patterns
    - Review audit logs and alerts
 
-## 🏗️ Architecture
+## ️ Architecture
 
 ### Technology Stack
 - **Backend**: Node.js + Express + Socket.IO
@@ -195,7 +195,7 @@ NODE_ENV=production
 5. **Real-time**: WebSocket broadcast + User isolation
 6. **Monitoring**: Threat detection + Alert generation
 
-## 🔧 Configuration
+##  Configuration
 
 ### Security Configuration
 
@@ -216,7 +216,7 @@ The application includes multiple security layers:
 - **Memory Management**: 5-minute garbage collection
 - **Alert Thresholds**: Configurable risk scoring
 
-## 🚨 Security Alerts
+##  Security Alerts
 
 The system monitors for:
 - Multiple failed login attempts
@@ -228,7 +228,7 @@ The system monitors for:
 - Account enumeration attempts
 - Session hijacking attempts
 
-## 📞 Support
+##  Support
 
 ### Troubleshooting
 
@@ -262,7 +262,7 @@ tail -f logs/security-$(date +%Y-%m-%d).log
 curl http://localhost:3000/api/metrics
 ```
 
-## 🏆 Compliance & Standards
+##  Compliance & Standards
 
 This application meets or exceeds:
 - **Government security standards** for sensitive data
@@ -273,17 +273,17 @@ This application meets or exceeds:
 
 ---
 
-## 🎯 Key Improvements Made
+##  Key Improvements Made
 
-✅ **Session Persistence** - No more logout on refresh  
-✅ **Real-time WebSockets** - Everything syncs instantly  
-✅ **User Isolation** - Each user sees only their data  
-✅ **Edit Functionality** - Full CRUD on all transactions  
-✅ **Admin Panel** - Complete user management system  
-✅ **Invite-only System** - No public registration  
-✅ **Government-level Security** - Comprehensive threat protection  
-✅ **Industry Robustness** - Enterprise-grade reliability  
-✅ **Audit Trails** - Complete activity tracking  
-✅ **Auto-reconnection** - Resilient network handling  
+ **Session Persistence** - No more logout on refresh  
+ **Real-time WebSockets** - Everything syncs instantly  
+ **User Isolation** - Each user sees only their data  
+ **Edit Functionality** - Full CRUD on all transactions  
+ **Admin Panel** - Complete user management system  
+ **Invite-only System** - No public registration  
+ **Government-level Security** - Comprehensive threat protection  
+ **Industry Robustness** - Enterprise-grade reliability  
+ **Audit Trails** - Complete activity tracking  
+ **Auto-reconnection** - Resilient network handling  
 
-**The app is now BULLETPROOF and ready for enterprise deployment! 🎉**
+**The app is now BULLETPROOF and ready for enterprise deployment! **

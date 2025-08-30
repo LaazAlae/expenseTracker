@@ -61,17 +61,17 @@ body {
 .icon-logout::before { content: "⤒"; color: #6b7280; }
 .icon-add::before { content: "+"; color: #fff; font-weight: bold; }
 .icon-close::before { content: "×"; color: #6b7280; }
-.icon-check::before { content: "✓"; color: #10b981; }
+.icon-check::before { content: ""; color: #10b981; }
 .icon-cancel::before { content: "×"; color: #ef4444; }
 .icon-bd::before { content: "▤"; color: #6b7280; }
 .icon-document::before { content: "▢"; color: #6b7280; }
-.icon-flight::before { content: "✈"; color: #3b82f6; }
+.icon-flight::before { content: ""; color: #3b82f6; }
 .icon-info::before { content: "ℹ"; color: #3b82f6; }
-.icon-success::before { content: "✓"; color: #10b981; }
+.icon-success::before { content: ""; color: #10b981; }
 .icon-error::before { content: "!"; color: #ef4444; }
-.icon-warning::before { content: "⚠"; color: #f59e0b; }
-.icon-edit::before { content: "✏"; color: #6b7280; }
-.icon-settings::before { content: "⚙"; color: #6b7280; }
+.icon-warning::before { content: ""; color: #f59e0b; }
+.icon-edit::before { content: ""; color: #6b7280; }
+.icon-settings::before { content: ""; color: #6b7280; }
 
 /* Header */
 .header { 
@@ -2061,7 +2061,7 @@ body {
 }
 
 .security-badge::before {
-  content: "🔒";
+  content: "";
   margin-right: 4px;
 }
 

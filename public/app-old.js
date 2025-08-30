@@ -38,12 +38,12 @@ class BulletproofWebSocketIntegration {
   }
   
   setupIntegration() {
-    console.log('🔗 Setting up Bulletproof WebSocket integration');
+    console.log(' Setting up Bulletproof WebSocket integration');
     this.isInitialized = true;
     
     // Subscribe to state changes from the bulletproof system
     this.stateSubscription = this.syncSystem.subscribe((newState, oldState, source) => {
-      console.log(`🔄 State update from ${source}:`, newState);
+      console.log(` State update from ${source}:`, newState);
       
       // Notify UI callback if registered
       if (window.bulletproofStateCallback) {
@@ -61,10 +61,10 @@ class BulletproofWebSocketIntegration {
     
     try {
       await this.syncSystem.connect(token);
-      console.log('🚀 Bulletproof connection established');
+      console.log(' Bulletproof connection established');
       return { socket: { on: () => {} } }; // Mock for compatibility
     } catch (error) {
-      console.error('❌ Bulletproof connection failed:', error);
+      console.error(' Bulletproof connection failed:', error);
       throw error;
     }
   }
@@ -191,19 +191,19 @@ function App() {
 
   const initializeBulletproofConnection = async (token) => {
     try {
-      console.log('🔗 Setting up bulletproof connection...');
+      console.log(' Setting up bulletproof connection...');
       
       // Setup state callback for UI updates BEFORE connecting
       window.bulletproofStateCallback = (newState, oldState, source) => {
-        console.log(`🔄 UI Update from ${source}:`, { newState, oldState });
+        console.log(` UI Update from ${source}:`, { newState, oldState });
         
         if (newState.budgetState) {
-          console.log('📊 Updating budget state:', newState.budgetState);
+          console.log(' Updating budget state:', newState.budgetState);
           setBudgetState(newState.budgetState);
         }
         
         if (newState.currentUser) {
-          console.log('👤 Updating current user:', newState.currentUser);
+          console.log(' Updating current user:', newState.currentUser);
           setCurrentUser(newState.currentUser);
         }
         
@@ -219,10 +219,10 @@ function App() {
       // Connect the bulletproof system
       await bulletproofWSManager.connect(token);
       
-      console.log('🚀 Bulletproof connection established successfully');
+      console.log(' Bulletproof connection established successfully');
       
     } catch (error) {
-      console.error('❌ Bulletproof connection failed:', error);
+      console.error(' Bulletproof connection failed:', error);
       setLoading(false);
       handleLogout();
     }
@@ -263,7 +263,7 @@ function App() {
       throw new Error('Invalid amount');
     }
 
-    console.log('💰 Adding funds locally and sending to server:', { amount: parseFloat(amount) });
+    console.log(' Adding funds locally and sending to server:', { amount: parseFloat(amount) });
     
     // Optimistic UI update - add funds immediately
     setBudgetState(prev => ({
@@ -291,7 +291,7 @@ function App() {
   };
 
   const handleAddTransaction = (transactionData) => {
-    console.log('📝 Adding transaction locally and sending to server:', transactionData);
+    console.log(' Adding transaction locally and sending to server:', transactionData);
     
     // Create optimistic transaction
     const optimisticTransaction = {

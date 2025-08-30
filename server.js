@@ -88,9 +88,9 @@ loadData().then(async () => {
   await budgetManager.cleanupOldBudgetFields();
   
   server.listen(PORT, () => {
-    console.log(`🚀 Secure expense tracker running on port ${PORT}`);
-    console.log(`🔒 WebSocket enabled for real-time communication`);
-    console.log(`💰 Centralized budget management active`);
-    console.log(`🔧 Ready for enterprise-grade consistency!`);
+    console.log(` Secure expense tracker running on port ${PORT}`);
+    console.log(` WebSocket enabled for real-time communication`);
+    console.log(` Centralized budget management active`);
+    console.log(` Ready for enterprise-grade consistency!`);
   });
 }).catch(console.error);

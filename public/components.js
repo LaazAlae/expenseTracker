@@ -234,7 +234,7 @@ function AuthForm({ onAuth }) {
           fontSize: '14px',
           color: '#92400e'
         }
-      }, '⚠ Registration is disabled. Contact an administrator for account access.'),
+      }, ' Registration is disabled. Contact an administrator for account access.'),
       
       errors.general && React.createElement('div', { className: 'form-error', style: { marginBottom: '16px' } },
         React.createElement('span', { className: 'icon icon-error' }),

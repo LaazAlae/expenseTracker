@@ -53,6 +53,51 @@
             });
           }
 
+          // Handle new transactions
+          if (event === 'transaction_added') {
+            console.log('[useWebSocket] Transaction added:', data);
+            // Budget state is already handled above, just show notification
+            if (window.showNotification) {
+              window.showNotification('Transaction added successfully', 'success');
+            }
+          }
+
+          // Handle new funds
+          if (event === 'funds_added') {
+            console.log('[useWebSocket] Funds added:', data);
+            // Budget state is already handled above, just show notification
+            if (window.showNotification) {
+              window.showNotification(`Funds added: $${data.transaction.amount}`, 'success');
+            }
+          }
+
+          // Handle transaction updates  
+          if (event === 'transaction_updated') {
+            console.log('[useWebSocket] Transaction updated:', data);
+            // Budget state is already handled above, just show notification
+            if (window.showNotification) {
+              window.showNotification('Transaction updated successfully', 'success');
+            }
+          }
+
+          // Handle transaction deletions
+          if (event === 'transaction_deleted') {
+            console.log('[useWebSocket] Transaction deleted:', data);
+            // Budget state is already handled above, just show notification
+            if (window.showNotification) {
+              window.showNotification('Transaction deleted successfully', 'success');
+            }
+          }
+
+          // Handle BD number assignments
+          if (event === 'bd_assigned') {
+            console.log('[useWebSocket] BD number assigned:', data);
+            // Budget state is already handled above, just show notification
+            if (window.showNotification) {
+              window.showNotification(`BD number ${data.bdNumber} assigned to ${data.count} transaction(s)`, 'success');
+            }
+          }
+
           // Handle user management updates
           if (event === 'users_list' && data.users) {
             setUsers(data.users);
@@ -255,6 +300,6 @@
   // Make hook globally available
   window.useWebSocket = useWebSocket;
 
-  console.log('✅ React WebSocket hook initialized');
+  console.log(' React WebSocket hook initialized');
 
 })();

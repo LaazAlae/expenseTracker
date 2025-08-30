@@ -311,8 +311,8 @@ function App() {
     switch (connectionStatus) {
       case 'connected': return '🟢 Connected';
       case 'connecting': return '🟡 Connecting...';
-      case 'disconnected': return '🔴 Disconnected';
-      case 'failed': return '🔴 Connection Failed';
+      case 'disconnected': return ' Disconnected';
+      case 'failed': return ' Connection Failed';
       default: return '🟡 Unknown';
     }
   };
@@ -567,7 +567,7 @@ function App() {
       }
     }),
 
-    editingTransaction && React.createElement(TransactionEditModal, {
+    editingTransaction && React.createElement(window.IsolatedModals.TransactionEditModal, {
       transaction: editingTransaction,
       onSave: handleSaveEditTransaction,
       onCancel: () => setEditingTransaction(null)

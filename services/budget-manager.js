@@ -418,7 +418,7 @@ class BudgetManager {
     
     if (needsSave) {
       await saveData();
-      console.log('✅ Cleaned up old budget fields from user data');
+      console.log(' Cleaned up old budget fields from user data');
     }
   }
 }
