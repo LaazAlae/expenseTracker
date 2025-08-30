@@ -186,8 +186,10 @@ class UltraIsolatedWebSocketManager {
       this.ultraMessageQueue.push({ event, data });
       console.log('Ultra WebSocket: Queued message -', event);
       
-      // Show user feedback for queued actions
-      showNotification('Action queued - will sync when connection restored', 'info');
+      // Only show queue message if actually offline/disconnected for more than 5 seconds
+      if (this.ultraReconnectAttempts > 1) {
+        showNotification('Action queued - will sync when connection restored', 'info');
+      }
       
       // Try to trigger background sync for PWAs
       if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
@@ -329,7 +331,40 @@ function App() {
     window.ultraPWAStateCallback = (newBudgetState) => {
       setBudgetState(newBudgetState);
       console.log('PWA sync: Updated state from another tab');
+      
+      // Force re-render and state update
+      setTimeout(() => {
+        setBudgetState(prevState => ({ ...prevState, ...newBudgetState }));
+      }, 100);
     };
+    
+    // Enhanced PWA visibility handling for instant refresh
+    const handlePWAVisibilityChange = () => {
+      if (!document.hidden && ultraWSManager.ultraIsConnected) {
+        console.log('PWA became visible - requesting fresh state');
+        ultraWSManager.requestStateRefresh();
+        // Also force a small delay update
+        setTimeout(() => {
+          if (ultraWSManager.ultraIsConnected) {
+            ultraWSManager.requestStateRefresh();
+          }
+        }, 500);
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handlePWAVisibilityChange);
+    window.addEventListener('focus', handlePWAVisibilityChange);
+    
+    // PWA app state change handling
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('beforeunload', () => {
+        if (ultraWSManager.ultraPWABroadcastChannel) {
+          ultraWSManager.ultraPWABroadcastChannel.postMessage({
+            type: 'app-closing'
+          });
+        }
+      });
+    }
 
     socket.on('authenticated', (data) => {
       console.log('WebSocket authenticated:', data);
@@ -413,6 +448,13 @@ function App() {
     socket.on('account_deleted', () => {
       showNotification('Your account has been deleted', 'error');
       handleLogout();
+    });
+
+    // Handle current state response for PWA sync
+    socket.on('current_state', (data) => {
+      console.log('Ultra WebSocket: Received current state', data);
+      setBudgetState(data.budgetState);
+      ultraWSManager.broadcastStateUpdate(data.budgetState);
     });
 
     socket.on('error', (data) => {
