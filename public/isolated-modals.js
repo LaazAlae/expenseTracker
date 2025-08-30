@@ -1141,6 +1141,7 @@
   
   // Override global TransactionEditModal to use our isolated version
   window.TransactionEditModal = function({ transaction, onSave, onCancel }) {
+    console.log('TransactionEditModal called with:', { transaction, onSave: typeof onSave, onCancel: typeof onCancel });
     return React.createElement(IM.TransactionEditModal, {
       isOpen: !!transaction,
       onClose: onCancel,
@@ -1148,5 +1149,9 @@
       onSave: onSave
     });
   };
+  
+  // Debug log to confirm our modal system is loaded
+  console.log('Isolated Modal System loaded with components:', Object.keys(window.IsolatedModals));
+  console.log('TransactionEditModal override installed');
   
 })();

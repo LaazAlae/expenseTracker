@@ -302,20 +302,37 @@ function App() {
     setLoading(false);
   };
 
-  const handleAddFunds = () => {
-    if (!fundsAmount || parseFloat(fundsAmount) <= 0) {
+  const handleAddFunds = (amount) => {
+    if (!amount || parseFloat(amount) <= 0) {
       showNotification('Please enter a valid amount', 'error');
-      return;
+      throw new Error('Invalid amount');
     }
 
-    console.log('Sending add_funds event:', { amount: parseFloat(fundsAmount) });
-    wsManager.emit('add_funds', {
-      amount: parseFloat(fundsAmount)
+    console.log('Sending add_funds event:', { amount: parseFloat(amount) });
+    return new Promise((resolve, reject) => {
+      try {
+        wsManager.emit('add_funds', {
+          amount: parseFloat(amount)
+        });
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
     });
   };
 
   const handleAddTransaction = (transactionData) => {
-    wsManager.emit('add_transaction', transactionData);
+    return new Promise((resolve, reject) => {
+      try {
+        if (!wsManager) {
+          throw new Error('Connection not available. Please refresh the page.');
+        }
+        wsManager.emit('add_transaction', transactionData);
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    });
   };
 
   const handleEditTransaction = (transaction) => {
@@ -323,14 +340,35 @@ function App() {
   };
 
   const handleSaveEditTransaction = (updates) => {
-    wsManager.emit('edit_transaction', {
-      transactionId: editingTransaction.id,
-      updates
+    return new Promise((resolve, reject) => {
+      try {
+        if (!wsManager) {
+          throw new Error('Connection not available. Please refresh the page.');
+        }
+        wsManager.emit('edit_transaction', {
+          transactionId: editingTransaction.id,
+          updates
+        });
+        setEditingTransaction(null);
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
     });
   };
 
   const handleDeleteTransaction = (transactionId) => {
     if (confirm('Are you sure you want to delete this transaction?')) {
+      if (!wsManager) {
+        alert('Connection not available. Please refresh the page.');
+        return;
+      }
+      // Optimistically update UI
+      setBudgetState(prev => ({
+        ...prev,
+        transactions: prev.transactions.filter(t => t.id !== transactionId)
+      }));
+      
       wsManager.emit('delete_transaction', { transactionId });
     }
   };

@@ -560,5 +560,5 @@ window.AddFundsModal = AddFundsModal;
 window.BDNumberModal = BDNumberModal;
 window.AdminPanel = AdminPanel;
 
-// Initialize wsManager globally
-window.wsManager = wsManager;
+// Remove wsManager reference - it's handled in app.js
+// window.wsManager = wsManager;
