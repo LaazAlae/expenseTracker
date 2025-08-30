@@ -224,13 +224,15 @@ function App() {
     setShowBDNumberPrompt(true);
   };
 
-  const confirmBDCreation = () => {
-    if (!bdNumber.trim()) {
+  const confirmBDCreation = (bdNumberFromModal) => {
+    console.log('[App] confirmBDCreation called with:', bdNumberFromModal);
+    
+    if (!bdNumberFromModal || !bdNumberFromModal.trim()) {
       showNotification('Please enter a BD number', 'error');
       return;
     }
 
-    assignBdNumber(Array.from(selectedForBD), bdNumber.trim())
+    assignBdNumber(Array.from(selectedForBD), bdNumberFromModal.trim())
       .then(() => {
         setShowBDCreation(false);
         setShowBDNumberPrompt(false);
