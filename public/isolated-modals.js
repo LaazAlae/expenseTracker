@@ -611,8 +611,14 @@
       const handleSubmit = async () => {
         const newErrors = {};
         
-        if (!formData.beneficiary) newErrors.beneficiary = 'Beneficiary is required';
-        if (!formData.itemDescription) newErrors.itemDescription = 'Item description is required';
+        // Different validation for fund additions vs regular transactions
+        const isFundAddition = transaction.type === 'fund_addition';
+        
+        if (!isFundAddition) {
+          if (!formData.beneficiary) newErrors.beneficiary = 'Beneficiary is required';
+          if (!formData.itemDescription) newErrors.itemDescription = 'Item description is required';
+        }
+        
         if (!formData.amount || parseFloat(formData.amount) <= 0) newErrors.amount = 'Valid amount is required';
         
         if (Object.keys(newErrors).length > 0) {
@@ -668,14 +674,25 @@
         actions
       },
         React.createElement('div', { className: 'im-form-grid' },
-          React.createElement(UIEMS.UltraSmartInputComponent, {
+          // Show transaction type for fund additions
+          transaction.type === 'fund_addition' && React.createElement('div', { 
+            className: 'im-form-field',
+            style: { background: '#e8f5e8', padding: '10px', borderRadius: '4px', marginBottom: '10px' }
+          },
+            React.createElement('strong', null, '💰 Fund Addition'),
+            React.createElement('p', { style: { margin: '5px 0 0 0', fontSize: '14px', color: '#666' } }, 
+              'Editing a fund addition transaction. Only amount and dates can be modified.')
+          ),
+          
+          // Only show beneficiary and item description for regular transactions
+          transaction.type !== 'fund_addition' && React.createElement(UIEMS.UltraSmartInputComponent, {
             field: 'beneficiary',
             label: 'Beneficiary',
             value: formData.beneficiary,
             onChange: (value) => updateField('beneficiary', value),
             required: true
           }),
-          React.createElement(UIEMS.UltraSmartInputComponent, {
+          transaction.type !== 'fund_addition' && React.createElement(UIEMS.UltraSmartInputComponent, {
             field: 'itemDescription',
             label: 'Item Description',
             value: formData.itemDescription,
@@ -692,7 +709,7 @@
             min: '0.01',
             required: true
           }),
-          React.createElement(UIEMS.UltraSmartInputComponent, {
+          transaction.type !== 'fund_addition' && React.createElement(UIEMS.UltraSmartInputComponent, {
             field: 'invoiceNumber',
             label: 'Invoice Number',
             value: formData.invoiceNumber,
@@ -712,13 +729,13 @@
             value: formData.dateOfReimbursement,
             onChange: (value) => updateField('dateOfReimbursement', value)
           }),
-          React.createElement(UIEMS.UltraSmartInputComponent, {
+          transaction.type !== 'fund_addition' && React.createElement(UIEMS.UltraSmartInputComponent, {
             field: 'flightNumber',
             label: 'Flight Number',
             value: formData.flightNumber,
             onChange: (value) => updateField('flightNumber', value)
           }),
-          React.createElement(UIEMS.UltraSmartInputComponent, {
+          transaction.type !== 'fund_addition' && React.createElement(UIEMS.UltraSmartInputComponent, {
             field: 'numberOfLuggage',
             label: 'Number of Luggage',
             type: 'number',
@@ -834,24 +851,51 @@
     );
   };
 
-  // Ultra BD Number Modal
+  // Ultra BD Number Modal with existing BD numbers
   UIEMS.UltraBDNumberModalComponent = function({ isOpen, onClose, onConfirm, count }) {
     const [bdNumber, setBdNumber] = React.useState('');
     const [error, setError] = React.useState('');
+    const [existingBdNumbers, setExistingBdNumbers] = React.useState([]);
     
     React.useEffect(() => {
       if (isOpen) {
         setBdNumber('');
         setError('');
+        
+        // Get existing BD numbers from current transactions
+        if (window.wsManager && window.wsManager.getStatus && window.wsManager.getStatus().connected) {
+          // Try to get existing BD numbers from global state or WebSocket
+          const existingBDs = [];
+          
+          // Check if we have access to current budget state
+          if (window.currentBudgetState && window.currentBudgetState.transactions) {
+            const bdNumbers = window.currentBudgetState.transactions
+              .filter(t => t.bdNumber)
+              .map(t => t.bdNumber)
+              .filter((bd, index, arr) => arr.indexOf(bd) === index) // unique
+              .sort();
+            setExistingBdNumbers(bdNumbers);
+          } else {
+            // Fallback - common BD number patterns
+            setExistingBdNumbers(['BD001', 'BD002', 'BD003', 'BD004', 'BD005']);
+          }
+        }
       }
     }, [isOpen]);
     
-    const handleSubmit = () => {
-      if (!bdNumber.trim()) {
+    const handleSubmit = (e) => {
+      if (e) e.preventDefault();
+      
+      if (!bdNumber || !bdNumber.trim()) {
         setError('Please enter a BD number');
         return;
       }
-      onConfirm(bdNumber.trim());
+      
+      setError('');
+      if (onConfirm) {
+        onConfirm(bdNumber.trim());
+      }
+      onClose(); // Close modal after confirming
     };
     
     const actions = React.createElement('div', { className: 'im-modal-actions' },
@@ -862,7 +906,7 @@
       React.createElement('button', {
         className: 'im-btn im-btn-primary',
         onClick: handleSubmit,
-        disabled: !bdNumber.trim()
+        disabled: !bdNumber || !bdNumber.trim()
       }, 'Assign BD Number')
     );
     
@@ -877,13 +921,28 @@
       size: 'small',
       actions
     },
+      existingBdNumbers.length > 0 && React.createElement('div', { className: 'im-form-field' },
+        React.createElement('label', { className: 'im-form-label' }, 'Existing BD Numbers (click to use):'),
+        React.createElement('div', { className: 'im-bd-suggestions' },
+          existingBdNumbers.map((bd, index) =>
+            React.createElement('button', {
+              key: `bd_${index}`,
+              type: 'button',
+              className: 'im-btn im-btn-outline',
+              onClick: () => setBdNumber(bd),
+              style: { margin: '2px', fontSize: '12px' }
+            }, bd)
+          )
+        )
+      ),
       React.createElement(UIEMS.UltraSmartInputComponent, {
         field: 'bdNumber',
         label: 'BD Number',
         value: bdNumber,
         onChange: setBdNumber,
-        placeholder: 'Enter BD number',
-        required: true
+        placeholder: 'Enter new BD number (e.g., BD006)',
+        required: true,
+        history: existingBdNumbers
       }),
       error && React.createElement('div', { className: 'im-form-error' }, error)
     );

@@ -32,6 +32,32 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* PWA Portrait Orientation Lock */
+@media screen and (orientation: landscape) and (max-device-width: 768px) {
+  body.pwa-mode::before {
+    content: "Please rotate your device to portrait mode for the best experience.";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #1e40af;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    z-index: 10000;
+    padding: 2rem;
+  }
+  
+  body.pwa-mode .app {
+    display: none;
+  }
+}
+
 .app { 
   height: 100vh;
   height: calc(var(--vh, 1vh) * 100);
