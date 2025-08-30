@@ -22,225 +22,90 @@ function showNotification(message, type = 'info') {
   }, 4000);
 }
 
-// ULTRA ISOLATED WEBSOCKET MANAGER - NO CONFLICTS
-class UltraIsolatedWebSocketManager {
+// BULLETPROOF WEBSOCKET INTEGRATION
+class BulletproofWebSocketIntegration {
   constructor() {
-    this.ultraSocket = null;
-    this.ultraIsConnected = false;
-    this.ultraMessageQueue = [];
-    this.ultraReconnectAttempts = 0;
-    this.ultraMaxReconnectAttempts = 10;
-    this.ultraHeartbeatInterval = null;
-    this.ultraLastPong = Date.now();
-    this.ultraReconnectTimer = null;
-    this.ultraConnectionToken = null;
-    this.ultraPWABroadcastChannel = null;
-    this.setupPWASync();
-  }
-
-  setupPWASync() {
-    // Setup broadcast channel for PWA cross-tab communication
-    if ('BroadcastChannel' in window) {
-      this.ultraPWABroadcastChannel = new BroadcastChannel('expense-tracker-sync');
-      this.ultraPWABroadcastChannel.onmessage = (event) => {
-        if (event.data.type === 'state-update') {
-          console.log('PWA sync: Received state update from another tab');
-          // Trigger UI update with new state
-          if (window.ultraPWAStateCallback) {
-            window.ultraPWAStateCallback(event.data.budgetState);
-          }
-        }
-      };
-    }
-
-    // Setup Service Worker communication for PWA updates
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data.type === 'BACKGROUND_SYNC_SUCCESS') {
-          console.log('PWA sync: Background sync completed');
-          this.requestStateRefresh();
-        }
-      });
-    }
-  }
-
-  connect(token) {
-    this.ultraConnectionToken = token;
+    this.syncSystem = window.BulletproofSyncSystem;
+    this.isInitialized = false;
+    this.stateSubscription = null;
     
-    if (this.ultraSocket) {
-      this.ultraSocket.disconnect();
-    }
-
-    console.log('Ultra WebSocket: Attempting connection...');
-    this.ultraSocket = io({
-      transports: ['websocket', 'polling'],
-      timeout: 20000,
-      forceNew: true
-    });
-
-    this.ultraSocket.on('connect', () => {
-      console.log('Ultra WebSocket: Connected successfully');
-      this.ultraIsConnected = true;
-      this.ultraReconnectAttempts = 0;
-      this.ultraLastPong = Date.now();
-      
-      // Clear any existing reconnect timer
-      if (this.ultraReconnectTimer) {
-        clearTimeout(this.ultraReconnectTimer);
-        this.ultraReconnectTimer = null;
-      }
-      
-      // Authenticate immediately
-      this.ultraSocket.emit('authenticate', { token });
-      
-      // Setup heartbeat
-      this.setupHeartbeat();
-      
-      // Send any queued messages
-      this.ultraMessageQueue.forEach(msg => {
-        this.ultraSocket.emit(msg.event, msg.data);
-      });
-      this.ultraMessageQueue = [];
-    });
-
-    this.ultraSocket.on('disconnect', (reason) => {
-      console.log('Ultra WebSocket: Disconnected -', reason);
-      this.ultraIsConnected = false;
-      this.clearHeartbeat();
-      
-      // Don't auto-reconnect for manual disconnections
-      if (reason !== 'io client disconnect') {
-        this.attemptReconnect(token);
-      }
-    });
-
-    this.ultraSocket.on('connect_error', (error) => {
-      console.error('Ultra WebSocket: Connection error -', error);
-      this.ultraIsConnected = false;
-      this.clearHeartbeat();
-    });
-
-    // Setup heartbeat response
-    this.ultraSocket.on('pong', () => {
-      this.ultraLastPong = Date.now();
-    });
-
-    return this.ultraSocket;
-  }
-
-  setupHeartbeat() {
-    this.clearHeartbeat();
-    this.ultraHeartbeatInterval = setInterval(() => {
-      if (this.ultraIsConnected && this.ultraSocket) {
-        const now = Date.now();
-        // Check if we haven't received a pong in too long
-        if (now - this.ultraLastPong > 30000) {
-          console.warn('Ultra WebSocket: Heartbeat timeout, forcing reconnect');
-          this.ultraSocket.disconnect();
-          return;
-        }
-        this.ultraSocket.emit('ping');
-      }
-    }, 10000);
-  }
-
-  clearHeartbeat() {
-    if (this.ultraHeartbeatInterval) {
-      clearInterval(this.ultraHeartbeatInterval);
-      this.ultraHeartbeatInterval = null;
-    }
-  }
-
-  attemptReconnect(token) {
-    if (this.ultraReconnectAttempts >= this.ultraMaxReconnectAttempts) {
-      showNotification('Connection lost. Please refresh the page.', 'error');
+    if (!this.syncSystem) {
+      console.error('BulletproofSyncSystem not found! Make sure bulletproof-sync.js is loaded first.');
       return;
     }
-
-    this.ultraReconnectAttempts++;
-    const delay = Math.min(1000 * Math.pow(2, this.ultraReconnectAttempts), 30000);
     
-    console.log(`Ultra WebSocket: Attempting to reconnect... (${this.ultraReconnectAttempts}/${this.ultraMaxReconnectAttempts}) in ${delay}ms`);
-    
-    this.ultraReconnectTimer = setTimeout(() => {
-      if (!this.ultraIsConnected) {
-        this.connect(token);
-      }
-    }, delay);
+    this.setupIntegration();
   }
-
+  
+  setupIntegration() {
+    console.log('🔗 Setting up Bulletproof WebSocket integration');
+    this.isInitialized = true;
+    
+    // Subscribe to state changes from the bulletproof system
+    this.stateSubscription = this.syncSystem.subscribe((newState, oldState, source) => {
+      console.log(`🔄 State update from ${source}:`, newState);
+      
+      // Notify UI callback if registered
+      if (window.bulletproofStateCallback) {
+        window.bulletproofStateCallback(newState, oldState, source);
+      }
+    });
+  }
+  
+  // Compatibility methods for existing code
+  async connect(token) {
+    if (!this.isInitialized) {
+      console.error('BulletproofWebSocketIntegration not initialized');
+      return;
+    }
+    
+    try {
+      await this.syncSystem.connect(token);
+      console.log('🚀 Bulletproof connection established');
+      return { socket: { on: () => {} } }; // Mock for compatibility
+    } catch (error) {
+      console.error('❌ Bulletproof connection failed:', error);
+      throw error;
+    }
+  }
+  
   emit(event, data) {
-    if (this.ultraIsConnected && this.ultraSocket) {
-      this.ultraSocket.emit(event, data);
-      
-      // Broadcast to other PWA tabs for immediate UI updates
-      if (this.ultraPWABroadcastChannel && ['add_funds', 'add_transaction', 'edit_transaction', 'delete_transaction'].includes(event)) {
-        this.ultraPWABroadcastChannel.postMessage({
-          type: 'action-performed',
-          action: event,
-          data: data
-        });
-      }
-    } else {
-      // Queue the message for when connection is restored
-      this.ultraMessageQueue.push({ event, data });
-      console.log('Ultra WebSocket: Queued message -', event);
-      
-      // Only show queue message if actually offline/disconnected for more than 5 seconds
-      if (this.ultraReconnectAttempts > 1) {
-        showNotification('Action queued - will sync when connection restored', 'info');
-      }
-      
-      // Try to trigger background sync for PWAs
-      if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
-        navigator.serviceWorker.ready.then(registration => {
-          return registration.sync.register('background-sync');
-        }).catch(() => {
-          console.log('Background sync not available');
-        });
-      }
+    if (!this.isInitialized) {
+      console.error('BulletproofWebSocketIntegration not initialized');
+      return false;
     }
+    
+    return this.syncSystem.emit(event, data);
   }
-
-  on(event, callback) {
-    if (this.ultraSocket) {
-      this.ultraSocket.on(event, callback);
-    }
-  }
-
+  
   requestStateRefresh() {
-    if (this.ultraIsConnected && this.ultraSocket) {
-      this.ultraSocket.emit('get_current_state');
+    if (this.isInitialized) {
+      this.syncSystem.requestRefresh();
     }
   }
-
-  broadcastStateUpdate(budgetState) {
-    if (this.ultraPWABroadcastChannel) {
-      this.ultraPWABroadcastChannel.postMessage({
-        type: 'state-update',
-        budgetState: budgetState
-      });
-    }
-  }
-
+  
   disconnect() {
-    this.clearHeartbeat();
-    if (this.ultraReconnectTimer) {
-      clearTimeout(this.ultraReconnectTimer);
-      this.ultraReconnectTimer = null;
+    if (this.isInitialized) {
+      this.syncSystem.disconnect();
     }
-    if (this.ultraPWABroadcastChannel) {
-      this.ultraPWABroadcastChannel.close();
+    
+    if (this.stateSubscription) {
+      this.stateSubscription();
     }
-    if (this.ultraSocket) {
-      this.ultraSocket.disconnect();
-      this.ultraSocket = null;
-      this.ultraIsConnected = false;
-    }
+  }
+  
+  // Compatibility getters
+  get ultraIsConnected() {
+    return this.syncSystem?.wsManager?.isConnected || false;
+  }
+  
+  get isConnected() {
+    return this.ultraIsConnected;
   }
 }
 
-const ultraWSManager = new UltraIsolatedWebSocketManager();
+// Initialize the bulletproof WebSocket manager
+const bulletproofWSManager = new BulletproofWebSocketIntegration();
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -310,7 +175,7 @@ function App() {
         if (data.valid) {
           setCurrentUser(data.user);
           localStorage.setItem('currentUser', JSON.stringify(data.user));
-          initializeWebSocket(token);
+          initializeBulletproofConnection(token);
         } else {
           handleLogout();
         }
@@ -324,144 +189,41 @@ function App() {
     }
   }, []);
 
-  const initializeWebSocket = (token) => {
-    const socket = ultraWSManager.connect(token);
-    
-    // Setup PWA state callback for cross-tab sync
-    window.ultraPWAStateCallback = (newBudgetState) => {
-      setBudgetState(newBudgetState);
-      console.log('PWA sync: Updated state from another tab');
-      
-      // Force re-render and state update
-      setTimeout(() => {
-        setBudgetState(prevState => ({ ...prevState, ...newBudgetState }));
-      }, 100);
-    };
-    
-    // Enhanced PWA visibility handling for instant refresh
-    const handlePWAVisibilityChange = () => {
-      if (!document.hidden && ultraWSManager.ultraIsConnected) {
-        console.log('PWA became visible - requesting fresh state');
-        ultraWSManager.requestStateRefresh();
-        // Also force a small delay update
-        setTimeout(() => {
-          if (ultraWSManager.ultraIsConnected) {
-            ultraWSManager.requestStateRefresh();
-          }
-        }, 500);
-      }
-    };
-    
-    document.addEventListener('visibilitychange', handlePWAVisibilityChange);
-    window.addEventListener('focus', handlePWAVisibilityChange);
-    
-    // PWA app state change handling
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('beforeunload', () => {
-        if (ultraWSManager.ultraPWABroadcastChannel) {
-          ultraWSManager.ultraPWABroadcastChannel.postMessage({
-            type: 'app-closing'
-          });
+  const initializeBulletproofConnection = async (token) => {
+    try {
+      // Setup state callback for UI updates
+      window.bulletproofStateCallback = (newState, oldState, source) => {
+        console.log(`🔄 UI Update from ${source}:`, newState);
+        
+        if (newState.budgetState) {
+          setBudgetState(newState.budgetState);
         }
-      });
-    }
-
-    socket.on('authenticated', (data) => {
-      console.log('WebSocket authenticated:', data);
-      setCurrentUser(data.user);
-      setBudgetState(data.budgetState);
-      setIsAuthenticated(true);
+        
+        if (newState.currentUser) {
+          setCurrentUser(newState.currentUser);
+        }
+        
+        setIsAuthenticated(true);
+        setLoading(false);
+      };
+      
+      // Connect the bulletproof system
+      await bulletproofWSManager.connect(token);
+      
+      // Make bulletproof system available globally for admin panel
+      window.wsManager = bulletproofWSManager;
+      window.ultraWSManager = bulletproofWSManager;
+      window.bulletproofWSManager = bulletproofWSManager;
+      
+      console.log('🚀 Bulletproof connection established successfully');
+      
+    } catch (error) {
+      console.error('❌ Bulletproof connection failed:', error);
       setLoading(false);
-      
-      // Make ultraWSManager available globally for admin panel
-      window.wsManager = ultraWSManager;
-      window.ultraWSManager = ultraWSManager;
-      
-      // Broadcast initial state to other tabs
-      ultraWSManager.broadcastStateUpdate(data.budgetState);
-    });
-
-    socket.on('auth_error', (data) => {
-      console.error('WebSocket auth error:', data);
-      showNotification(data.message, 'error');
       handleLogout();
-    });
-
-    socket.on('funds_added', (data) => {
-      console.log('Ultra WebSocket: Funds added', data);
-      setBudgetState(data.budgetState);
-      ultraWSManager.broadcastStateUpdate(data.budgetState);
-      showNotification('Funds added successfully', 'success');
-      setFundsAmount('');
-      setShowAddFunds(false);
-    });
-
-    socket.on('transaction_added', (data) => {
-      console.log('Ultra WebSocket: Transaction added', data);
-      setBudgetState(data.budgetState);
-      ultraWSManager.broadcastStateUpdate(data.budgetState);
-      showNotification('Transaction added successfully', 'success');
-      setShowTransactionForm(false);
-    });
-
-    socket.on('transaction_updated', (data) => {
-      console.log('Ultra WebSocket: Transaction updated', data);
-      setBudgetState(data.budgetState);
-      ultraWSManager.broadcastStateUpdate(data.budgetState);
-      showNotification('Transaction updated successfully', 'success');
-      setEditingTransaction(null);
-    });
-
-    socket.on('transaction_deleted', (data) => {
-      console.log('Ultra WebSocket: Transaction deleted', data);
-      setBudgetState(data.budgetState);
-      ultraWSManager.broadcastStateUpdate(data.budgetState);
-      showNotification('Transaction deleted successfully', 'success');
-    });
-
-    socket.on('bd_assigned', (data) => {
-      console.log('Ultra WebSocket: BD assigned', data);
-      setBudgetState(data.budgetState);
-      ultraWSManager.broadcastStateUpdate(data.budgetState);
-      showNotification(`BD number ${data.bdNumber} assigned to ${data.count} transactions`, 'success');
-      setShowBDNumberPrompt(false);
-      setShowBDCreation(false);
-      setSelectedForBD(new Set());
-      setBdNumber('');
-    });
-
-    socket.on('user_created', (data) => {
-      showNotification(`User ${data.user.username} created successfully`, 'success');
-      // Show credentials
-      alert(`User created:\nUsername: ${data.credentials.username}\nPassword: ${data.credentials.password}\n\nPlease save these credentials securely.`);
-    });
-
-    socket.on('user_deleted', (data) => {
-      showNotification('User deleted successfully', 'success');
-    });
-
-    socket.on('password_reset', (data) => {
-      showNotification('Password reset successfully', 'success');
-      alert(`New password for user: ${data.newPassword}\n\nPlease save this password securely.`);
-    });
-
-    socket.on('account_deleted', () => {
-      showNotification('Your account has been deleted', 'error');
-      handleLogout();
-    });
-
-    // Handle current state response for PWA sync
-    socket.on('current_state', (data) => {
-      console.log('Ultra WebSocket: Received current state', data);
-      setBudgetState(data.budgetState);
-      ultraWSManager.broadcastStateUpdate(data.budgetState);
-    });
-
-    socket.on('error', (data) => {
-      console.error('WebSocket error:', data);
-      showNotification(data.message, 'error');
-    });
+    }
   };
+
 
   const handleAuth = async (userData) => {
     const { token, user } = userData;
@@ -470,13 +232,13 @@ function App() {
     
     setCurrentUser(user);
     setLoading(true);
-    initializeWebSocket(token);
+    await initializeBulletproofConnection(token);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('currentUser');
-    ultraWSManager.disconnect();
+    bulletproofWSManager.disconnect();
     setIsAuthenticated(false);
     setCurrentUser(null);
     setBudgetState({
@@ -500,7 +262,7 @@ function App() {
     console.log('Sending add_funds event:', { amount: parseFloat(amount) });
     return new Promise((resolve, reject) => {
       try {
-        ultraWSManager.emit('add_funds', {
+        bulletproofWSManager.emit('add_funds', {
           amount: parseFloat(amount)
         });
         resolve();
@@ -513,10 +275,10 @@ function App() {
   const handleAddTransaction = (transactionData) => {
     return new Promise((resolve, reject) => {
       try {
-        if (!ultraWSManager) {
+        if (!bulletproofWSManager.isConnected) {
           throw new Error('Connection not available. Please refresh the page.');
         }
-        ultraWSManager.emit('add_transaction', transactionData);
+        bulletproofWSManager.emit('add_transaction', transactionData);
         resolve();
       } catch (error) {
         reject(error);
@@ -542,10 +304,10 @@ function App() {
   const handleSaveEditTransaction = (updates) => {
     return new Promise((resolve, reject) => {
       try {
-        if (!ultraWSManager) {
+        if (!bulletproofWSManager.isConnected) {
           throw new Error('Connection not available. Please refresh the page.');
         }
-        ultraWSManager.emit('edit_transaction', {
+        bulletproofWSManager.emit('edit_transaction', {
           transactionId: editingTransaction.id,
           updates
         });
@@ -559,7 +321,7 @@ function App() {
 
   const handleDeleteTransaction = (transactionId) => {
     if (confirm('Are you sure you want to delete this transaction?')) {
-      if (!ultraWSManager) {
+      if (!bulletproofWSManager.isConnected) {
         alert('Connection not available. Please refresh the page.');
         return;
       }
@@ -569,7 +331,7 @@ function App() {
         transactions: prev.transactions.filter(t => t.id !== transactionId)
       }));
       
-      ultraWSManager.emit('delete_transaction', { transactionId });
+      bulletproofWSManager.emit('delete_transaction', { transactionId });
     }
   };
 
@@ -602,7 +364,7 @@ function App() {
       return;
     }
 
-    ultraWSManager.emit('assign_bd_number', {
+    bulletproofWSManager.emit('assign_bd_number', {
       transactionIds: Array.from(selectedForBD),
       bdNumber: bdNumber.trim()
     });
