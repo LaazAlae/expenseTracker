@@ -22,94 +22,223 @@ function showNotification(message, type = 'info') {
   }, 4000);
 }
 
-// WebSocket Manager
-class WebSocketManager {
+// ULTRA ISOLATED WEBSOCKET MANAGER - NO CONFLICTS
+class UltraIsolatedWebSocketManager {
   constructor() {
-    this.socket = null;
-    this.isConnected = false;
-    this.messageQueue = [];
-    this.reconnectAttempts = 0;
-    this.maxReconnectAttempts = 5;
+    this.ultraSocket = null;
+    this.ultraIsConnected = false;
+    this.ultraMessageQueue = [];
+    this.ultraReconnectAttempts = 0;
+    this.ultraMaxReconnectAttempts = 10;
+    this.ultraHeartbeatInterval = null;
+    this.ultraLastPong = Date.now();
+    this.ultraReconnectTimer = null;
+    this.ultraConnectionToken = null;
+    this.ultraPWABroadcastChannel = null;
+    this.setupPWASync();
+  }
+
+  setupPWASync() {
+    // Setup broadcast channel for PWA cross-tab communication
+    if ('BroadcastChannel' in window) {
+      this.ultraPWABroadcastChannel = new BroadcastChannel('expense-tracker-sync');
+      this.ultraPWABroadcastChannel.onmessage = (event) => {
+        if (event.data.type === 'state-update') {
+          console.log('PWA sync: Received state update from another tab');
+          // Trigger UI update with new state
+          if (window.ultraPWAStateCallback) {
+            window.ultraPWAStateCallback(event.data.budgetState);
+          }
+        }
+      };
+    }
+
+    // Setup Service Worker communication for PWA updates
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data.type === 'BACKGROUND_SYNC_SUCCESS') {
+          console.log('PWA sync: Background sync completed');
+          this.requestStateRefresh();
+        }
+      });
+    }
   }
 
   connect(token) {
-    if (this.socket) {
-      this.socket.disconnect();
+    this.ultraConnectionToken = token;
+    
+    if (this.ultraSocket) {
+      this.ultraSocket.disconnect();
     }
 
-    this.socket = io({
-      transports: ['websocket', 'polling']
+    console.log('Ultra WebSocket: Attempting connection...');
+    this.ultraSocket = io({
+      transports: ['websocket', 'polling'],
+      timeout: 20000,
+      forceNew: true
     });
 
-    this.socket.on('connect', () => {
-      console.log('WebSocket connected');
-      this.isConnected = true;
-      this.reconnectAttempts = 0;
+    this.ultraSocket.on('connect', () => {
+      console.log('Ultra WebSocket: Connected successfully');
+      this.ultraIsConnected = true;
+      this.ultraReconnectAttempts = 0;
+      this.ultraLastPong = Date.now();
+      
+      // Clear any existing reconnect timer
+      if (this.ultraReconnectTimer) {
+        clearTimeout(this.ultraReconnectTimer);
+        this.ultraReconnectTimer = null;
+      }
       
       // Authenticate immediately
-      this.socket.emit('authenticate', { token });
+      this.ultraSocket.emit('authenticate', { token });
+      
+      // Setup heartbeat
+      this.setupHeartbeat();
       
       // Send any queued messages
-      this.messageQueue.forEach(msg => {
-        this.socket.emit(msg.event, msg.data);
+      this.ultraMessageQueue.forEach(msg => {
+        this.ultraSocket.emit(msg.event, msg.data);
       });
-      this.messageQueue = [];
+      this.ultraMessageQueue = [];
     });
 
-    this.socket.on('disconnect', () => {
-      console.log('WebSocket disconnected');
-      this.isConnected = false;
+    this.ultraSocket.on('disconnect', (reason) => {
+      console.log('Ultra WebSocket: Disconnected -', reason);
+      this.ultraIsConnected = false;
+      this.clearHeartbeat();
       
-      // Attempt to reconnect
-      this.attemptReconnect(token);
+      // Don't auto-reconnect for manual disconnections
+      if (reason !== 'io client disconnect') {
+        this.attemptReconnect(token);
+      }
     });
 
-    this.socket.on('connect_error', (error) => {
-      console.error('WebSocket connection error:', error);
-      this.isConnected = false;
+    this.ultraSocket.on('connect_error', (error) => {
+      console.error('Ultra WebSocket: Connection error -', error);
+      this.ultraIsConnected = false;
+      this.clearHeartbeat();
     });
 
-    return this.socket;
+    // Setup heartbeat response
+    this.ultraSocket.on('pong', () => {
+      this.ultraLastPong = Date.now();
+    });
+
+    return this.ultraSocket;
+  }
+
+  setupHeartbeat() {
+    this.clearHeartbeat();
+    this.ultraHeartbeatInterval = setInterval(() => {
+      if (this.ultraIsConnected && this.ultraSocket) {
+        const now = Date.now();
+        // Check if we haven't received a pong in too long
+        if (now - this.ultraLastPong > 30000) {
+          console.warn('Ultra WebSocket: Heartbeat timeout, forcing reconnect');
+          this.ultraSocket.disconnect();
+          return;
+        }
+        this.ultraSocket.emit('ping');
+      }
+    }, 10000);
+  }
+
+  clearHeartbeat() {
+    if (this.ultraHeartbeatInterval) {
+      clearInterval(this.ultraHeartbeatInterval);
+      this.ultraHeartbeatInterval = null;
+    }
   }
 
   attemptReconnect(token) {
-    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+    if (this.ultraReconnectAttempts >= this.ultraMaxReconnectAttempts) {
       showNotification('Connection lost. Please refresh the page.', 'error');
       return;
     }
 
-    this.reconnectAttempts++;
-    setTimeout(() => {
-      console.log(`Attempting to reconnect... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-      this.connect(token);
-    }, 2000 * this.reconnectAttempts);
+    this.ultraReconnectAttempts++;
+    const delay = Math.min(1000 * Math.pow(2, this.ultraReconnectAttempts), 30000);
+    
+    console.log(`Ultra WebSocket: Attempting to reconnect... (${this.ultraReconnectAttempts}/${this.ultraMaxReconnectAttempts}) in ${delay}ms`);
+    
+    this.ultraReconnectTimer = setTimeout(() => {
+      if (!this.ultraIsConnected) {
+        this.connect(token);
+      }
+    }, delay);
   }
 
   emit(event, data) {
-    if (this.isConnected && this.socket) {
-      this.socket.emit(event, data);
+    if (this.ultraIsConnected && this.ultraSocket) {
+      this.ultraSocket.emit(event, data);
+      
+      // Broadcast to other PWA tabs for immediate UI updates
+      if (this.ultraPWABroadcastChannel && ['add_funds', 'add_transaction', 'edit_transaction', 'delete_transaction'].includes(event)) {
+        this.ultraPWABroadcastChannel.postMessage({
+          type: 'action-performed',
+          action: event,
+          data: data
+        });
+      }
     } else {
       // Queue the message for when connection is restored
-      this.messageQueue.push({ event, data });
+      this.ultraMessageQueue.push({ event, data });
+      console.log('Ultra WebSocket: Queued message -', event);
+      
+      // Show user feedback for queued actions
+      showNotification('Action queued - will sync when connection restored', 'info');
+      
+      // Try to trigger background sync for PWAs
+      if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
+        navigator.serviceWorker.ready.then(registration => {
+          return registration.sync.register('background-sync');
+        }).catch(() => {
+          console.log('Background sync not available');
+        });
+      }
     }
   }
 
   on(event, callback) {
-    if (this.socket) {
-      this.socket.on(event, callback);
+    if (this.ultraSocket) {
+      this.ultraSocket.on(event, callback);
+    }
+  }
+
+  requestStateRefresh() {
+    if (this.ultraIsConnected && this.ultraSocket) {
+      this.ultraSocket.emit('get_current_state');
+    }
+  }
+
+  broadcastStateUpdate(budgetState) {
+    if (this.ultraPWABroadcastChannel) {
+      this.ultraPWABroadcastChannel.postMessage({
+        type: 'state-update',
+        budgetState: budgetState
+      });
     }
   }
 
   disconnect() {
-    if (this.socket) {
-      this.socket.disconnect();
-      this.socket = null;
-      this.isConnected = false;
+    this.clearHeartbeat();
+    if (this.ultraReconnectTimer) {
+      clearTimeout(this.ultraReconnectTimer);
+      this.ultraReconnectTimer = null;
+    }
+    if (this.ultraPWABroadcastChannel) {
+      this.ultraPWABroadcastChannel.close();
+    }
+    if (this.ultraSocket) {
+      this.ultraSocket.disconnect();
+      this.ultraSocket = null;
+      this.ultraIsConnected = false;
     }
   }
 }
 
-const wsManager = new WebSocketManager();
+const ultraWSManager = new UltraIsolatedWebSocketManager();
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -194,7 +323,13 @@ function App() {
   }, []);
 
   const initializeWebSocket = (token) => {
-    const socket = wsManager.connect(token);
+    const socket = ultraWSManager.connect(token);
+    
+    // Setup PWA state callback for cross-tab sync
+    window.ultraPWAStateCallback = (newBudgetState) => {
+      setBudgetState(newBudgetState);
+      console.log('PWA sync: Updated state from another tab');
+    };
 
     socket.on('authenticated', (data) => {
       console.log('WebSocket authenticated:', data);
@@ -203,8 +338,12 @@ function App() {
       setIsAuthenticated(true);
       setLoading(false);
       
-      // Make wsManager available globally for admin panel
-      window.wsManager = wsManager;
+      // Make ultraWSManager available globally for admin panel
+      window.wsManager = ultraWSManager;
+      window.ultraWSManager = ultraWSManager;
+      
+      // Broadcast initial state to other tabs
+      ultraWSManager.broadcastStateUpdate(data.budgetState);
     });
 
     socket.on('auth_error', (data) => {
@@ -214,33 +353,41 @@ function App() {
     });
 
     socket.on('funds_added', (data) => {
-      console.log('WebSocket: Funds added', data);
+      console.log('Ultra WebSocket: Funds added', data);
       setBudgetState(data.budgetState);
+      ultraWSManager.broadcastStateUpdate(data.budgetState);
       showNotification('Funds added successfully', 'success');
       setFundsAmount('');
       setShowAddFunds(false);
     });
 
     socket.on('transaction_added', (data) => {
-      console.log('WebSocket: Transaction added', data);
+      console.log('Ultra WebSocket: Transaction added', data);
       setBudgetState(data.budgetState);
+      ultraWSManager.broadcastStateUpdate(data.budgetState);
       showNotification('Transaction added successfully', 'success');
       setShowTransactionForm(false);
     });
 
     socket.on('transaction_updated', (data) => {
+      console.log('Ultra WebSocket: Transaction updated', data);
       setBudgetState(data.budgetState);
+      ultraWSManager.broadcastStateUpdate(data.budgetState);
       showNotification('Transaction updated successfully', 'success');
       setEditingTransaction(null);
     });
 
     socket.on('transaction_deleted', (data) => {
+      console.log('Ultra WebSocket: Transaction deleted', data);
       setBudgetState(data.budgetState);
+      ultraWSManager.broadcastStateUpdate(data.budgetState);
       showNotification('Transaction deleted successfully', 'success');
     });
 
     socket.on('bd_assigned', (data) => {
+      console.log('Ultra WebSocket: BD assigned', data);
       setBudgetState(data.budgetState);
+      ultraWSManager.broadcastStateUpdate(data.budgetState);
       showNotification(`BD number ${data.bdNumber} assigned to ${data.count} transactions`, 'success');
       setShowBDNumberPrompt(false);
       setShowBDCreation(false);
@@ -287,7 +434,7 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('currentUser');
-    wsManager.disconnect();
+    ultraWSManager.disconnect();
     setIsAuthenticated(false);
     setCurrentUser(null);
     setBudgetState({
@@ -311,7 +458,7 @@ function App() {
     console.log('Sending add_funds event:', { amount: parseFloat(amount) });
     return new Promise((resolve, reject) => {
       try {
-        wsManager.emit('add_funds', {
+        ultraWSManager.emit('add_funds', {
           amount: parseFloat(amount)
         });
         resolve();
@@ -324,10 +471,10 @@ function App() {
   const handleAddTransaction = (transactionData) => {
     return new Promise((resolve, reject) => {
       try {
-        if (!wsManager) {
+        if (!ultraWSManager) {
           throw new Error('Connection not available. Please refresh the page.');
         }
-        wsManager.emit('add_transaction', transactionData);
+        ultraWSManager.emit('add_transaction', transactionData);
         resolve();
       } catch (error) {
         reject(error);
@@ -336,16 +483,27 @@ function App() {
   };
 
   const handleEditTransaction = (transaction) => {
-    setEditingTransaction({...transaction});
+    console.log('handleEditTransaction called with:', transaction);
+    if (!transaction) {
+      console.error('No transaction provided to edit');
+      return;
+    }
+    try {
+      setEditingTransaction({...transaction});
+      console.log('EditingTransaction state set successfully');
+    } catch (error) {
+      console.error('Error setting editing transaction:', error);
+      alert('Error opening edit modal. Please refresh the page.');
+    }
   };
 
   const handleSaveEditTransaction = (updates) => {
     return new Promise((resolve, reject) => {
       try {
-        if (!wsManager) {
+        if (!ultraWSManager) {
           throw new Error('Connection not available. Please refresh the page.');
         }
-        wsManager.emit('edit_transaction', {
+        ultraWSManager.emit('edit_transaction', {
           transactionId: editingTransaction.id,
           updates
         });
@@ -359,7 +517,7 @@ function App() {
 
   const handleDeleteTransaction = (transactionId) => {
     if (confirm('Are you sure you want to delete this transaction?')) {
-      if (!wsManager) {
+      if (!ultraWSManager) {
         alert('Connection not available. Please refresh the page.');
         return;
       }
@@ -369,7 +527,7 @@ function App() {
         transactions: prev.transactions.filter(t => t.id !== transactionId)
       }));
       
-      wsManager.emit('delete_transaction', { transactionId });
+      ultraWSManager.emit('delete_transaction', { transactionId });
     }
   };
 
@@ -402,7 +560,7 @@ function App() {
       return;
     }
 
-    wsManager.emit('assign_bd_number', {
+    ultraWSManager.emit('assign_bd_number', {
       transactionIds: Array.from(selectedForBD),
       bdNumber: bdNumber.trim()
     });
