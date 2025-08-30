@@ -1083,7 +1083,7 @@
 /* MOBILE SPECIFIC DROPDOWN ULTRA-HIGH Z-INDEX FIX */
 @media screen and (max-width: 768px) {
   .im-autocomplete-dropdown {
-    z-index: 9999999 !important;
+    z-index: 99999999 !important;
     position: fixed !important;
     transform: translateY(0px) !important;
     isolation: isolate !important;
@@ -1102,7 +1102,7 @@
   
   /* Ultra-mobile specific dropdown positioning */
   .ultra-mobile-dropdown {
-    z-index: 9999999 !important;
+    z-index: 99999999 !important;
     position: fixed !important;
     isolation: isolate !important;
     will-change: transform !important;
@@ -1112,7 +1112,7 @@
   }
   
   .ultra-mobile-dropdown-item {
-    z-index: 9999999 !important;
+    z-index: 99999999 !important;
     isolation: isolate !important;
     contain: layout style paint !important;
   }

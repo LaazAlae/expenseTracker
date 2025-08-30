@@ -342,10 +342,6 @@ function App() {
     React.createElement('div', { className: 'header' },
       React.createElement('h1', null, `Welcome ${currentUser?.username || 'User'}`),
       
-      // Connection status indicator
-      React.createElement('div', { className: 'connection-status', style: { fontSize: '12px', opacity: 0.8 } }, 
-        getConnectionStatusText()
-      ),
       
       React.createElement('div', { className: 'header-actions' },
         React.createElement('button', { 

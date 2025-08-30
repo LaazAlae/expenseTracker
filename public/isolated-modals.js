@@ -308,7 +308,7 @@
             className: 'im-modal-close',
             onClick: onClose,
             type: 'button',
-            'data-icon': 'close'
+            dangerouslySetInnerHTML: { __html: window.icon('close', 20) }
           })
         ),
         React.createElement('div', { className: 'im-modal-body' }, children),
@@ -724,14 +724,14 @@
             value: formData.invoiceNumber,
             onChange: (value) => updateField('invoiceNumber', value)
           }),
-          React.createElement(UIEMS.UltraSmartInputComponent, {
+          transaction.type !== 'fund_addition' && React.createElement(UIEMS.UltraSmartInputComponent, {
             field: 'dateOfPurchase',
             label: 'Date of Purchase',
             type: 'date',
             value: formData.dateOfPurchase,
             onChange: (value) => updateField('dateOfPurchase', value)
           }),
-          React.createElement(UIEMS.UltraSmartInputComponent, {
+          transaction.type !== 'fund_addition' && React.createElement(UIEMS.UltraSmartInputComponent, {
             field: 'dateOfReimbursement',
             label: 'Date of Reimbursement',
             type: 'date',
@@ -931,7 +931,7 @@
   UIEMS.UltraAdminPanelModalComponent = function({ isOpen, onClose }) {
     const [users, setUsers] = React.useState([]);
     const [loading, setLoading] = React.useState(false);
-    const [newUser, setNewUser] = React.useState({ username: '', isAdmin: false });
+    const [newUser, setNewUser] = React.useState({ username: '', password: '', isAdmin: false });
     const [error, setError] = React.useState('');
     
     React.useEffect(() => {
@@ -980,15 +980,16 @@
     };
     
     const createUser = async () => {
-      if (!newUser.username.trim()) {
-        setError('Username is required');
+      if (!newUser.username.trim() || !newUser.password.trim()) {
+        setError('Username and password are required');
         return;
       }
       
       try {
         if (window.wsManager) {
+          console.log('[Admin] Creating user:', newUser);
           window.wsManager.emit('admin_create_user', newUser);
-          setNewUser({ username: '', isAdmin: false });
+          setNewUser({ username: '', password: '', isAdmin: false });
         }
       } catch (err) {
         setError('Failed to create user');
@@ -1008,9 +1009,13 @@
     };
     
     const resetPassword = async (userId) => {
+      const newPassword = prompt('Enter new password:');
+      if (!newPassword) return;
+      
       try {
         if (window.wsManager) {
-          window.wsManager.emit('admin_reset_password', { userId });
+          console.log('[Admin] Resetting password for user:', userId);
+          window.wsManager.emit('admin_reset_password', { userId, newPassword });
         }
       } catch (err) {
         setError('Failed to reset password');
@@ -1038,6 +1043,14 @@
               onChange: (value) => setNewUser(prev => ({ ...prev, username: value })),
               placeholder: 'Enter username'
             }),
+            React.createElement(UIEMS.UltraSmartInputComponent, {
+              field: 'password',
+              label: 'Password',
+              type: 'password',
+              value: newUser.password,
+              onChange: (value) => setNewUser(prev => ({ ...prev, password: value })),
+              placeholder: 'Enter password'
+            }),
             React.createElement('label', { className: 'im-checkbox-label' },
               React.createElement('input', {
                 type: 'checkbox',
@@ -1049,7 +1062,7 @@
             React.createElement('button', {
               className: 'im-btn im-btn-primary',
               onClick: createUser,
-              disabled: !newUser.username.trim()
+              disabled: !newUser.username.trim() || !newUser.password.trim()
             }, 'Create User')
           )
         ),
