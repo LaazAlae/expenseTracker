@@ -24,20 +24,33 @@
       try {
         setConnectionStatus('connecting');
         
-        // Setup state update handler
-        window.wsManager.onStateUpdate((event, data) => {
+        // Setup state update handler with proper cleanup
+        const stateCleanup = window.wsManager.onStateUpdate((event, data) => {
           console.log(`[useWebSocket] State update: ${event}`, data);
           
           // Handle authentication
           if (event === 'authenticated') {
-            if (data.user) setCurrentUser(data.user);
-            if (data.budgetState) setBudgetState(data.budgetState);
+            if (data.user) {
+              console.log('[useWebSocket] Setting current user:', data.user);
+              setCurrentUser(data.user);
+            }
+            if (data.budgetState) {
+              console.log('[useWebSocket] Setting initial budget state:', data.budgetState);
+              setBudgetState(prev => {
+                console.log('[useWebSocket] Budget state changed from:', prev, 'to:', data.budgetState);
+                return data.budgetState;
+              });
+            }
             return;
           }
 
           // Handle budget state updates
           if (data.budgetState) {
-            setBudgetState(data.budgetState);
+            console.log('[useWebSocket] Updating budget state:', data.budgetState);
+            setBudgetState(prev => {
+              console.log('[useWebSocket] Budget state changed from:', prev, 'to:', data.budgetState);
+              return data.budgetState;
+            });
           }
 
           // Handle user management updates
@@ -50,8 +63,9 @@
           }
         });
 
-        // Setup connection status handler
-        window.wsManager.onConnectionStatus((status, message) => {
+        // Setup connection status handler with proper cleanup
+        const statusCleanup = window.wsManager.onConnectionStatus((status, message) => {
+          console.log('[useWebSocket] Connection status changed:', status, message);
           setConnectionStatus(status);
           
           // Show user feedback for connection issues
@@ -61,6 +75,10 @@
             window.showNotification?.('Connection failed - using offline mode', 'warning');
           }
         });
+
+        // Store cleanup functions for later use
+        window._wsStateCleanup = stateCleanup;
+        window._wsStatusCleanup = statusCleanup;
 
         // Connect
         await window.wsManager.connect(token);
@@ -75,6 +93,16 @@
 
     // Disconnect WebSocket
     const disconnectWebSocket = React.useCallback(() => {
+      // Clean up callbacks
+      if (window._wsStateCleanup) {
+        window._wsStateCleanup();
+        window._wsStateCleanup = null;
+      }
+      if (window._wsStatusCleanup) {
+        window._wsStatusCleanup();
+        window._wsStatusCleanup = null;
+      }
+      
       window.wsManager.disconnect();
       setConnectionStatus('disconnected');
       setCurrentUser(null);
@@ -90,23 +118,25 @@
       setUsers([]);
     }, []);
 
-    // Emit event with optimistic updates
+    // Emit event with optimistic updates - returns Promise for proper error handling
     const emit = React.useCallback((event, data, optimisticUpdate = null) => {
-      // Apply optimistic update immediately
-      if (optimisticUpdate) {
-        optimisticUpdate();
-      }
+      return new Promise((resolve, reject) => {
+        // Apply optimistic update immediately
+        if (optimisticUpdate) {
+          optimisticUpdate();
+        }
 
-      // Emit to server
-      const sent = window.wsManager.emit(event, data);
-      
-      if (!sent) {
-        // If not sent (offline), we keep the optimistic update
-        // It will be corrected when the server response comes back
-        console.log(`[useWebSocket] Queued ${event} with optimistic update`);
-      }
-
-      return sent;
+        // Emit to server
+        const sent = window.wsManager.emit(event, data);
+        
+        if (!sent) {
+          // If not sent (offline), we keep the optimistic update
+          console.log(`[useWebSocket] Queued ${event} with optimistic update`);
+          resolve(false); // Resolve with false to indicate queued
+        } else {
+          resolve(true); // Resolve with true to indicate sent
+        }
+      });
     }, []);
 
     // Expense-specific actions with optimistic updates
@@ -116,7 +146,10 @@
         throw new Error('Invalid amount');
       }
 
+      console.log(`[useWebSocket] Adding funds: $${numAmount}`);
+      
       return emit('add_funds', { amount: numAmount }, () => {
+        console.log(`[useWebSocket] Optimistic update: adding $${numAmount} to budget`);
         setBudgetState(prev => ({
           ...prev,
           totalFundsAdded: prev.totalFundsAdded + numAmount,

@@ -28,8 +28,8 @@
       this.reconnectTimer = null;
       this.messageQueue = [];
       this.eventHandlers = new Map();
-      this.stateUpdateCallback = null;
-      this.connectionStatusCallback = null;
+      this.stateUpdateCallbacks = new Set(); // Multiple callbacks support
+      this.connectionStatusCallbacks = new Set(); // Multiple callbacks support
       
       // Bind methods to preserve 'this'
       this.onConnect = this.onConnect.bind(this);
@@ -149,14 +149,14 @@
         this.socket.on(event, (data) => {
           log('DATA', `Received ${event}`, data);
           
-          // Trigger state update callback
-          if (this.stateUpdateCallback) {
+          // Trigger state update callbacks for all registered callbacks
+          this.stateUpdateCallbacks.forEach(callback => {
             try {
-              this.stateUpdateCallback(event, data);
+              callback(event, data);
             } catch (err) {
               error(`Error in state update callback for ${event}`, err);
             }
-          }
+          });
 
           // Show user notification
           this.showNotificationForEvent(event, data);
@@ -213,9 +213,15 @@
       // Process queued messages
       this.processQueuedMessages();
       
-      // Trigger initial state update
-      if (this.stateUpdateCallback && data) {
-        this.stateUpdateCallback('authenticated', data);
+      // Trigger initial state update for all callbacks
+      if (data) {
+        this.stateUpdateCallbacks.forEach(callback => {
+          try {
+            callback('authenticated', data);
+          } catch (err) {
+            error('Error in state update callback for authenticated', err);
+          }
+        });
       }
     }
 
@@ -297,23 +303,38 @@
       });
     }
 
-    // Set callback for state updates
+    // Add callback for state updates (supports multiple callbacks)
     onStateUpdate(callback) {
-      this.stateUpdateCallback = callback;
+      this.stateUpdateCallbacks.add(callback);
+      
+      // Return cleanup function
+      return () => {
+        this.stateUpdateCallbacks.delete(callback);
+      };
     }
 
-    // Set callback for connection status changes
+    // Add callback for connection status changes (supports multiple callbacks)
     onConnectionStatus(callback) {
-      this.connectionStatusCallback = callback;
+      this.connectionStatusCallbacks.add(callback);
+      
+      // Return cleanup function
+      return () => {
+        this.connectionStatusCallbacks.delete(callback);
+      };
     }
 
     // Update connection status
     updateConnectionStatus(status, message = null) {
       log('STATUS', status, message);
       
-      if (this.connectionStatusCallback) {
-        this.connectionStatusCallback(status, message);
-      }
+      // Notify all connection status callbacks
+      this.connectionStatusCallbacks.forEach(callback => {
+        try {
+          callback(status, message);
+        } catch (err) {
+          error('Error in connection status callback', err);
+        }
+      });
     }
 
     // Show notification for events

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Real-time WebSocket Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .connected { background: #d4edda; color: #155724; }
+        .disconnected { background: #f8d7da; color: #721c24; }
+        .log { background: #f8f9fa; padding: 10px; margin: 10px 0; border-left: 3px solid #007bff; }
+        button { padding: 8px 16px; margin: 5px; }
+        .budget { font-size: 1.2em; font-weight: bold; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Real-time WebSocket Test</h1>
+    <div id="status" class="status disconnected">Disconnected</div>
+    <div class="budget">Available Budget: $<span id="budget">0.00</span></div>
+    
+    <button onclick="addFunds()">Add $100</button>
+    <button onclick="addFunds2()">Add $50</button>
+    
+    <h3>Live Updates Log:</h3>
+    <div id="log"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let socket = null;
+        let budget = 0;
+        
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = 'log';
+            entry.innerHTML = `${new Date().toLocaleTimeString()}: ${message}`;
+            logDiv.insertBefore(entry, logDiv.firstChild);
+        }
+        
+        function updateStatus(status) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = status;
+            statusDiv.className = `status ${status.toLowerCase().includes('connected') ? 'connected' : 'disconnected'}`;
+        }
+        
+        function updateBudget(amount) {
+            budget = amount;
+            document.getElementById('budget').textContent = budget.toFixed(2);
+        }
+        
+        function connect() {
+            log('Connecting to WebSocket...');
+            updateStatus('Connecting...');
+            
+            socket = io({
+                transports: ['websocket', 'polling'],
+                timeout: 5000
+            });
+            
+            socket.on('connect', () => {
+                log('✅ WebSocket connected');
+                updateStatus('Connected - Authenticating...');
+                
+                // Use a test token (this will fail auth but we can see connection works)
+                socket.emit('authenticate', {
+                    token: 'test-token-for-demo',
+                    timestamp: Date.now()
+                });
+            });
+            
+            socket.on('authenticated', (data) => {
+                log('✅ Authenticated successfully');
+                updateStatus('Connected & Authenticated');
+                if (data.budgetState) {
+                    updateBudget(data.budgetState.availableBudget);
+                    log(`Initial budget: $${data.budgetState.availableBudget}`);
+                }
+            });
+            
+            socket.on('auth_error', (data) => {
+                log('❌ Authentication failed: ' + data.message);
+                updateStatus('Connected (Auth Failed)');
+            });
+            
+            socket.on('funds_added', (data) => {
+                log(`💰 Funds added: +$${data.transaction.amount}`);
+                if (data.budgetState) {
+                    updateBudget(data.budgetState.availableBudget);
+                    log(`New budget: $${data.budgetState.availableBudget}`);
+                }
+            });
+            
+            socket.on('transaction_added', (data) => {
+                log(`📝 Transaction added: -$${data.transaction.amount}`);
+                if (data.budgetState) {
+                    updateBudget(data.budgetState.availableBudget);
+                    log(`New budget: $${data.budgetState.availableBudget}`);
+                }
+            });
+            
+            socket.on('disconnect', (reason) => {
+                log('❌ Disconnected: ' + reason);
+                updateStatus('Disconnected');
+            });
+            
+            socket.on('error', (error) => {
+                log('❌ Error: ' + error);
+            });
+        }
+        
+        function addFunds() {
+            if (socket && socket.connected) {
+                log('📤 Sending add_funds request: $100');
+                socket.emit('add_funds', { amount: 100 });
+            } else {
+                log('❌ Not connected to WebSocket');
+            }
+        }
+        
+        function addFunds2() {
+            if (socket && socket.connected) {
+                log('📤 Sending add_funds request: $50');
+                socket.emit('add_funds', { amount: 50 });
+            } else {
+                log('❌ Not connected to WebSocket');
+            }
+        }
+        
+        // Auto-connect on page load
+        connect();
+    </script>
+</body>
+</html>

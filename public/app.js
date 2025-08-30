@@ -142,9 +142,14 @@ function App() {
       throw new Error('Invalid amount');
     }
 
+    console.log('[App] handleAddFunds called with amount:', amount);
+    
     return addFunds(amount)
-      .then(() => {
+      .then((result) => {
+        console.log('[App] addFunds result:', result);
         console.log('Funds added successfully');
+        // Always resolve successfully since WebSocket handles the actual result
+        return Promise.resolve();
       })
       .catch(error => {
         console.error('Add funds failed:', error);
