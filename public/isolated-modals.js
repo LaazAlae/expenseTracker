@@ -329,23 +329,42 @@
           max-height: 200px !important;
           overflow-y: auto !important;
           background: white !important;
-          border: 2px solid #ef4444 !important;
-          border-radius: 8px !important;
-          box-shadow: 0 20px 40px rgba(239, 68, 68, 0.4) !important;
+          border: 1px solid #d1d5db !important;
+          border-radius: 12px !important;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
         `;
         
-        const items = history.filter(item => 
+        let items = history.filter(item => 
           item.toLowerCase().includes((value || '').toLowerCase())
-        ).slice(0, 5);
+        );
+        
+        // Always put Sky Cap first for itemDescription field
+        if (field === 'itemDescription') {
+          const skyCapIndex = items.findIndex(item => item.toLowerCase().includes('sky cap'));
+          if (skyCapIndex > -1) {
+            const skyCapItem = items.splice(skyCapIndex, 1)[0];
+            items = [skyCapItem, ...items];
+          } else if (!value || value.toLowerCase().includes('sky')) {
+            items = ['Sky Cap', ...items.filter(item => item !== 'Sky Cap')];
+          }
+        }
+        
+        items = items.slice(0, 5);
         
         portalEl.innerHTML = items.map(item => `
           <div class="portal-dropdown-item" data-value="${item}" style="
-            padding: 12px 16px !important;
+            padding: 14px 18px !important;
             cursor: pointer !important;
             border-bottom: 1px solid #f3f4f6 !important;
             font-size: 14px !important;
+            font-weight: 500 !important;
             background: white !important;
-          ">${item}</div>
+            transition: all 0.2s ease !important;
+            color: #374151 !important;
+          " 
+          onmouseover="this.style.background='#f8fafc'; this.style.color='#1f2937'"
+          onmouseout="this.style.background='white'; this.style.color='#374151'"
+          >${item}</div>
         `).join('');
         
         const handleClick = (e) => {
@@ -422,9 +441,24 @@
           className: 'im-autocomplete-dropdown ultra-mobile-dropdown',
           style: ultraDropdownStyles
         },
-          history.filter(item => 
-            item.toLowerCase().includes((value || '').toLowerCase())
-          ).slice(0, 5).map((item, index) =>
+          (() => {
+            let items = history.filter(item => 
+              item.toLowerCase().includes((value || '').toLowerCase())
+            );
+            
+            // Always put Sky Cap first for itemDescription field
+            if (field === 'itemDescription') {
+              const skyCapIndex = items.findIndex(item => item.toLowerCase().includes('sky cap'));
+              if (skyCapIndex > -1) {
+                const skyCapItem = items.splice(skyCapIndex, 1)[0];
+                items = [skyCapItem, ...items];
+              } else if (!value || value.toLowerCase().includes('sky')) {
+                items = ['Sky Cap', ...items.filter(item => item !== 'Sky Cap')];
+              }
+            }
+            
+            return items.slice(0, 5);
+          })().map((item, index) =>
             React.createElement('div', {
               key: `ultra_${field}_${index}_${Date.now()}`,
               className: 'im-dropdown-item ultra-mobile-dropdown-item',
