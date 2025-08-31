@@ -46,6 +46,9 @@
     const ultraInputRef = React.useRef(null);
     const ultraInputId = React.useMemo(() => UIEMS.generateUniqueModalId(), []);
     
+    // Mobile detection - must be declared early
+    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+    
     // Calculate dropdown position for mobile fixed positioning
     const ultraCalculateDropdownPosition = React.useCallback(() => {
       if (ultraInputRef.current) {
@@ -301,14 +304,13 @@
           }
         }, 50);
       }
-    }, [ultraDropdownVisibleState, isMobile, analyzeStackingContext, analyzeParentHierarchy, testZIndexEffectiveness, diagnosticLog, ultraDropdownPosition, history.length, value]);
+    }, [ultraDropdownVisibleState, analyzeStackingContext, analyzeParentHierarchy, testZIndexEffectiveness, diagnosticLog, ultraDropdownPosition, history.length, value]);
 
     // Conditional field logic
     const shouldShowConditionalFields = field === 'itemDescription' && 
       value && value.toLowerCase().includes('sky cap');
 
     // Mobile dropdown positioning styles
-    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
     const ultraDropdownStyles = isMobile && ultraDropdownPosition.width > 0 ? {
       position: 'fixed',
       top: `${ultraDropdownPosition.top}px`,
