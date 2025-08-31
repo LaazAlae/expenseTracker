@@ -320,19 +320,25 @@
         const portalEl = document.createElement('div');
         portalEl.id = portalId;
         portalEl.className = 'mobile-dropdown-portal';
+        // Get current input position dynamically to handle scrolling
+        const inputEl = document.getElementById(ultraInputId);
+        const inputRect = inputEl ? inputEl.getBoundingClientRect() : ultraDropdownPosition;
+        
         portalEl.style.cssText = `
           position: fixed !important;
-          top: ${ultraDropdownPosition.top}px !important;
-          left: ${ultraDropdownPosition.left}px !important;
-          width: ${ultraDropdownPosition.width}px !important;
+          top: ${inputRect.bottom + 4}px !important;
+          left: ${inputRect.left}px !important;
+          width: ${inputRect.width}px !important;
           z-index: 2147483647 !important;
           max-height: 200px !important;
-          overflow-y: auto !important;
+          overflow-y: scroll !important;
           -webkit-overflow-scrolling: touch !important;
+          overscroll-behavior: contain !important;
           background: white !important;
           border: 1px solid #d1d5db !important;
           border-radius: 12px !important;
           box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+          touch-action: pan-y !important;
         `;
         
         let items = history.filter(item => 
@@ -395,6 +401,31 @@
           }
         };
         
+        // Function to update dropdown position dynamically
+        const updatePosition = () => {
+          const inputEl = document.getElementById(ultraInputId);
+          if (inputEl && document.body.contains(portalEl)) {
+            const currentRect = inputEl.getBoundingClientRect();
+            portalEl.style.top = `${currentRect.bottom + 4}px`;
+            portalEl.style.left = `${currentRect.left}px`;
+            portalEl.style.width = `${currentRect.width}px`;
+          }
+        };
+        
+        // Add scroll listeners to keep dropdown positioned correctly
+        const scrollListener = () => updatePosition();
+        const resizeListener = () => updatePosition();
+        
+        // Listen for scroll events on window and modal containers
+        window.addEventListener('scroll', scrollListener, { passive: true });
+        window.addEventListener('resize', resizeListener, { passive: true });
+        
+        // Also listen for scroll on modal containers
+        const modalContainers = document.querySelectorAll('.absolute-modal-overlay-final, .absolute-modal-box-final');
+        modalContainers.forEach(container => {
+          container.addEventListener('scroll', scrollListener, { passive: true });
+        });
+        
         portalEl.addEventListener('click', handleClick);
         document.body.appendChild(portalEl);
         
@@ -403,6 +434,13 @@
             portalEl.removeEventListener('click', handleClick);
             document.body.removeChild(portalEl);
           }
+          
+          // Clean up event listeners
+          window.removeEventListener('scroll', scrollListener);
+          window.removeEventListener('resize', resizeListener);
+          modalContainers.forEach(container => {
+            container.removeEventListener('scroll', scrollListener);
+          });
         };
       }
     }, [ultraDropdownVisibleState, isMobile, history, value, ultraDropdownPosition, handleUltraDropdownSelect, ultraInputId]);
