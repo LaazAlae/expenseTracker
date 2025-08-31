@@ -156,6 +156,63 @@
       };
     }, [ultraDropdownVisibleState, ultraCalculateDropdownPosition]);
 
+    // NUCLEAR FIX: Create portal dropdown outside modal
+    React.useEffect(() => {
+      if (ultraDropdownVisibleState && isMobile && history.length > 0) {
+        const portalId = `nuclear-dropdown-${ultraInputId}`;
+        let portalEl = document.getElementById(portalId);
+        
+        if (!portalEl) {
+          portalEl = document.createElement('div');
+          portalEl.id = portalId;
+          portalEl.style.cssText = `
+            position: fixed !important;
+            top: ${ultraDropdownPosition.top}px !important;
+            left: ${ultraDropdownPosition.left}px !important;
+            width: ${ultraDropdownPosition.width}px !important;
+            z-index: 2147483647 !important;
+            background: white !important;
+            border: 3px solid #ef4444 !important;
+            border-radius: 12px !important;
+            box-shadow: 0 25px 50px rgba(239, 68, 68, 0.4) !important;
+            max-height: 200px !important;
+            overflow-y: auto !important;
+            pointer-events: auto !important;
+          `;
+          document.body.appendChild(portalEl);
+        }
+        
+        const items = history.filter(item => 
+          item.toLowerCase().includes((value || '').toLowerCase())
+        ).slice(0, 5);
+        
+        portalEl.innerHTML = items.map(item => `
+          <div class="nuclear-dropdown-item" data-value="${item}" style="
+            padding: 12px 16px !important;
+            cursor: pointer !important;
+            border-bottom: 1px solid #f3f4f6 !important;
+            font-size: 14px !important;
+            background: white !important;
+          ">${item}</div>
+        `).join('');
+        
+        const handleItemClick = (e) => {
+          if (e.target.classList.contains('nuclear-dropdown-item')) {
+            handleUltraDropdownSelect(e.target.dataset.value);
+          }
+        };
+        
+        portalEl.addEventListener('click', handleItemClick);
+        
+        return () => {
+          portalEl?.removeEventListener('click', handleItemClick);
+          if (portalEl && document.body.contains(portalEl)) {
+            document.body.removeChild(portalEl);
+          }
+        };
+      }
+    }, [ultraDropdownVisibleState, isMobile, history, value, ultraDropdownPosition, handleUltraDropdownSelect, ultraInputId]);
+
     // Conditional field logic
     const shouldShowConditionalFields = field === 'itemDescription' && 
       value && value.toLowerCase().includes('sky cap');
@@ -209,8 +266,8 @@
           autoCapitalize: field === 'beneficiary' ? 'words' : 'off',
           spellCheck: 'false'
         }),
-        ultraDropdownVisibleState && history.length > 0 && React.createElement('div', {
-          className: `im-autocomplete-dropdown ${isMobile ? 'ultra-supreme-dropdown-mobile' : 'ultra-mobile-dropdown'}`,
+        ultraDropdownVisibleState && history.length > 0 && !isMobile && React.createElement('div', {
+          className: `im-autocomplete-dropdown ultra-mobile-dropdown`,
           style: ultraDropdownStyles
         },
           history.filter(item => 
