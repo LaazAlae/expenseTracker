@@ -210,7 +210,7 @@
           spellCheck: 'false'
         }),
         ultraDropdownVisibleState && history.length > 0 && React.createElement('div', {
-          className: 'im-autocomplete-dropdown ultra-mobile-dropdown',
+          className: `im-autocomplete-dropdown ${isMobile ? 'ultra-supreme-dropdown-mobile' : 'ultra-mobile-dropdown'}`,
           style: ultraDropdownStyles
         },
           history.filter(item => 

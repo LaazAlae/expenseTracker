@@ -20,7 +20,7 @@ body {
   padding: 0;
   /* PWA safe area background fix */
   padding-bottom: env(safe-area-inset-bottom);
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #dee3e9 100%);
   /* COMPLETELY PREVENT PAGE SCROLL - PWA FIX */
   position: fixed !important;
   touch-action: none;
@@ -67,29 +67,29 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #dee3e9 100%);
   /* Prevent over-scroll and elastic bounce */
   overscroll-behavior: none;
   overscroll-behavior-y: none;
   /* PWA bottom area fix */
   padding-bottom: env(safe-area-inset-bottom);
+  /* Force bottom border to exact color */
+  border-bottom: 5px solid #dee3e9;
 }
 
 /* PWA mode specific styling */
 body.pwa-mode .app {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+  background: linear-gradient(135deg, #f8fafc 0%, #dee3e9 100%) !important;
   position: relative;
 }
 
-body.pwa-mode .app::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: env(safe-area-inset-bottom, 34px);
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  z-index: -1;
+/* Force all shadows to use bottom color */
+body.pwa-mode .transaction-section {
+  box-shadow: 0 -2px 8px #dee3e9 !important;
+}
+
+body.pwa-mode .transaction-table {
+  box-shadow: 0 2px 8px #dee3e9 !important;
 }
 
 /* Professional Icons */
@@ -3396,7 +3396,7 @@ body.desktop .mobile-only {
 
 /* Notched device styles */
 .app.has-safe-area {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #dee3e9 100%);
 }
 
 .app.has-safe-area .header {
@@ -4107,7 +4107,7 @@ body.pwa-mode .transaction-table {
   border-radius: 0 !important;
 }
 
-/* PWA BOTTOM FIX - PRECISE MATCH */
+/* PWA BOTTOM FIX - EXACT #dee3e9 MATCH */
 body.pwa-mode::after {
   content: '';
   position: fixed;
@@ -4115,8 +4115,7 @@ body.pwa-mode::after {
   left: 0;
   right: 0;
   height: env(safe-area-inset-bottom, 34px);
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  background-position: 0 100%;
+  background: #dee3e9 !important;
   z-index: -1;
   pointer-events: none;
 }
