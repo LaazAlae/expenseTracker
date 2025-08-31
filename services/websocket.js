@@ -125,8 +125,8 @@ class WebSocketManager {
             userAgent
           });
 
-          // RADICAL FIX: ALL USERS SHARE THE SAME GLOBAL BUDGET - Use user ID 1 always
-          const budgetState = await budgetManager.initializeUserData(1);
+          // GLOBAL BUDGET FIX: ALL USERS SHARE ALAE'S BUDGET DATA
+          const budgetState = await budgetManager.initializeUserData('1756153666869');
 
           socket.emit('authenticated', { 
             user: { id: user.id, username: user.username, isAdmin },
@@ -160,7 +160,7 @@ class WebSocketManager {
           }
 
           // Use centralized budget manager for atomic operation
-          const result = await budgetManager.addFunds(1, amount, socket.username);
+          const result = await budgetManager.addFunds('1756153666869', amount, socket.username);
 
           if (result.success) {
             // CRITICAL FIX: Broadcast to ALL connected users with the same budget state
@@ -211,7 +211,7 @@ class WebSocketManager {
           };
 
           // Use centralized budget manager for atomic operation
-          const result = await budgetManager.addTransaction(1, sanitizedData, socket.username);
+          const result = await budgetManager.addTransaction('1756153666869', sanitizedData, socket.username);
 
           if (result.success) {
             // CRITICAL FIX: Broadcast to ALL connected users for real-time sync
@@ -262,7 +262,7 @@ class WebSocketManager {
           });
 
           // Use centralized budget manager for atomic operation
-          const result = await budgetManager.editTransaction(1, transactionId, sanitizedUpdates, socket.username);
+          const result = await budgetManager.editTransaction('1756153666869', transactionId, sanitizedUpdates, socket.username);
 
           if (result.success) {
             // CRITICAL FIX: Broadcast to ALL connected users for real-time sync
@@ -301,7 +301,7 @@ class WebSocketManager {
           const { transactionId } = data;
 
           // Use centralized budget manager for atomic operation
-          const result = await budgetManager.deleteTransaction(1, transactionId, socket.username);
+          const result = await budgetManager.deleteTransaction('1756153666869', transactionId, socket.username);
 
           if (result.success) {
             // CRITICAL FIX: Broadcast to ALL connected users for real-time sync
@@ -341,7 +341,7 @@ class WebSocketManager {
           const { transactionIds, bdNumber } = data;
 
           // Use centralized budget manager for atomic operation
-          const result = await budgetManager.assignBdNumbers(1, transactionIds, bdNumber, socket.username);
+          const result = await budgetManager.assignBdNumbers('1756153666869', transactionIds, bdNumber, socket.username);
 
           if (result.success) {
             // CRITICAL FIX: Broadcast to ALL connected users for real-time sync

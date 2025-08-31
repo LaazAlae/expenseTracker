@@ -73,15 +73,6 @@
     // Advanced focus/blur handling to prevent mobile keyboard flicker
     const handleUltraInputFocus = React.useCallback(() => {
       setUltraInputFocusedState(true);
-      
-      // RADICAL: Add body class when dropdown opens on mobile
-      if (window.innerWidth <= 768) {
-        document.body.classList.add('dropdown-open');
-        if (ultraInputRef.current && ultraInputRef.current.parentElement) {
-          ultraInputRef.current.parentElement.classList.add('ultra-dropdown-active');
-        }
-      }
-      
       if (history.length > 0) {
         ultraCalculateDropdownPosition();
         // Delay dropdown show to prevent keyboard conflicts
@@ -96,12 +87,6 @@
       setTimeout(() => {
         setUltraInputFocusedState(false);
         setUltraDropdownVisibleState(false);
-        
-        // RADICAL: Remove body classes when dropdown closes
-        document.body.classList.remove('dropdown-open');
-        if (ultraInputRef.current && ultraInputRef.current.parentElement) {
-          ultraInputRef.current.parentElement.classList.remove('ultra-dropdown-active');
-        }
       }, 200);
     }, []);
 

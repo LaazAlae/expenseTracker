@@ -1088,28 +1088,20 @@
   -webkit-backdrop-filter: blur(10px) !important;
 }
 
-/* RADICAL MOBILE DROPDOWN FIX - HIDE ALL OTHER ELEMENTS */
+/* MOBILE DROPDOWN Z-INDEX FIX */
 @media screen and (max-width: 768px) {
   .im-autocomplete-dropdown {
-    z-index: 2147483647 !important;
+    z-index: 1000000 !important;
     position: fixed !important;
     transform: translateY(0px) !important;
-    isolation: isolate !important;
-    will-change: transform !important;
-    -webkit-transform-style: preserve-3d !important;
-    transform-style: preserve-3d !important;
+    background: white !important;
+    border: 2px solid #3b82f6 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3) !important;
   }
   
-  /* RADICAL: Hide all other input elements when dropdown is open */
-  .im-input-container.ultra-dropdown-active ~ .im-input-container,
-  body.dropdown-open .im-input-container:not(.ultra-dropdown-active) {
-    opacity: 0.3 !important;
-    pointer-events: none !important;
-    position: relative !important;
-    z-index: -1 !important;
-  }
-  
-  /* Create backdrop when dropdown is open */
+  /* Add backdrop for mobile dropdown */
+  .im-autocomplete-dropdown::backdrop,
   .im-autocomplete-dropdown::before {
     content: '';
     position: fixed;
@@ -1118,7 +1110,7 @@
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.1);
-    z-index: -1;
+    z-index: 999999;
   }
   
   /* Create new stacking context for mobile dropdown container */
