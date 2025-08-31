@@ -1088,37 +1088,35 @@
   -webkit-backdrop-filter: blur(10px) !important;
 }
 
-/* RADICAL MOBILE DROPDOWN Z-INDEX DIAGNOSIS & FIX */
+/* GUARANTEED MOBILE DROPDOWN FIX - BREAK THE STACKING TRAP */
 @media screen and (max-width: 768px) {
   
-  /* BREAK ALL STACKING CONTEXTS - FORCE DROPDOWN TO TOP */
-  .im-modal-overlay,
-  .im-modal-container,
-  .im-modal-content,
+  /* BREAK THE STACKING CONTEXTS THAT TRAP THE DROPDOWN */
+  .absolute-modal-box-final,
+  .absolute-modal-overlay-final,
   .im-modal-body {
-    isolation: auto !important;
     transform: none !important;
-    will-change: auto !important;
+    isolation: auto !important;
     contain: none !important;
+    will-change: auto !important;
   }
   
-  /* DROPDOWN WITH ULTIMATE Z-INDEX & ISOLATION */
-  .ultra-supreme-dropdown-mobile {
+  /* FORCE DROPDOWN TO HIGHEST POSSIBLE Z-INDEX */
+  .im-autocomplete-dropdown {
     z-index: 2147483647 !important;
     position: fixed !important;
-    background: #ffffff !important;
-    border: 3px solid #ef4444 !important;
-    border-radius: 12px !important;
-    box-shadow: 0 25px 50px rgba(239, 68, 68, 0.4) !important;
     isolation: isolate !important;
-    transform: translateZ(999px) !important;
-    -webkit-transform: translateZ(999px) !important;
+    transform: translateZ(0) !important;
     contain: none !important;
-    will-change: transform !important;
+    will-change: auto !important;
+    background: white !important;
+    border: 2px solid #3b82f6 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3) !important;
   }
   
-  /* FORCE DROPDOWN ABOVE EVERYTHING */
-  .ultra-supreme-dropdown-mobile > * {
+  /* ENSURE DROPDOWN ITEMS INHERIT HIGH Z-INDEX */
+  .im-autocomplete-dropdown > * {
     z-index: inherit !important;
     position: relative !important;
   }
