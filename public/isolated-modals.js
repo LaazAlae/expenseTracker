@@ -156,7 +156,152 @@
       };
     }, [ultraDropdownVisibleState, ultraCalculateDropdownPosition]);
 
-    // Portal temporarily disabled
+    // DIAGNOSTIC LOGGING SYSTEM
+    const diagnosticLog = React.useCallback((action, data) => {
+      if (window.innerWidth <= 768) {
+        console.log(`[DROPDOWN-DEBUG] ${action}:`, data);
+      }
+    }, []);
+
+    // Z-Index & Stacking Context Analysis
+    const analyzeStackingContext = React.useCallback((element, name) => {
+      if (!element) return;
+      const computed = getComputedStyle(element);
+      
+      const stackingProps = {
+        zIndex: computed.zIndex,
+        position: computed.position,
+        transform: computed.transform,
+        opacity: computed.opacity,
+        isolation: computed.isolation,
+        contain: computed.contain,
+        willChange: computed.willChange,
+        filter: computed.filter,
+        backdropFilter: computed.backdropFilter,
+        mixBlendMode: computed.mixBlendMode
+      };
+      
+      const createsContext = computed.transform !== 'none' || 
+                            computed.opacity !== '1' || 
+                            computed.isolation === 'isolate' ||
+                            (computed.zIndex !== 'auto' && computed.position !== 'static') ||
+                            computed.contain.includes('layout') ||
+                            computed.contain.includes('paint') ||
+                            computed.willChange !== 'auto' ||
+                            computed.filter !== 'none' ||
+                            computed.backdropFilter !== 'none';
+      
+      diagnosticLog(`STACKING-${name}`, {
+        element: element.tagName + (element.className ? '.' + element.className : ''),
+        createsStackingContext: createsContext,
+        ...stackingProps
+      });
+      
+      return createsContext;
+    }, [diagnosticLog]);
+
+    // Analyze parent hierarchy
+    const analyzeParentHierarchy = React.useCallback((element) => {
+      if (!element || window.innerWidth > 768) return;
+      
+      diagnosticLog('PARENT-HIERARCHY-START', 'Analyzing dropdown parent chain');
+      
+      let parent = element.parentElement;
+      let level = 0;
+      const stackingContexts = [];
+      
+      while (parent && level < 15) {
+        const createsContext = analyzeStackingContext(parent, `PARENT-${level}`);
+        if (createsContext) {
+          stackingContexts.push({
+            level,
+            element: parent.tagName + (parent.className ? '.' + parent.className : ''),
+            computed: getComputedStyle(parent)
+          });
+        }
+        parent = parent.parentElement;
+        level++;
+      }
+      
+      diagnosticLog('STACKING-CONTEXTS-FOUND', stackingContexts);
+      return stackingContexts;
+    }, [analyzeStackingContext, diagnosticLog]);
+
+    // Test z-index effectiveness
+    const testZIndexEffectiveness = React.useCallback(() => {
+      if (window.innerWidth > 768) return;
+      
+      diagnosticLog('Z-INDEX-TEST-START', 'Testing z-index effectiveness');
+      
+      // Create test elements
+      const testContainer = document.createElement('div');
+      testContainer.style.cssText = `
+        position: fixed;
+        top: 50px;
+        left: 50px;
+        width: 100px;
+        height: 100px;
+        background: red;
+        z-index: 999999;
+        pointer-events: none;
+      `;
+      
+      const testModal = document.querySelector('.im-modal-overlay') || document.querySelector('.modal-overlay');
+      if (testModal) {
+        testModal.appendChild(testContainer);
+        
+        setTimeout(() => {
+          const testRect = testContainer.getBoundingClientRect();
+          const elementsAtPoint = document.elementsFromPoint(testRect.left + 50, testRect.top + 50);
+          
+          diagnosticLog('Z-INDEX-TEST-RESULT', {
+            testElementVisible: elementsAtPoint[0] === testContainer,
+            elementsAtPoint: elementsAtPoint.map(el => el.tagName + (el.className ? '.' + el.className : '')),
+            testElementComputedZIndex: getComputedStyle(testContainer).zIndex
+          });
+          
+          testContainer.remove();
+        }, 100);
+      }
+    }, [diagnosticLog]);
+
+    // Monitor dropdown visibility
+    React.useEffect(() => {
+      if (ultraDropdownVisibleState && isMobile) {
+        diagnosticLog('DROPDOWN-SHOWN', {
+          timestamp: new Date().toISOString(),
+          dropdownPosition: ultraDropdownPosition,
+          historyLength: history.length,
+          inputValue: value
+        });
+        
+        setTimeout(() => {
+          const dropdown = document.querySelector('.im-autocomplete-dropdown');
+          if (dropdown) {
+            analyzeStackingContext(dropdown, 'DROPDOWN');
+            analyzeParentHierarchy(dropdown);
+            testZIndexEffectiveness();
+            
+            // Check what elements are actually on top
+            const dropdownRect = dropdown.getBoundingClientRect();
+            const centerX = dropdownRect.left + dropdownRect.width / 2;
+            const centerY = dropdownRect.top + dropdownRect.height / 2;
+            
+            const elementsAtCenter = document.elementsFromPoint(centerX, centerY);
+            diagnosticLog('ELEMENTS-ON-TOP', {
+              dropdownRect,
+              centerPoint: {x: centerX, y: centerY},
+              elementsAtCenter: elementsAtCenter.map(el => ({
+                tag: el.tagName,
+                className: el.className,
+                zIndex: getComputedStyle(el).zIndex,
+                position: getComputedStyle(el).position
+              }))
+            });
+          }
+        }, 50);
+      }
+    }, [ultraDropdownVisibleState, isMobile, analyzeStackingContext, analyzeParentHierarchy, testZIndexEffectiveness, diagnosticLog, ultraDropdownPosition, history.length, value]);
 
     // Conditional field logic
     const shouldShowConditionalFields = field === 'itemDescription' && 
