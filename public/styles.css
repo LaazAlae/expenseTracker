@@ -4107,23 +4107,43 @@ body.pwa-mode .transaction-table {
   border-radius: 0 !important;
 }
 
-/* PWA BOTTOM AREA DEFINITIVE COLOR MATCH */
-@supports (padding: max(0px)) {
-  body.pwa-mode {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
-    padding-bottom: max(env(safe-area-inset-bottom), 0px) !important;
-  }
-  
-  body.pwa-mode::after {
-    content: '';
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: max(env(safe-area-inset-bottom), 34px);
-    background: #e2e8f0 !important;
-    z-index: -10;
-  }
+/* RADICAL PWA BOTTOM FIX - FORCE EXACT MATCH */
+body.pwa-mode {
+  background: #e2e8f0 !important;
+  background-image: none !important;
+}
+
+body.pwa-mode .app {
+  background: #e2e8f0 !important;
+  background-image: none !important;
+}
+
+/* Force exact bottom color match */
+body.pwa-mode::after {
+  content: '';
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: max(env(safe-area-inset-bottom), 40px);
+  background: #e2e8f0 !important;
+  background-image: none !important;
+  z-index: 999;
+  pointer-events: none;
+}
+
+/* Remove ALL gradients and shadows in PWA mode */
+body.pwa-mode * {
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+body.pwa-mode .transaction-section,
+body.pwa-mode .transaction-table,
+body.pwa-mode .header {
+  background: #e2e8f0 !important;
+  background-image: none !important;
+  box-shadow: none !important;
 }
 
 /* No content pushing needed for floating confirm panel */
