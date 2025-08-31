@@ -328,6 +328,7 @@
           z-index: 2147483647 !important;
           max-height: 200px !important;
           overflow-y: auto !important;
+          -webkit-overflow-scrolling: touch !important;
           background: white !important;
           border: 1px solid #d1d5db !important;
           border-radius: 12px !important;
@@ -361,15 +362,36 @@
             background: white !important;
             transition: all 0.2s ease !important;
             color: #374151 !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
           " 
           onmouseover="this.style.background='#f8fafc'; this.style.color='#1f2937'"
           onmouseout="this.style.background='white'; this.style.color='#374151'"
-          >${item}</div>
+          >
+            <span style="flex: 1;">${item}</span>
+            <button class="portal-delete-btn" data-delete="${item}" style="
+              background: none !important;
+              border: none !important;
+              color: #9ca3af !important;
+              cursor: pointer !important;
+              padding: 4px !important;
+              font-size: 16px !important;
+              line-height: 1 !important;
+              margin-left: 8px !important;
+            " onclick="event.stopPropagation();">&times;</button>
+          </div>
         `).join('');
         
         const handleClick = (e) => {
           if (e.target.classList.contains('portal-dropdown-item')) {
             handleUltraDropdownSelect(e.target.dataset.value);
+          } else if (e.target.classList.contains('portal-delete-btn')) {
+            e.stopPropagation();
+            const itemToDelete = e.target.dataset.delete;
+            if (onRemoveFromHistory) {
+              onRemoveFromHistory(field, itemToDelete);
+            }
           }
         };
         
