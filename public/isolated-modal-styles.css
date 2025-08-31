@@ -1088,37 +1088,35 @@
   -webkit-backdrop-filter: blur(10px) !important;
 }
 
-/* GUARANTEED MOBILE DROPDOWN FIX - BREAK THE STACKING TRAP */
+/* SURGICAL MOBILE DROPDOWN FIX - BREAK STACKING WITHOUT AFFECTING CENTERING */
 @media screen and (max-width: 768px) {
   
-  /* BREAK THE STACKING CONTEXTS THAT TRAP THE DROPDOWN */
-  .absolute-modal-box-final,
-  .absolute-modal-overlay-final,
-  .im-modal-body {
-    transform: none !important;
+  /* ONLY BREAK STACKING CONTEXT WHEN DROPDOWN IS VISIBLE */
+  body:has(.im-autocomplete-dropdown) .absolute-modal-box-final,
+  body:has(.im-autocomplete-dropdown) .absolute-modal-overlay-final {
     isolation: auto !important;
     contain: none !important;
     will-change: auto !important;
   }
   
-  /* FORCE DROPDOWN TO HIGHEST POSSIBLE Z-INDEX */
+  /* USE PORTAL APPROACH - RENDER DROPDOWN OUTSIDE MODAL ENTIRELY */
   .im-autocomplete-dropdown {
     z-index: 2147483647 !important;
     position: fixed !important;
-    isolation: isolate !important;
-    transform: translateZ(0) !important;
-    contain: none !important;
-    will-change: auto !important;
     background: white !important;
     border: 2px solid #3b82f6 !important;
     border-radius: 8px !important;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3) !important;
   }
   
-  /* ENSURE DROPDOWN ITEMS INHERIT HIGH Z-INDEX */
-  .im-autocomplete-dropdown > * {
-    z-index: inherit !important;
-    position: relative !important;
+  /* ALTERNATIVE: CREATE BODY-LEVEL PORTAL */
+  body > .mobile-dropdown-portal {
+    z-index: 2147483647 !important;
+    position: fixed !important;
+    background: white !important;
+    border: 2px solid #ef4444 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 20px 40px rgba(239, 68, 68, 0.4) !important;
   }
 }
   

@@ -306,6 +306,66 @@
       }
     }, [ultraDropdownVisibleState, analyzeStackingContext, analyzeParentHierarchy, testZIndexEffectiveness, diagnosticLog, ultraDropdownPosition, history.length, value]);
 
+    // MOBILE PORTAL DROPDOWN - RENDER TO BODY (BYPASSES ALL STACKING CONTEXTS)
+    React.useEffect(() => {
+      if (ultraDropdownVisibleState && isMobile && history.length > 0 && ultraDropdownPosition.width > 0) {
+        const portalId = `mobile-dropdown-portal-${ultraInputId}`;
+        
+        // Remove any existing portal
+        const existingPortal = document.getElementById(portalId);
+        if (existingPortal) {
+          document.body.removeChild(existingPortal);
+        }
+        
+        const portalEl = document.createElement('div');
+        portalEl.id = portalId;
+        portalEl.className = 'mobile-dropdown-portal';
+        portalEl.style.cssText = `
+          position: fixed !important;
+          top: ${ultraDropdownPosition.top}px !important;
+          left: ${ultraDropdownPosition.left}px !important;
+          width: ${ultraDropdownPosition.width}px !important;
+          z-index: 2147483647 !important;
+          max-height: 200px !important;
+          overflow-y: auto !important;
+          background: white !important;
+          border: 2px solid #ef4444 !important;
+          border-radius: 8px !important;
+          box-shadow: 0 20px 40px rgba(239, 68, 68, 0.4) !important;
+        `;
+        
+        const items = history.filter(item => 
+          item.toLowerCase().includes((value || '').toLowerCase())
+        ).slice(0, 5);
+        
+        portalEl.innerHTML = items.map(item => `
+          <div class="portal-dropdown-item" data-value="${item}" style="
+            padding: 12px 16px !important;
+            cursor: pointer !important;
+            border-bottom: 1px solid #f3f4f6 !important;
+            font-size: 14px !important;
+            background: white !important;
+          ">${item}</div>
+        `).join('');
+        
+        const handleClick = (e) => {
+          if (e.target.classList.contains('portal-dropdown-item')) {
+            handleUltraDropdownSelect(e.target.dataset.value);
+          }
+        };
+        
+        portalEl.addEventListener('click', handleClick);
+        document.body.appendChild(portalEl);
+        
+        return () => {
+          if (document.body.contains(portalEl)) {
+            portalEl.removeEventListener('click', handleClick);
+            document.body.removeChild(portalEl);
+          }
+        };
+      }
+    }, [ultraDropdownVisibleState, isMobile, history, value, ultraDropdownPosition, handleUltraDropdownSelect, ultraInputId]);
+
     // Conditional field logic
     const shouldShowConditionalFields = field === 'itemDescription' && 
       value && value.toLowerCase().includes('sky cap');
@@ -358,7 +418,7 @@
           autoCapitalize: field === 'beneficiary' ? 'words' : 'off',
           spellCheck: 'false'
         }),
-        ultraDropdownVisibleState && history.length > 0 && React.createElement('div', {
+        ultraDropdownVisibleState && history.length > 0 && !isMobile && React.createElement('div', {
           className: 'im-autocomplete-dropdown ultra-mobile-dropdown',
           style: ultraDropdownStyles
         },
