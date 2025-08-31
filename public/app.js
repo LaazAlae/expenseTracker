@@ -251,39 +251,54 @@ function App() {
       const workbook = XLSX.utils.book_new();
 
       const worksheetData = [
-        ['Date of Reimbursement', 'Beneficiary', 'Item Description', 'Invoice Number', 'Date of Purchase', 'Amount', 'Amount Left', 'Flight Number', 'Number of Luggage', 'Observations', 'Username']
+        ['Date', 'Bénéficiaire', 'Description', 'Facture N°', 'Date de Fact', 'Montant', 'Solde Restant', 'N° de Vol', 'Bagages', 'Observations', 'Numéro BD', 'Nom d\'utilisateur']
       ];
 
-      let runningTotal = budgetState.totalFundsAdded;
+      // Calculate historical balances for each transaction at time of purchase
+      let sortedTransactions = [...budgetState.transactions].sort((a, b) => new Date(a.dateOfReimbursement) - new Date(b.dateOfReimbursement));
+      let runningBalance = 0;
+      const transactionBalances = new Map();
+      
+      sortedTransactions.forEach(transaction => {
+        if (transaction.type === 'fund_addition') {
+          runningBalance += transaction.amount;
+        } else {
+          runningBalance -= transaction.amount;
+        }
+        transactionBalances.set(transaction.id, runningBalance);
+      });
       
       budgetState.transactions.forEach(transaction => {
+        const historicalBalance = transactionBalances.get(transaction.id) || 0;
+        
         if (transaction.type === 'fund_addition') {
           worksheetData.push([
-            new Date(transaction.dateOfReimbursement).toLocaleDateString('en-US', {timeZone: 'America/New_York'}) || '-',
+            new Date(transaction.dateOfReimbursement).toLocaleDateString('fr-FR', {timeZone: 'Europe/Paris'}) || '-',
             '-',
-            'Fund Addition',
+            'Ajout de Fonds',
             '-',
-            new Date(transaction.dateOfPurchase).toLocaleDateString('en-US', {timeZone: 'America/New_York'}) || '-',
-            `$${transaction.amount.toFixed(2)}`,
-            `$${runningTotal.toFixed(2)}`,
+            new Date(transaction.dateOfPurchase).toLocaleDateString('fr-FR', {timeZone: 'Europe/Paris'}) || '-',
+            `${transaction.amount.toFixed(2)}€`,
+            `${historicalBalance.toFixed(2)}€`,
             '-',
             '-',
-            '-',
+            transaction.observations || '-',
+            transaction.bdNumber || '-',
             currentUser?.username || '-'
           ]);
         } else {
-          runningTotal -= transaction.amount;
           worksheetData.push([
-            new Date(transaction.dateOfReimbursement).toLocaleDateString('en-US', {timeZone: 'America/New_York'}) || '-',
+            new Date(transaction.dateOfReimbursement).toLocaleDateString('fr-FR', {timeZone: 'Europe/Paris'}) || '-',
             transaction.beneficiary || '-',
             transaction.itemDescription || '-',
             transaction.invoiceNumber || '-',
-            new Date(transaction.dateOfPurchase).toLocaleDateString('en-US', {timeZone: 'America/New_York'}) || '-',
-            `$${transaction.amount.toFixed(2)}`,
-            `$${runningTotal.toFixed(2)}`,
+            new Date(transaction.dateOfPurchase).toLocaleDateString('fr-FR', {timeZone: 'Europe/Paris'}) || '-',
+            `${transaction.amount.toFixed(2)}€`,
+            `${historicalBalance.toFixed(2)}€`,
             transaction.flightNumber || '-',
             transaction.numberOfLuggage || '-',
             transaction.observations || '-',
+            transaction.bdNumber || '-',
             currentUser?.username || '-'
           ]);
         }
