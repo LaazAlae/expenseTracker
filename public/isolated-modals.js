@@ -306,144 +306,20 @@
       }
     }, [ultraDropdownVisibleState, analyzeStackingContext, analyzeParentHierarchy, testZIndexEffectiveness, diagnosticLog, ultraDropdownPosition, history.length, value]);
 
-    // PORTAL DROPDOWN - RENDER TO BODY WITH PROPER POSITIONING
+    // INDUSTRY STANDARD DROPDOWN - NOW WORKS BECAUSE NO STACKING CONTEXT
     React.useEffect(() => {
+      // Enable for mobile since we fixed the stacking context
       if (ultraDropdownVisibleState && isMobile && history.length > 0) {
-        const inputEl = document.getElementById(ultraInputId);
-        if (!inputEl) return;
-        
-        const portalId = `portal-dropdown-${ultraInputId}`;
-        
-        // Remove existing
-        const existing = document.getElementById(portalId);
-        if (existing) existing.remove();
-        
-        let items = history.filter(item => 
-          item.toLowerCase().includes((value || '').toLowerCase())
-        );
-        
-        // Sky Cap first for itemDescription
-        if (field === 'itemDescription') {
-          const skyCapIndex = items.findIndex(item => item.toLowerCase().includes('sky cap'));
-          if (skyCapIndex > -1) {
-            const skyCapItem = items.splice(skyCapIndex, 1)[0];
-            items = [skyCapItem, ...items];
-          } else if (!value || value.toLowerCase().includes('sky')) {
-            items = ['Sky Cap', ...items.filter(item => item !== 'Sky Cap')];
-          }
-        }
-        
-        items = items.slice(0, 5);
-        
-        const dropdownEl = document.createElement('div');
-        dropdownEl.id = portalId;
-        dropdownEl.className = 'portal-mobile-dropdown';
-        
-        // Get input position and update on scroll
-        const updatePosition = () => {
-          const inputRect = inputEl.getBoundingClientRect();
-          dropdownEl.style.cssText = `
-            position: fixed !important;
-            top: ${inputRect.bottom + 4}px !important;
-            left: ${inputRect.left}px !important;
-            width: ${inputRect.width}px !important;
-            z-index: 2147483647 !important;
-            max-height: 200px !important;
-            overflow-y: auto !important;
-            -webkit-overflow-scrolling: touch !important;
-            background: white !important;
-            border: 1px solid #d1d5db !important;
-            border-radius: 12px !important;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
-            overscroll-behavior: contain !important;
-            touch-action: pan-y !important;
-          `;
-        };
-        
-        updatePosition();
-        
-        dropdownEl.innerHTML = items.map(item => `
-          <div class="portal-dropdown-item" data-value="${item}" style="
-            padding: 14px 18px !important;
-            cursor: pointer !important;
-            border-bottom: 1px solid #f3f4f6 !important;
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-          ">
-            <span style="flex: 1;">${item}</span>
-            <button class="portal-delete-btn" data-delete="${item}" style="
-              background: none !important;
-              border: none !important;
-              color: #9ca3af !important;
-              cursor: pointer !important;
-              padding: 4px !important;
-              font-size: 16px !important;
-            ">&times;</button>
-          </div>
-        `).join('');
-        
-        dropdownEl.addEventListener('click', (e) => {
-          if (e.target.classList.contains('portal-dropdown-item')) {
-            handleUltraDropdownSelect(e.target.dataset.value);
-          } else if (e.target.classList.contains('portal-delete-btn')) {
-            e.stopPropagation();
-            if (onRemoveFromHistory) {
-              onRemoveFromHistory(field, e.target.dataset.delete);
-            }
-          }
-        });
-        
-        // Update position on scroll - listen to modal scroll, not window scroll
-        const scrollHandler = () => updatePosition();
-        const modalContainer = document.querySelector('.absolute-modal-box-final');
-        const modalOverlay = document.querySelector('.absolute-modal-overlay-final');
-        
-        // Listen for scroll on the modal containers where the actual scrolling happens
-        if (modalContainer) {
-          modalContainer.addEventListener('scroll', scrollHandler, { passive: true });
-        }
-        if (modalOverlay) {
-          modalOverlay.addEventListener('scroll', scrollHandler, { passive: true });
-        }
-        window.addEventListener('resize', scrollHandler, { passive: true });
-        
-        document.body.appendChild(dropdownEl);
-        
-        return () => {
-          if (document.contains(dropdownEl)) {
-            dropdownEl.remove();
-          }
-          if (modalContainer) {
-            modalContainer.removeEventListener('scroll', scrollHandler);
-          }
-          if (modalOverlay) {
-            modalOverlay.removeEventListener('scroll', scrollHandler);
-          }
-          window.removeEventListener('resize', scrollHandler);
-        };
+        console.log(`[DROPDOWN-INDUSTRY] Creating normal dropdown - no more stacking context issues!`);
       }
-    }, [ultraDropdownVisibleState, isMobile, history, value, handleUltraDropdownSelect, ultraInputId, field, onRemoveFromHistory]);
+      // Mobile dropdown is now handled by the normal dropdown below since stacking context is fixed
+    }, [ultraDropdownVisibleState, isMobile, history, value]);
 
     // Conditional field logic
     const shouldShowConditionalFields = field === 'itemDescription' && 
       value && value.toLowerCase().includes('sky cap');
 
-    // Mobile dropdown positioning styles
-    const ultraDropdownStyles = isMobile && ultraDropdownPosition.width > 0 ? {
-      position: 'fixed',
-      top: `${ultraDropdownPosition.top}px`,
-      left: `${ultraDropdownPosition.left}px`,
-      width: `${ultraDropdownPosition.width}px`,
-      zIndex: 9999999,
-      right: 'auto'
-    } : {
-      position: 'absolute',
-      top: '100%',
-      left: 0,
-      right: 0,
-      zIndex: 99999
-    };
+    // Standard dropdown styles - no more mobile/desktop distinction needed
 
     return React.createElement('div', { className: 'im-form-field' },
       React.createElement('label', { 
@@ -455,8 +331,8 @@
         required && React.createElement('span', { className: 'im-required' }, ' *')
       ),
       React.createElement('div', { 
-        className: 'im-input-container ultra-mobile-input-container',
-        style: { position: 'relative', zIndex: isMobile ? 9999998 : 'auto' }
+        className: 'im-input-container',
+        style: { position: 'relative' }
       },
         React.createElement('input', {
           id: ultraInputId,
@@ -477,9 +353,23 @@
           autoCapitalize: field === 'beneficiary' ? 'words' : 'off',
           spellCheck: 'false'
         }),
-        ultraDropdownVisibleState && history.length > 0 && !isMobile && React.createElement('div', {
-          className: 'im-autocomplete-dropdown ultra-mobile-dropdown',
-          style: ultraDropdownStyles
+        ultraDropdownVisibleState && history.length > 0 && React.createElement('div', {
+          className: 'im-autocomplete-dropdown ultra-standard-dropdown',
+          style: {
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            zIndex: 999999,
+            maxHeight: '200px',
+            overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            background: 'white',
+            border: '1px solid #d1d5db',
+            borderRadius: '12px',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15)',
+            marginTop: '4px'
+          }
         },
           (() => {
             let items = history.filter(item => 
