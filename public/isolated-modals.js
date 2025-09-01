@@ -329,25 +329,28 @@
           existingDropdown.remove();
         }
         
-        // Get input position relative to modal container
+        // Get input position relative to modal container's SCROLLED content
+        const modalScrollTop = modalContainer.scrollTop || 0;
         const modalRect = modalContainer.getBoundingClientRect();
         const inputRect = inputEl.getBoundingClientRect();
-        const relativeTop = inputRect.bottom - modalRect.top + 4;
-        const relativeLeft = inputRect.left - modalRect.left;
         
-        console.log(`[DROPDOWN-SCROLL-DEBUG] Positioning - modalRect:`, modalRect);
-        console.log(`[DROPDOWN-SCROLL-DEBUG] Positioning - inputRect:`, inputRect);
-        console.log(`[DROPDOWN-SCROLL-DEBUG] Positioning - relative top: ${relativeTop}, left: ${relativeLeft}`);
+        // Calculate position relative to the modal's content (not viewport)
+        const inputOffsetFromModal = inputEl.offsetTop + inputEl.offsetHeight + 4;
+        const inputLeftFromModal = inputEl.offsetLeft;
+        
+        console.log(`[DROPDOWN-SCROLL-DEBUG] Modal scroll top: ${modalScrollTop}`);
+        console.log(`[DROPDOWN-SCROLL-DEBUG] Input offsetTop: ${inputEl.offsetTop}, offsetLeft: ${inputEl.offsetLeft}`);
+        console.log(`[DROPDOWN-SCROLL-DEBUG] Final position - top: ${inputOffsetFromModal}, left: ${inputLeftFromModal}`);
         
         const dropdownEl = document.createElement('div');
         dropdownEl.id = dropdownId;
         dropdownEl.className = 'modal-contained-dropdown';
         
-        // Position absolutely within the modal container
+        // Position absolutely within modal using offset position (scrolls with content)
         dropdownEl.style.cssText = `
           position: absolute !important;
-          top: ${relativeTop}px !important;
-          left: ${relativeLeft}px !important;
+          top: ${inputOffsetFromModal}px !important;
+          left: ${inputLeftFromModal}px !important;
           width: ${inputRect.width}px !important;
           z-index: 999999 !important;
           max-height: 200px !important;
