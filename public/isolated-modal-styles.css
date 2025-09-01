@@ -14,6 +14,7 @@
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
+  height: 100dvh !important; /* Dynamic viewport height for mobile */
   background: rgba(0, 0, 0, 0.75) !important;
   z-index: 999999 !important;
   display: block !important;
@@ -34,6 +35,7 @@
   width: 90% !important;
   max-width: 500px !important;
   height: calc(100vh - 100px) !important;
+  height: calc(100dvh - 100px) !important; /* Dynamic viewport height for mobile */
   max-height: 600px !important;
   background: #ffffff !important;
   border-radius: 16px !important;

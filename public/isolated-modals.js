@@ -306,32 +306,52 @@
       }
     }, [ultraDropdownVisibleState, analyzeStackingContext, analyzeParentHierarchy, testZIndexEffectiveness, diagnosticLog, ultraDropdownPosition, history.length, value]);
 
-    // MOBILE PORTAL DROPDOWN - RENDER TO BODY (BYPASSES ALL STACKING CONTEXTS)
+    // MOBILE MODAL-CONTAINED DROPDOWN WITH COMPREHENSIVE LOGGING
     React.useEffect(() => {
-      if (ultraDropdownVisibleState && isMobile && history.length > 0 && ultraDropdownPosition.width > 0) {
-        const portalId = `mobile-dropdown-portal-${ultraInputId}`;
+      console.log(`[DROPDOWN-SCROLL-DEBUG] Effect triggered - visible: ${ultraDropdownVisibleState}, isMobile: ${isMobile}, history: ${history.length}, width: ${ultraDropdownPosition.width}`);
+      
+      if (ultraDropdownVisibleState && isMobile && history.length > 0) {
+        const modalContainer = document.querySelector('.absolute-modal-box-final');
+        const inputEl = document.getElementById(ultraInputId);
         
-        // Remove any existing portal
-        const existingPortal = document.getElementById(portalId);
-        if (existingPortal) {
-          document.body.removeChild(existingPortal);
+        console.log(`[DROPDOWN-SCROLL-DEBUG] Found modal container: ${!!modalContainer}, input: ${!!inputEl}`);
+        
+        if (!modalContainer || !inputEl) {
+          console.error(`[DROPDOWN-SCROLL-DEBUG] Missing elements - modal: ${!!modalContainer}, input: ${!!inputEl}`);
+          return;
         }
         
-        const portalEl = document.createElement('div');
-        portalEl.id = portalId;
-        portalEl.className = 'mobile-dropdown-portal';
-        // Get current input position dynamically to handle scrolling
-        const inputEl = document.getElementById(ultraInputId);
-        const inputRect = inputEl ? inputEl.getBoundingClientRect() : ultraDropdownPosition;
+        const dropdownId = `modal-dropdown-${ultraInputId}`;
         
-        portalEl.style.cssText = `
-          position: fixed !important;
-          top: ${inputRect.bottom + 4}px !important;
-          left: ${inputRect.left}px !important;
+        // Remove any existing dropdown
+        const existingDropdown = document.getElementById(dropdownId);
+        if (existingDropdown) {
+          existingDropdown.remove();
+        }
+        
+        // Get input position relative to modal container
+        const modalRect = modalContainer.getBoundingClientRect();
+        const inputRect = inputEl.getBoundingClientRect();
+        const relativeTop = inputRect.bottom - modalRect.top + 4;
+        const relativeLeft = inputRect.left - modalRect.left;
+        
+        console.log(`[DROPDOWN-SCROLL-DEBUG] Positioning - modalRect:`, modalRect);
+        console.log(`[DROPDOWN-SCROLL-DEBUG] Positioning - inputRect:`, inputRect);
+        console.log(`[DROPDOWN-SCROLL-DEBUG] Positioning - relative top: ${relativeTop}, left: ${relativeLeft}`);
+        
+        const dropdownEl = document.createElement('div');
+        dropdownEl.id = dropdownId;
+        dropdownEl.className = 'modal-contained-dropdown';
+        
+        // Position absolutely within the modal container
+        dropdownEl.style.cssText = `
+          position: absolute !important;
+          top: ${relativeTop}px !important;
+          left: ${relativeLeft}px !important;
           width: ${inputRect.width}px !important;
-          z-index: 2147483647 !important;
+          z-index: 999999 !important;
           max-height: 200px !important;
-          overflow-y: scroll !important;
+          overflow-y: auto !important;
           -webkit-overflow-scrolling: touch !important;
           overscroll-behavior: contain !important;
           background: white !important;
@@ -339,7 +359,11 @@
           border-radius: 12px !important;
           box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
           touch-action: pan-y !important;
+          pointer-events: auto !important;
+          display: block !important;
         `;
+        
+        console.log(`[DROPDOWN-SCROLL-DEBUG] Applied CSS:`, dropdownEl.style.cssText);
         
         let items = history.filter(item => 
           item.toLowerCase().includes((value || '').toLowerCase())
@@ -357,9 +381,10 @@
         }
         
         items = items.slice(0, 5);
+        console.log(`[DROPDOWN-SCROLL-DEBUG] Rendering ${items.length} items:`, items);
         
-        portalEl.innerHTML = items.map(item => `
-          <div class="portal-dropdown-item" data-value="${item}" style="
+        dropdownEl.innerHTML = items.map(item => `
+          <div class="modal-dropdown-item" data-value="${item}" style="
             padding: 14px 18px !important;
             cursor: pointer !important;
             border-bottom: 1px solid #f3f4f6 !important;
@@ -376,7 +401,7 @@
           onmouseout="this.style.background='white'; this.style.color='#374151'"
           >
             <span style="flex: 1;">${item}</span>
-            <button class="portal-delete-btn" data-delete="${item}" style="
+            <button class="modal-dropdown-delete" data-delete="${item}" style="
               background: none !important;
               border: none !important;
               color: #9ca3af !important;
@@ -390,60 +415,62 @@
         `).join('');
         
         const handleClick = (e) => {
-          if (e.target.classList.contains('portal-dropdown-item')) {
+          console.log(`[DROPDOWN-SCROLL-DEBUG] Click detected on:`, e.target.className, e.target.dataset);
+          
+          if (e.target.classList.contains('modal-dropdown-item')) {
+            console.log(`[DROPDOWN-SCROLL-DEBUG] Selecting item:`, e.target.dataset.value);
             handleUltraDropdownSelect(e.target.dataset.value);
-          } else if (e.target.classList.contains('portal-delete-btn')) {
+          } else if (e.target.classList.contains('modal-dropdown-delete')) {
             e.stopPropagation();
             const itemToDelete = e.target.dataset.delete;
+            console.log(`[DROPDOWN-SCROLL-DEBUG] Deleting item:`, itemToDelete);
             if (onRemoveFromHistory) {
               onRemoveFromHistory(field, itemToDelete);
             }
           }
         };
         
-        // Function to update dropdown position dynamically
-        const updatePosition = () => {
-          const inputEl = document.getElementById(ultraInputId);
-          if (inputEl && document.body.contains(portalEl)) {
-            const currentRect = inputEl.getBoundingClientRect();
-            portalEl.style.top = `${currentRect.bottom + 4}px`;
-            portalEl.style.left = `${currentRect.left}px`;
-            portalEl.style.width = `${currentRect.width}px`;
-          }
-        };
-        
-        // Add scroll listeners to keep dropdown positioned correctly
-        const scrollListener = () => updatePosition();
-        const resizeListener = () => updatePosition();
-        
-        // Listen for scroll events on window and modal containers
-        window.addEventListener('scroll', scrollListener, { passive: true });
-        window.addEventListener('resize', resizeListener, { passive: true });
-        
-        // Also listen for scroll on modal containers
-        const modalContainers = document.querySelectorAll('.absolute-modal-overlay-final, .absolute-modal-box-final');
-        modalContainers.forEach(container => {
-          container.addEventListener('scroll', scrollListener, { passive: true });
+        // Test scrolling immediately after adding
+        dropdownEl.addEventListener('click', handleClick);
+        dropdownEl.addEventListener('scroll', () => {
+          console.log(`[DROPDOWN-SCROLL-DEBUG] Dropdown scroll detected - scrollTop: ${dropdownEl.scrollTop}`);
+        });
+        dropdownEl.addEventListener('touchstart', () => {
+          console.log(`[DROPDOWN-SCROLL-DEBUG] Touch start on dropdown`);
+        });
+        dropdownEl.addEventListener('touchmove', (e) => {
+          console.log(`[DROPDOWN-SCROLL-DEBUG] Touch move on dropdown - scrollTop: ${dropdownEl.scrollTop}`);
         });
         
-        portalEl.addEventListener('click', handleClick);
-        document.body.appendChild(portalEl);
+        modalContainer.appendChild(dropdownEl);
+        
+        console.log(`[DROPDOWN-SCROLL-DEBUG] Dropdown added to modal container`);
+        console.log(`[DROPDOWN-SCROLL-DEBUG] Final computed styles:`, {
+          position: getComputedStyle(dropdownEl).position,
+          zIndex: getComputedStyle(dropdownEl).zIndex,
+          overflow: getComputedStyle(dropdownEl).overflow,
+          touchAction: getComputedStyle(dropdownEl).touchAction,
+          pointerEvents: getComputedStyle(dropdownEl).pointerEvents
+        });
+        
+        // Test scroll functionality
+        setTimeout(() => {
+          console.log(`[DROPDOWN-SCROLL-DEBUG] Testing scroll - scrollHeight: ${dropdownEl.scrollHeight}, clientHeight: ${dropdownEl.clientHeight}`);
+          if (dropdownEl.scrollHeight > dropdownEl.clientHeight) {
+            console.log(`[DROPDOWN-SCROLL-DEBUG] Dropdown should be scrollable`);
+          } else {
+            console.log(`[DROPDOWN-SCROLL-DEBUG] Dropdown content fits, no scrolling needed`);
+          }
+        }, 100);
         
         return () => {
-          if (document.body.contains(portalEl)) {
-            portalEl.removeEventListener('click', handleClick);
-            document.body.removeChild(portalEl);
+          console.log(`[DROPDOWN-SCROLL-DEBUG] Cleaning up dropdown`);
+          if (document.contains(dropdownEl)) {
+            dropdownEl.remove();
           }
-          
-          // Clean up event listeners
-          window.removeEventListener('scroll', scrollListener);
-          window.removeEventListener('resize', resizeListener);
-          modalContainers.forEach(container => {
-            container.removeEventListener('scroll', scrollListener);
-          });
         };
       }
-    }, [ultraDropdownVisibleState, isMobile, history, value, ultraDropdownPosition, handleUltraDropdownSelect, ultraInputId]);
+    }, [ultraDropdownVisibleState, isMobile, history, value, handleUltraDropdownSelect, ultraInputId, field, onRemoveFromHistory]);
 
     // Conditional field logic
     const shouldShowConditionalFields = field === 'itemDescription' && 
