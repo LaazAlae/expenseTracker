@@ -379,7 +379,7 @@ class WebSocketManager {
         }
 
         try {
-          const { username, password } = data;
+          const { username, password, isAdmin } = data;
           const userData = getData();
 
           if (userData.users[username]) {
@@ -398,7 +398,8 @@ class WebSocketManager {
             createdAt: new Date().toISOString(),
             createdBy: socket.username,
             loginAttempts: 0,
-            lockUntil: null
+            lockUntil: null,
+            isAdmin: isAdmin === true
           };
 
           userData.userData[userId] = {

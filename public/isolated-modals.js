@@ -612,13 +612,7 @@
         setErrors(prev => ({ ...prev, [field]: '' }));
       }
       
-      // Save to history
-      if (value && value.trim() && ['beneficiary', 'itemDescription'].includes(field)) {
-        const history = inputHistory[field] || [];
-        const newHistory = [value, ...history.filter(item => item !== value)].slice(0, 10);
-        setInputHistory(prev => ({ ...prev, [field]: newHistory }));
-        localStorage.setItem(`${field}History`, JSON.stringify(newHistory));
-      }
+      // Don't save to history on every keystroke - only save on successful transaction save
     };
     
     const removeFromHistory = (field, item) => {
@@ -654,6 +648,16 @@
           if (formData.invoiceNumber) window.LocalStorageManager.saveOption('invoiceNumber', formData.invoiceNumber);
           if (formData.flightNumber) window.LocalStorageManager.saveOption('flightNumber', formData.flightNumber);
         }
+        
+        // Also save to local inputHistory state for immediate dropdown updates
+        ['beneficiary', 'itemDescription', 'invoiceNumber', 'flightNumber'].forEach(field => {
+          if (formData[field] && formData[field].trim()) {
+            const history = inputHistory[field] || [];
+            const newHistory = [formData[field], ...history.filter(item => item !== formData[field])].slice(0, 10);
+            setInputHistory(prev => ({ ...prev, [field]: newHistory }));
+            localStorage.setItem(`${field}History`, JSON.stringify(newHistory));
+          }
+        });
         
         onClose();
       } catch (err) {
