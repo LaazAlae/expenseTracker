@@ -541,15 +541,13 @@
   }
   
   .absolute-modal-box-final {
-    top: 40px !important;
-    left: 50% !important;
     width: calc(100vw - 40px) !important;
     max-width: calc(100vw - 40px) !important;
     height: calc(100vh - 80px) !important;
     max-height: calc(100vh - 80px) !important;
-    transform: translateX(-50%) !important;
     border-radius: 12px !important;
-    position: absolute !important;
+    position: relative !important;
+    margin: 0 auto !important;
   }
   
   .im-form-grid {
@@ -886,16 +884,12 @@
 }
 
 .absolute-modal-box-final {
-  position: absolute !important;
-  top: 50px !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
+  position: relative !important;
   width: 90% !important;
   max-width: 500px !important;
   height: calc(100vh - 100px) !important;
   max-height: 600px !important;
-  z-index: 1000000 !important;
-  margin: 0 !important;
+  margin: 0 auto !important;
   padding: 0 !important;
   box-sizing: border-box !important;
 }
@@ -949,15 +943,13 @@
   }
   
   .absolute-modal-box-final {
-    top: 30px !important;
-    left: 50% !important;
     width: calc(100vw - 30px) !important;
     max-width: calc(100vw - 30px) !important;
     height: calc(100vh - 60px) !important;
     max-height: calc(100vh - 60px) !important;
-    transform: translateX(-50%) !important;
     border-radius: 12px !important;
-    position: absolute !important;
+    position: relative !important;
+    margin: 0 auto !important;
   }
   
   .im-modal-header {
