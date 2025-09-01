@@ -306,21 +306,16 @@
       }
     }, [ultraDropdownVisibleState, analyzeStackingContext, analyzeParentHierarchy, testZIndexEffectiveness, diagnosticLog, ultraDropdownPosition, history.length, value]);
 
-    // SIMPLE MOBILE DROPDOWN - APPEND TO INPUT CONTAINER LIKE NORMAL
+    // PORTAL DROPDOWN - RENDER TO BODY WITH PROPER POSITIONING
     React.useEffect(() => {
       if (ultraDropdownVisibleState && isMobile && history.length > 0) {
         const inputEl = document.getElementById(ultraInputId);
-        const inputContainer = inputEl?.parentElement;
+        if (!inputEl) return;
         
-        if (!inputContainer) {
-          console.log(`[DROPDOWN-DEBUG] No input container found`);
-          return;
-        }
-        
-        const dropdownId = `simple-dropdown-${ultraInputId}`;
+        const portalId = `portal-dropdown-${ultraInputId}`;
         
         // Remove existing
-        const existing = document.getElementById(dropdownId);
+        const existing = document.getElementById(portalId);
         if (existing) existing.remove();
         
         let items = history.filter(item => 
@@ -341,26 +336,34 @@
         items = items.slice(0, 5);
         
         const dropdownEl = document.createElement('div');
-        dropdownEl.id = dropdownId;
-        dropdownEl.className = 'simple-mobile-dropdown';
-        dropdownEl.style.cssText = `
-          position: absolute !important;
-          top: 100% !important;
-          left: 0 !important;
-          right: 0 !important;
-          z-index: 999999 !important;
-          max-height: 200px !important;
-          overflow-y: auto !important;
-          -webkit-overflow-scrolling: touch !important;
-          background: white !important;
-          border: 1px solid #d1d5db !important;
-          border-radius: 12px !important;
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
-          margin-top: 4px !important;
-        `;
+        dropdownEl.id = portalId;
+        dropdownEl.className = 'portal-mobile-dropdown';
+        
+        // Get input position and update on scroll
+        const updatePosition = () => {
+          const inputRect = inputEl.getBoundingClientRect();
+          dropdownEl.style.cssText = `
+            position: fixed !important;
+            top: ${inputRect.bottom + 4}px !important;
+            left: ${inputRect.left}px !important;
+            width: ${inputRect.width}px !important;
+            z-index: 2147483647 !important;
+            max-height: 200px !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            background: white !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 12px !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+            overscroll-behavior: contain !important;
+            touch-action: pan-y !important;
+          `;
+        };
+        
+        updatePosition();
         
         dropdownEl.innerHTML = items.map(item => `
-          <div class="simple-dropdown-item" data-value="${item}" style="
+          <div class="portal-dropdown-item" data-value="${item}" style="
             padding: 14px 18px !important;
             cursor: pointer !important;
             border-bottom: 1px solid #f3f4f6 !important;
@@ -369,7 +372,7 @@
             align-items: center !important;
           ">
             <span style="flex: 1;">${item}</span>
-            <button class="simple-delete-btn" data-delete="${item}" style="
+            <button class="portal-delete-btn" data-delete="${item}" style="
               background: none !important;
               border: none !important;
               color: #9ca3af !important;
@@ -381,9 +384,9 @@
         `).join('');
         
         dropdownEl.addEventListener('click', (e) => {
-          if (e.target.classList.contains('simple-dropdown-item')) {
+          if (e.target.classList.contains('portal-dropdown-item')) {
             handleUltraDropdownSelect(e.target.dataset.value);
-          } else if (e.target.classList.contains('simple-delete-btn')) {
+          } else if (e.target.classList.contains('portal-delete-btn')) {
             e.stopPropagation();
             if (onRemoveFromHistory) {
               onRemoveFromHistory(field, e.target.dataset.delete);
@@ -391,12 +394,19 @@
           }
         });
         
-        inputContainer.appendChild(dropdownEl);
+        // Update position on scroll
+        const scrollHandler = () => updatePosition();
+        window.addEventListener('scroll', scrollHandler, { passive: true });
+        window.addEventListener('resize', scrollHandler, { passive: true });
+        
+        document.body.appendChild(dropdownEl);
         
         return () => {
           if (document.contains(dropdownEl)) {
             dropdownEl.remove();
           }
+          window.removeEventListener('scroll', scrollHandler);
+          window.removeEventListener('resize', scrollHandler);
         };
       }
     }, [ultraDropdownVisibleState, isMobile, history, value, handleUltraDropdownSelect, ultraInputId, field, onRemoveFromHistory]);
