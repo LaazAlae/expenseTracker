@@ -306,73 +306,28 @@
       }
     }, [ultraDropdownVisibleState, analyzeStackingContext, analyzeParentHierarchy, testZIndexEffectiveness, diagnosticLog, ultraDropdownPosition, history.length, value]);
 
-    // MOBILE MODAL-CONTAINED DROPDOWN WITH COMPREHENSIVE LOGGING
+    // SIMPLE MOBILE DROPDOWN - APPEND TO INPUT CONTAINER LIKE NORMAL
     React.useEffect(() => {
-      console.log(`[DROPDOWN-SCROLL-DEBUG] Effect triggered - visible: ${ultraDropdownVisibleState}, isMobile: ${isMobile}, history: ${history.length}, width: ${ultraDropdownPosition.width}`);
-      
       if (ultraDropdownVisibleState && isMobile && history.length > 0) {
-        const modalContainer = document.querySelector('.absolute-modal-box-final');
         const inputEl = document.getElementById(ultraInputId);
+        const inputContainer = inputEl?.parentElement;
         
-        console.log(`[DROPDOWN-SCROLL-DEBUG] Found modal container: ${!!modalContainer}, input: ${!!inputEl}`);
-        
-        if (!modalContainer || !inputEl) {
-          console.error(`[DROPDOWN-SCROLL-DEBUG] Missing elements - modal: ${!!modalContainer}, input: ${!!inputEl}`);
+        if (!inputContainer) {
+          console.log(`[DROPDOWN-DEBUG] No input container found`);
           return;
         }
         
-        const dropdownId = `modal-dropdown-${ultraInputId}`;
+        const dropdownId = `simple-dropdown-${ultraInputId}`;
         
-        // Remove any existing dropdown
-        const existingDropdown = document.getElementById(dropdownId);
-        if (existingDropdown) {
-          existingDropdown.remove();
-        }
-        
-        // Get input position relative to modal container's SCROLLED content
-        const modalScrollTop = modalContainer.scrollTop || 0;
-        const modalRect = modalContainer.getBoundingClientRect();
-        const inputRect = inputEl.getBoundingClientRect();
-        
-        // Calculate position relative to the modal's content (not viewport)
-        const inputOffsetFromModal = inputEl.offsetTop + inputEl.offsetHeight + 4;
-        const inputLeftFromModal = inputEl.offsetLeft;
-        
-        console.log(`[DROPDOWN-SCROLL-DEBUG] Modal scroll top: ${modalScrollTop}`);
-        console.log(`[DROPDOWN-SCROLL-DEBUG] Input offsetTop: ${inputEl.offsetTop}, offsetLeft: ${inputEl.offsetLeft}`);
-        console.log(`[DROPDOWN-SCROLL-DEBUG] Final position - top: ${inputOffsetFromModal}, left: ${inputLeftFromModal}`);
-        
-        const dropdownEl = document.createElement('div');
-        dropdownEl.id = dropdownId;
-        dropdownEl.className = 'modal-contained-dropdown';
-        
-        // Position absolutely within modal using offset position (scrolls with content)
-        dropdownEl.style.cssText = `
-          position: absolute !important;
-          top: ${inputOffsetFromModal}px !important;
-          left: ${inputLeftFromModal}px !important;
-          width: ${inputRect.width}px !important;
-          z-index: 999999 !important;
-          max-height: 200px !important;
-          overflow-y: auto !important;
-          -webkit-overflow-scrolling: touch !important;
-          overscroll-behavior: contain !important;
-          background: white !important;
-          border: 1px solid #d1d5db !important;
-          border-radius: 12px !important;
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
-          touch-action: pan-y !important;
-          pointer-events: auto !important;
-          display: block !important;
-        `;
-        
-        console.log(`[DROPDOWN-SCROLL-DEBUG] Applied CSS:`, dropdownEl.style.cssText);
+        // Remove existing
+        const existing = document.getElementById(dropdownId);
+        if (existing) existing.remove();
         
         let items = history.filter(item => 
           item.toLowerCase().includes((value || '').toLowerCase())
         );
         
-        // Always put Sky Cap first for itemDescription field
+        // Sky Cap first for itemDescription
         if (field === 'itemDescription') {
           const skyCapIndex = items.findIndex(item => item.toLowerCase().includes('sky cap'));
           if (skyCapIndex > -1) {
@@ -384,90 +339,61 @@
         }
         
         items = items.slice(0, 5);
-        console.log(`[DROPDOWN-SCROLL-DEBUG] Rendering ${items.length} items:`, items);
+        
+        const dropdownEl = document.createElement('div');
+        dropdownEl.id = dropdownId;
+        dropdownEl.className = 'simple-mobile-dropdown';
+        dropdownEl.style.cssText = `
+          position: absolute !important;
+          top: 100% !important;
+          left: 0 !important;
+          right: 0 !important;
+          z-index: 999999 !important;
+          max-height: 200px !important;
+          overflow-y: auto !important;
+          -webkit-overflow-scrolling: touch !important;
+          background: white !important;
+          border: 1px solid #d1d5db !important;
+          border-radius: 12px !important;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+          margin-top: 4px !important;
+        `;
         
         dropdownEl.innerHTML = items.map(item => `
-          <div class="modal-dropdown-item" data-value="${item}" style="
+          <div class="simple-dropdown-item" data-value="${item}" style="
             padding: 14px 18px !important;
             cursor: pointer !important;
             border-bottom: 1px solid #f3f4f6 !important;
-            font-size: 14px !important;
-            font-weight: 500 !important;
-            background: white !important;
-            transition: all 0.2s ease !important;
-            color: #374151 !important;
             display: flex !important;
             justify-content: space-between !important;
             align-items: center !important;
-          " 
-          onmouseover="this.style.background='#f8fafc'; this.style.color='#1f2937'"
-          onmouseout="this.style.background='white'; this.style.color='#374151'"
-          >
+          ">
             <span style="flex: 1;">${item}</span>
-            <button class="modal-dropdown-delete" data-delete="${item}" style="
+            <button class="simple-delete-btn" data-delete="${item}" style="
               background: none !important;
               border: none !important;
               color: #9ca3af !important;
               cursor: pointer !important;
               padding: 4px !important;
               font-size: 16px !important;
-              line-height: 1 !important;
-              margin-left: 8px !important;
-            " onclick="event.stopPropagation();">&times;</button>
+            ">&times;</button>
           </div>
         `).join('');
         
-        const handleClick = (e) => {
-          console.log(`[DROPDOWN-SCROLL-DEBUG] Click detected on:`, e.target.className, e.target.dataset);
-          
-          if (e.target.classList.contains('modal-dropdown-item')) {
-            console.log(`[DROPDOWN-SCROLL-DEBUG] Selecting item:`, e.target.dataset.value);
+        dropdownEl.addEventListener('click', (e) => {
+          if (e.target.classList.contains('simple-dropdown-item')) {
             handleUltraDropdownSelect(e.target.dataset.value);
-          } else if (e.target.classList.contains('modal-dropdown-delete')) {
+          } else if (e.target.classList.contains('simple-delete-btn')) {
             e.stopPropagation();
-            const itemToDelete = e.target.dataset.delete;
-            console.log(`[DROPDOWN-SCROLL-DEBUG] Deleting item:`, itemToDelete);
             if (onRemoveFromHistory) {
-              onRemoveFromHistory(field, itemToDelete);
+              onRemoveFromHistory(field, e.target.dataset.delete);
             }
           }
-        };
-        
-        // Test scrolling immediately after adding
-        dropdownEl.addEventListener('click', handleClick);
-        dropdownEl.addEventListener('scroll', () => {
-          console.log(`[DROPDOWN-SCROLL-DEBUG] Dropdown scroll detected - scrollTop: ${dropdownEl.scrollTop}`);
-        });
-        dropdownEl.addEventListener('touchstart', () => {
-          console.log(`[DROPDOWN-SCROLL-DEBUG] Touch start on dropdown`);
-        });
-        dropdownEl.addEventListener('touchmove', (e) => {
-          console.log(`[DROPDOWN-SCROLL-DEBUG] Touch move on dropdown - scrollTop: ${dropdownEl.scrollTop}`);
         });
         
-        modalContainer.appendChild(dropdownEl);
-        
-        console.log(`[DROPDOWN-SCROLL-DEBUG] Dropdown added to modal container`);
-        console.log(`[DROPDOWN-SCROLL-DEBUG] Final computed styles:`, {
-          position: getComputedStyle(dropdownEl).position,
-          zIndex: getComputedStyle(dropdownEl).zIndex,
-          overflow: getComputedStyle(dropdownEl).overflow,
-          touchAction: getComputedStyle(dropdownEl).touchAction,
-          pointerEvents: getComputedStyle(dropdownEl).pointerEvents
-        });
-        
-        // Test scroll functionality
-        setTimeout(() => {
-          console.log(`[DROPDOWN-SCROLL-DEBUG] Testing scroll - scrollHeight: ${dropdownEl.scrollHeight}, clientHeight: ${dropdownEl.clientHeight}`);
-          if (dropdownEl.scrollHeight > dropdownEl.clientHeight) {
-            console.log(`[DROPDOWN-SCROLL-DEBUG] Dropdown should be scrollable`);
-          } else {
-            console.log(`[DROPDOWN-SCROLL-DEBUG] Dropdown content fits, no scrolling needed`);
-          }
-        }, 100);
+        inputContainer.appendChild(dropdownEl);
         
         return () => {
-          console.log(`[DROPDOWN-SCROLL-DEBUG] Cleaning up dropdown`);
           if (document.contains(dropdownEl)) {
             dropdownEl.remove();
           }
