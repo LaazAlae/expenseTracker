@@ -103,8 +103,8 @@ class WebSocketManager {
           this.connectedUsers.set(decoded.userId, socket.id);
           this.socketUsers.set(socket.id, decoded.userId);
           
-          // Check if user is admin (first user is admin by default)
-          const isAdmin = user.id === Object.values(userData.users)[0]?.id;
+          // Check if user is admin (check isAdmin property or first user)
+          const isAdmin = user.isAdmin === true || user.id === Object.values(userData.users)[0]?.id;
           if (isAdmin) {
             this.adminUsers.add(decoded.userId);
           }

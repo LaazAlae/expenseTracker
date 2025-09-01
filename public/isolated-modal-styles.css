@@ -1118,29 +1118,73 @@
   }
 }
   
-  /* Create new stacking context for mobile dropdown container */
+  /* Remove stacking context - let dropdown use normal z-index */
   .im-input-container,
   .ultra-mobile-input-container {
     position: relative !important;
-    z-index: 9999998 !important;
-    isolation: isolate !important;
   }
   
-  /* Ultra-mobile specific dropdown positioning */
-  .ultra-mobile-dropdown {
+  /* Professional dropdown styling */
+  .im-autocomplete-dropdown,
+  .ultra-standard-dropdown {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
     z-index: 999999999 !important;
-    position: fixed !important;
-    isolation: isolate !important;
-    will-change: transform !important;
-    -webkit-transform-style: preserve-3d !important;
-    transform-style: preserve-3d !important;
-    contain: layout style paint !important;
+    position: absolute !important;
+    background: white !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+    max-height: 200px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
   }
   
+  .im-dropdown-item,
   .ultra-mobile-dropdown-item {
-    z-index: 999999999 !important;
-    isolation: isolate !important;
-    contain: layout style paint !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background: white !important;
+    border: none !important;
+    padding: 14px 18px !important;
+    margin: 0 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border-bottom: 1px solid #f3f4f6 !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #374151 !important;
+  }
+  
+  .im-dropdown-item:hover,
+  .ultra-mobile-dropdown-item:hover {
+    background: #f8fafc !important;
+    color: #1f2937 !important;
+  }
+  
+  .im-dropdown-item:last-child,
+  .ultra-mobile-dropdown-item:last-child {
+    border-bottom: none !important;
+  }
+  
+  .im-dropdown-remove {
+    background: none !important;
+    border: none !important;
+    color: #9ca3af !important;
+    cursor: pointer !important;
+    padding: 4px !important;
+    font-size: 16px !important;
+    line-height: 1 !important;
+    margin-left: 8px !important;
+    transition: color 0.2s ease !important;
+  }
+  
+  .im-dropdown-remove:hover {
+    color: #ef4444 !important;
   }
   
   .ultra-mobile-input {

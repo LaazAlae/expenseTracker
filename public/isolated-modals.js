@@ -306,14 +306,17 @@
       }
     }, [ultraDropdownVisibleState, analyzeStackingContext, analyzeParentHierarchy, testZIndexEffectiveness, diagnosticLog, ultraDropdownPosition, history.length, value]);
 
-    // INDUSTRY STANDARD DROPDOWN - NOW WORKS BECAUSE NO STACKING CONTEXT
+    // DEBUG MODE - PERSISTENT DROPDOWN FOR INSPECTION
     React.useEffect(() => {
-      // Enable for mobile since we fixed the stacking context
-      if (ultraDropdownVisibleState && isMobile && history.length > 0) {
-        console.log(`[DROPDOWN-INDUSTRY] Creating normal dropdown - no more stacking context issues!`);
+      if (field === 'itemDescription' && window.location.hash === '#debug-dropdown') {
+        // Force dropdown to stay open for 30 seconds
+        console.log(`[DEBUG-DROPDOWN] Forcing dropdown to stay open for inspection...`);
+        setUltraDropdownVisibleState(true);
+        setTimeout(() => {
+          console.log(`[DEBUG-DROPDOWN] Debug mode ended`);
+        }, 30000);
       }
-      // Mobile dropdown is now handled by the normal dropdown below since stacking context is fixed
-    }, [ultraDropdownVisibleState, isMobile, history, value]);
+    }, [field]);
 
     // Conditional field logic
     const shouldShowConditionalFields = field === 'itemDescription' && 
@@ -643,6 +646,15 @@
       
       try {
         await onSubmit(formData);
+        
+        // Save form values to history only after successful save
+        if (window.LocalStorageManager) {
+          if (formData.beneficiary) window.LocalStorageManager.saveOption('beneficiary', formData.beneficiary);
+          if (formData.itemDescription) window.LocalStorageManager.saveOption('itemDescription', formData.itemDescription);
+          if (formData.invoiceNumber) window.LocalStorageManager.saveOption('invoiceNumber', formData.invoiceNumber);
+          if (formData.flightNumber) window.LocalStorageManager.saveOption('flightNumber', formData.flightNumber);
+        }
+        
         onClose();
       } catch (err) {
         setErrors({ submit: 'Failed to save transaction. Please try again.' });

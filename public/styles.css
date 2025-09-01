@@ -3436,11 +3436,11 @@ body.landscape.mobile .budget-amount {
   margin: 8px 0;
 }
 
-/* Performance optimizations for animations on mobile */
-body.mobile-device * {
+/* Performance optimizations for animations on mobile - REMOVED GLOBAL TRANSFORM */
+/* body.mobile-device * {
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
-}
+} */
 
 body.mobile-device .transaction-table tr:hover {
   transform: none; /* Disable hover transform on mobile */

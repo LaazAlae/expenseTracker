@@ -109,9 +109,7 @@ function AutocompleteInput({
 
   const handleBlur = () => {
     setTimeout(() => setShowDropdown(false), 200);
-    if (storageKey && value) {
-      LocalStorageManager.saveOption(storageKey, value);
-    }
+    // Don't save to history on blur - only save on transaction save
   };
 
   return React.createElement('div', { className: 'autocomplete-container' },
