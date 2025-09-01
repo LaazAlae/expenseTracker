@@ -394,9 +394,18 @@
           }
         });
         
-        // Update position on scroll
+        // Update position on scroll - listen to modal scroll, not window scroll
         const scrollHandler = () => updatePosition();
-        window.addEventListener('scroll', scrollHandler, { passive: true });
+        const modalContainer = document.querySelector('.absolute-modal-box-final');
+        const modalOverlay = document.querySelector('.absolute-modal-overlay-final');
+        
+        // Listen for scroll on the modal containers where the actual scrolling happens
+        if (modalContainer) {
+          modalContainer.addEventListener('scroll', scrollHandler, { passive: true });
+        }
+        if (modalOverlay) {
+          modalOverlay.addEventListener('scroll', scrollHandler, { passive: true });
+        }
         window.addEventListener('resize', scrollHandler, { passive: true });
         
         document.body.appendChild(dropdownEl);
@@ -405,7 +414,12 @@
           if (document.contains(dropdownEl)) {
             dropdownEl.remove();
           }
-          window.removeEventListener('scroll', scrollHandler);
+          if (modalContainer) {
+            modalContainer.removeEventListener('scroll', scrollHandler);
+          }
+          if (modalOverlay) {
+            modalOverlay.removeEventListener('scroll', scrollHandler);
+          }
           window.removeEventListener('resize', scrollHandler);
         };
       }
