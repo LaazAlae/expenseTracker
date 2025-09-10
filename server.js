@@ -130,12 +130,6 @@ app.use(express.static('public', {
 // Routes (only auth routes now, data handled by WebSocket)
 app.use('/api', authRoutes);
 
-// Add detailed request logging middleware
-app.use((req, res, next) => {
-  console.log(` ${new Date().toISOString()} - ${req.method} ${req.url} from ${req.ip}`);
-  console.log(` Headers:`, JSON.stringify(req.headers, null, 2));
-  next();
-});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -230,8 +224,6 @@ async function createAdminUserIfNeeded() {
 }
 
 const PORT = process.env.PORT || 3000;
-console.log(' DEBUGGING - process.env.PORT:', process.env.PORT);
-console.log(' DEBUGGING - Final PORT value:', PORT);
 const HOST = process.env.HOST || '0.0.0.0'; // Railway requires binding to 0.0.0.0
 
 // Initialize WebSocket
@@ -245,24 +237,14 @@ loadData().then(async () => {
   // Auto-create admin user if none exists
   await createAdminUserIfNeeded();
   
-  console.log(' ATTEMPTING TO START SERVER...');
-  console.log(' Will bind to HOST:', HOST);
-  console.log(' Will bind to PORT:', PORT);
-  console.log(' PORT type:', typeof PORT);
-  
   const actualPort = parseInt(PORT, 10);
-  console.log(' Parsed PORT as integer:', actualPort);
   
   server.listen(actualPort, HOST, () => {
     const address = server.address();
     console.log(` Secure expense tracker running on ${HOST}:${actualPort}`);
-    console.log(` Server address object:`, address);
     console.log(` WebSocket enabled for real-time communication`);
     console.log(` Centralized budget management active`);
     console.log(` Ready for enterprise-grade consistency!`);
-    console.log(` Railway URL should be: https://expensetracking.up.railway.app`);
-    console.log(` Environment: NODE_ENV=${process.env.NODE_ENV}`);
-    console.log(` All Environment Variables:`, Object.keys(process.env).filter(key => key.includes('RAILWAY') || key.includes('PORT') || key.includes('HOST')));
   });
   
   // Add error logging for server issues
@@ -272,19 +254,6 @@ loadData().then(async () => {
     console.error(' Error message:', error.message);
   });
   
-  server.on('listening', () => {
-    const address = server.address();
-    console.log(` Server successfully bound to:`, address);
-    console.log(` Server is listening and ready to accept connections`);
-  });
-  
-  server.on('connection', (socket) => {
-    console.log(` New connection from:`, socket.remoteAddress);
-  });
-  
-  server.on('close', () => {
-    console.log(` Server closed`);
-  });
 }).catch((error) => {
   console.error(' FATAL ERROR during server startup:');
   console.error(' Error name:', error.name);
