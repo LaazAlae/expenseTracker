@@ -4,8 +4,9 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const compression = require('compression');
 const path = require('path');
+const bcrypt = require('bcrypt');
 const authRoutes = require('./routes/auth');
-const { loadData } = require('./services/database');
+const { loadData, getData, saveData } = require('./services/database');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 const { setupProcessSecurity } = require('./security/process');
 const websocketManager = require('./services/websocket');
@@ -175,6 +176,59 @@ app.get('/', (req, res) => {
 app.use(notFoundHandler);
 app.use(errorHandler);
 
+// Auto-create admin user function
+async function createAdminUserIfNeeded() {
+  try {
+    const data = getData();
+    
+    // Check if any users exist
+    const existingUsers = Object.values(data.users);
+    if (existingUsers.length > 0) {
+      console.log('✅ Admin user already exists:', existingUsers[0].username);
+      return;
+    }
+    
+    // Create admin user from environment variables
+    const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'SecureAdmin123!';
+    
+    console.log('🔧 Creating admin user from environment variables...');
+    console.log('🔧 Admin Username:', adminUsername);
+    console.log('🔧 Admin Password:', adminPassword.substring(0, 3) + '***');
+    
+    const hashedPassword = await bcrypt.hash(adminPassword, 12);
+    const userId = Date.now().toString();
+    
+    data.users[adminUsername] = {
+      id: userId,
+      username: adminUsername,
+      password: hashedPassword,
+      createdAt: new Date().toISOString(),
+      loginAttempts: 0,
+      lockUntil: null,
+      isAdmin: true
+    };
+    
+    data.userData[userId] = {
+      budget: 0,
+      transactions: [],
+      beneficiaries: [],
+      itemDescriptions: ['Sky Cap'],
+      flightNumbers: ['AT200', 'AT201']
+    };
+    
+    await saveData();
+    
+    console.log('✅ Admin user created successfully!');
+    console.log('✅ You can now log in with:');
+    console.log(`   Username: ${adminUsername}`);
+    console.log(`   Password: ${adminPassword}`);
+    
+  } catch (error) {
+    console.error('❌ Failed to create admin user:', error);
+  }
+}
+
 const PORT = process.env.PORT || 3000;
 console.log('🔍 DEBUGGING - process.env.PORT:', process.env.PORT);
 console.log('🔍 DEBUGGING - Final PORT value:', PORT);
@@ -187,6 +241,9 @@ websocketManager.initialize(server);
 loadData().then(async () => {
   // Clean up old budget fields for consistency
   await budgetManager.cleanupOldBudgetFields();
+  
+  // Auto-create admin user if none exists
+  await createAdminUserIfNeeded();
   
   console.log('🚀 ATTEMPTING TO START SERVER...');
   console.log('🚀 Will bind to HOST:', HOST);
