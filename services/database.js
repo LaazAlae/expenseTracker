@@ -29,20 +29,34 @@ const loadData = async () => {
     // Try to decrypt, fall back to plain JSON for legacy data
     try {
       data = decryptData(fileData);
+      console.log('✅ Data loaded and decrypted successfully');
     } catch (decryptErr) {
-      // Might be legacy unencrypted data
-      data = JSON.parse(fileData);
-      // Re-save as encrypted
-      await saveData();
+      console.warn('⚠️ Corrupted data file detected, creating fresh database');
+      // Data is corrupted, start fresh
+      data = {
+        users: {},
+        userData: {}
+      };
+      await saveData(); // Create new encrypted file
     }
     
     console.log('Data loaded from file');
   } catch (err) {
     if (err.code === 'ENOENT') {
       console.log('No existing data file, starting fresh');
+      data = {
+        users: {},
+        userData: {}
+      };
       await saveData(); // Create initial encrypted file
     } else {
       console.error('Error loading data:', err);
+      // If any other error, start fresh
+      data = {
+        users: {},
+        userData: {}
+      };
+      await saveData();
     }
   }
 };

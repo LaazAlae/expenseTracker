@@ -18,7 +18,7 @@ class SimpleSecureEncryption {
   encrypt(text) {
     try {
       const iv = crypto.randomBytes(16);
-      const key = Buffer.from(this.encryptionKey, 'hex');
+      const key = this.encryptionKey.substring(0, 32); // Use first 32 chars as key
       const cipher = crypto.createCipher(this.algorithm, key);
       
       let encrypted = cipher.update(text, 'utf8', 'hex');
@@ -42,7 +42,7 @@ class SimpleSecureEncryption {
       
       const iv = Buffer.from(parts[0], 'hex');
       const encryptedData = parts[1];
-      const key = Buffer.from(this.encryptionKey, 'hex');
+      const key = this.encryptionKey.substring(0, 32); // Use first 32 chars as key
       
       const decipher = crypto.createDecipher(this.algorithm, key);
       let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
