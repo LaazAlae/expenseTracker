@@ -129,9 +129,46 @@ app.use(express.static('public', {
 // Routes (only auth routes now, data handled by WebSocket)
 app.use('/api', authRoutes);
 
+// Add detailed request logging middleware
+app.use((req, res, next) => {
+  console.log(`📨 ${new Date().toISOString()} - ${req.method} ${req.url} from ${req.ip}`);
+  console.log(`📨 Headers:`, JSON.stringify(req.headers, null, 2));
+  next();
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  console.log('💊 Health check requested');
+  res.status(200).json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    port: PORT,
+    host: HOST,
+    env: process.env.NODE_ENV
+  });
+});
+
+// Test endpoint
+app.get('/test', (req, res) => {
+  console.log('🧪 Test endpoint requested');
+  res.status(200).send('<h1>Server is working!</h1><p>If you can see this, the server is responding correctly.</p>');
+});
+
 // Serve main application
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  console.log('🏠 Root endpoint requested');
+  const indexPath = path.join(__dirname, 'public', 'index.html');
+  console.log('🏠 Serving index.html from:', indexPath);
+  
+  // Check if file exists
+  const fs = require('fs');
+  if (fs.existsSync(indexPath)) {
+    console.log('✅ index.html found, serving file');
+    res.sendFile(indexPath);
+  } else {
+    console.error('❌ index.html not found at:', indexPath);
+    res.status(404).send('<h1>index.html not found</h1><p>File path: ' + indexPath + '</p>');
+  }
 });
 
 // Error handling
@@ -154,5 +191,58 @@ loadData().then(async () => {
     console.log(`📡 WebSocket enabled for real-time communication`);
     console.log(`💰 Centralized budget management active`);
     console.log(`🚀 Ready for enterprise-grade consistency!`);
+    console.log(`🌐 Railway URL should be: https://expensetracking.up.railway.app`);
+    console.log(`🔍 Environment: NODE_ENV=${process.env.NODE_ENV}`);
+    console.log(`🔍 All Environment Variables:`, Object.keys(process.env).filter(key => key.includes('RAILWAY') || key.includes('PORT') || key.includes('HOST')));
   });
-}).catch(console.error);
+  
+  // Add error logging for server issues
+  server.on('error', (error) => {
+    console.error('❌ SERVER ERROR:', error);
+    console.error('❌ Error code:', error.code);
+    console.error('❌ Error message:', error.message);
+  });
+  
+  server.on('listening', () => {
+    const address = server.address();
+    console.log(`✅ Server successfully bound to:`, address);
+    console.log(`✅ Server is listening and ready to accept connections`);
+  });
+  
+  server.on('connection', (socket) => {
+    console.log(`🔗 New connection from:`, socket.remoteAddress);
+  });
+  
+  server.on('close', () => {
+    console.log(`🛑 Server closed`);
+  });
+}).catch((error) => {
+  console.error('💥 FATAL ERROR during server startup:');
+  console.error('💥 Error name:', error.name);
+  console.error('💥 Error message:', error.message);
+  console.error('💥 Error stack:', error.stack);
+  console.error('💥 Process will exit');
+  process.exit(1);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('💥 UNCAUGHT EXCEPTION:');
+  console.error('💥 Error:', error);
+  console.error('💥 Stack:', error.stack);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('💥 UNHANDLED REJECTION:');
+  console.error('💥 Reason:', reason);
+  console.error('💥 Promise:', promise);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('🛑 SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    console.log('✅ Server closed successfully');
+    process.exit(0);
+  });
+});
