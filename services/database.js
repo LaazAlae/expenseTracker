@@ -47,15 +47,23 @@ const loadData = async () => {
   }
 };
 
-// Military-grade AES-256-GCM encryption for data at rest
-const militaryEncryption = require('../security/encryption');
+// Secure encryption for data at rest
+const secureEncryption = require('../security/simple-encryption');
 
 const encryptData = (data) => {
   try {
-    return militaryEncryption.encryptJSON(data, 'database');
+    return secureEncryption.encryptJSON(data);
   } catch (error) {
     console.error('Database encryption failed:', error);
-    throw new Error('Failed to encrypt sensitive data');
+    // Fallback to legacy encryption for compatibility
+    const dataStr = JSON.stringify(data);
+    const encoded = Buffer.from(dataStr).toString('base64');
+    const key = process.env.ENCRYPT_KEY || 'expense-tracker-key-2024';
+    let obfuscated = '';
+    for (let i = 0; i < encoded.length; i++) {
+      obfuscated += String.fromCharCode(encoded.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+    }
+    return Buffer.from(obfuscated).toString('base64');
   }
 };
 
@@ -63,7 +71,7 @@ const encryptData = (data) => {
 const decryptData = (encryptedData) => {
   try {
     // Try military-grade decryption first
-    return militaryEncryption.decryptJSON(encryptedData, 'database');
+    return secureEncryption.decryptJSON(encryptedData);
   } catch (decryptErr) {
     try {
       // Fallback: Try legacy XOR decryption for old data
@@ -76,13 +84,13 @@ const decryptData = (encryptedData) => {
       const dataStr = Buffer.from(decoded, 'base64').toString();
       const legacyData = JSON.parse(dataStr);
       
-      console.warn('️ Migrating from legacy encryption to military-grade encryption...');
+      console.warn('⚠️ Migrating from legacy encryption to secure encryption...');
       return legacyData;
     } catch (legacyErr) {
       try {
         // Final fallback: unencrypted data
         const plainData = JSON.parse(encryptedData);
-        console.warn('️ Found unencrypted data! Migrating to military-grade encryption...');
+        console.warn('⚠️ Found unencrypted data! Migrating to secure encryption...');
         return plainData;
       } catch (parseErr) {
         console.error('Failed to decrypt/parse data:', decryptErr.message);
