@@ -17,16 +17,34 @@ setupProcessSecurity();
 const app = express();
 const server = http.createServer(app);
 
-// Security middleware
+// Enhanced Security Headers
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdnjs.cloudflare.com"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      connectSrc: ["'self'"]
+      connectSrc: ["'self'"],
+      imgSrc: ["'self'", "data:"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      frameSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"]
     }
-  }
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  },
+  noSniff: true,
+  frameguard: { action: 'deny' },
+  xssFilter: true,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  crossOriginEmbedderPolicy: true,
+  crossOriginOpenerPolicy: { policy: 'same-origin' },
+  crossOriginResourcePolicy: { policy: 'same-site' }
 }));
 
 // Rate limiting
@@ -50,9 +68,52 @@ app.use(limiter);
 app.use('/api/login', authLimiter);
 app.use('/api/register', authLimiter);
 
-// Basic middleware
+// Enhanced Security Middleware
 app.use(compression());
-app.use(express.json({ limit: '10mb' }));
+
+// CSRF Protection Headers
+app.use((req, res, next) => {
+  // Set secure headers
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+  
+  // CSRF Token Generation (for forms if needed)
+  const csrfToken = require('crypto').randomBytes(32).toString('hex');
+  res.locals.csrfToken = csrfToken;
+  
+  // Security logging
+  const clientIP = req.ip || req.connection.remoteAddress;
+  if (req.url.includes('..') || req.url.includes('%2e%2e')) {
+    console.warn(`Directory traversal attempt from ${clientIP}: ${req.url}`);
+    return res.status(400).json({ error: 'Invalid request' });
+  }
+  
+  next();
+});
+
+// Enhanced JSON parsing with strict limits
+app.use(express.json({ 
+  limit: '1mb', // Reduced from 10mb for security
+  strict: true,
+  type: 'application/json',
+  verify: (req, res, buf) => {
+    // Additional JSON validation
+    if (buf.length > 1024 * 1024) { // 1MB limit
+      throw new Error('Request entity too large');
+    }
+  }
+}));
+
+// URL encoded data with strict limits
+app.use(express.urlencoded({ 
+  extended: false, 
+  limit: '100kb',
+  parameterLimit: 20
+}));
 
 // Secure static file serving - prevent directory traversal
 app.use(express.static('public', {

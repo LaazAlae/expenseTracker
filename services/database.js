@@ -47,45 +47,47 @@ const loadData = async () => {
   }
 };
 
-// Simple but secure encryption for data at rest
+// Military-grade AES-256-GCM encryption for data at rest
+const militaryEncryption = require('../security/encryption');
+
 const encryptData = (data) => {
-  // For now, use base64 encoding with obfuscation
-  // In production, use a proper encryption library like node-forge
-  const dataStr = JSON.stringify(data);
-  const encoded = Buffer.from(dataStr).toString('base64');
-  
-  // Add simple XOR obfuscation
-  const key = process.env.ENCRYPT_KEY || 'expense-tracker-key-2024';
-  let obfuscated = '';
-  for (let i = 0; i < encoded.length; i++) {
-    obfuscated += String.fromCharCode(encoded.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+  try {
+    return militaryEncryption.encryptJSON(data, 'database');
+  } catch (error) {
+    console.error('Database encryption failed:', error);
+    throw new Error('Failed to encrypt sensitive data');
   }
-  
-  return Buffer.from(obfuscated).toString('base64');
 };
 
-// Decrypt data after loading  
+// Military-grade decryption for data loading  
 const decryptData = (encryptedData) => {
   try {
-    // Try to decode
-    const obfuscated = Buffer.from(encryptedData, 'base64').toString();
-    
-    // Remove XOR obfuscation
-    const key = process.env.ENCRYPT_KEY || 'expense-tracker-key-2024';
-    let decoded = '';
-    for (let i = 0; i < obfuscated.length; i++) {
-      decoded += String.fromCharCode(obfuscated.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-    }
-    
-    const dataStr = Buffer.from(decoded, 'base64').toString();
-    return JSON.parse(dataStr);
-  } catch (err) {
-    // If decryption fails, might be unencrypted legacy data
+    // Try military-grade decryption first
+    return militaryEncryption.decryptJSON(encryptedData, 'database');
+  } catch (decryptErr) {
     try {
-      return JSON.parse(encryptedData);
-    } catch (parseErr) {
-      console.error('Failed to decrypt/parse data:', err.message);
-      throw new Error('Data corruption detected');
+      // Fallback: Try legacy XOR decryption for old data
+      const obfuscated = Buffer.from(encryptedData, 'base64').toString();
+      const key = process.env.ENCRYPT_KEY || 'expense-tracker-key-2024';
+      let decoded = '';
+      for (let i = 0; i < obfuscated.length; i++) {
+        decoded += String.fromCharCode(obfuscated.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+      }
+      const dataStr = Buffer.from(decoded, 'base64').toString();
+      const legacyData = JSON.parse(dataStr);
+      
+      console.warn('️ Migrating from legacy encryption to military-grade encryption...');
+      return legacyData;
+    } catch (legacyErr) {
+      try {
+        // Final fallback: unencrypted data
+        const plainData = JSON.parse(encryptedData);
+        console.warn('️ Found unencrypted data! Migrating to military-grade encryption...');
+        return plainData;
+      } catch (parseErr) {
+        console.error('Failed to decrypt/parse data:', decryptErr.message);
+        throw new Error('Data corruption detected - unable to decrypt with any method');
+      }
     }
   }
 };

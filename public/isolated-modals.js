@@ -877,7 +877,7 @@
             className: 'im-form-field',
             style: { background: '#e8f5e8', padding: '10px', borderRadius: '4px', marginBottom: '10px' }
           },
-            React.createElement('strong', null, '💰 Fund Addition'),
+            React.createElement('strong', null, ' Fund Addition'),
             React.createElement('p', { style: { margin: '5px 0 0 0', fontSize: '14px', color: '#666' } }, 
               'Editing a fund addition transaction. Only amount and dates can be modified.')
           ),
