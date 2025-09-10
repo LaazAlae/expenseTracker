@@ -176,6 +176,8 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
+console.log('🔍 DEBUGGING - process.env.PORT:', process.env.PORT);
+console.log('🔍 DEBUGGING - Final PORT value:', PORT);
 const HOST = process.env.HOST || '0.0.0.0'; // Railway requires binding to 0.0.0.0
 
 // Initialize WebSocket
@@ -186,8 +188,18 @@ loadData().then(async () => {
   // Clean up old budget fields for consistency
   await budgetManager.cleanupOldBudgetFields();
   
-  server.listen(PORT, HOST, () => {
-    console.log(`🔒 Secure expense tracker running on ${HOST}:${PORT}`);
+  console.log('🚀 ATTEMPTING TO START SERVER...');
+  console.log('🚀 Will bind to HOST:', HOST);
+  console.log('🚀 Will bind to PORT:', PORT);
+  console.log('🚀 PORT type:', typeof PORT);
+  
+  const actualPort = parseInt(PORT, 10);
+  console.log('🚀 Parsed PORT as integer:', actualPort);
+  
+  server.listen(actualPort, HOST, () => {
+    const address = server.address();
+    console.log(`🔒 Secure expense tracker running on ${HOST}:${actualPort}`);
+    console.log(`🔒 Server address object:`, address);
     console.log(`📡 WebSocket enabled for real-time communication`);
     console.log(`💰 Centralized budget management active`);
     console.log(`🚀 Ready for enterprise-grade consistency!`);
