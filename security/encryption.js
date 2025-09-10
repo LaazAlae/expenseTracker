@@ -35,7 +35,7 @@ class MilitaryGradeEncryption {
       const iv = crypto.randomBytes(this.ivLength);
       const key = this.deriveKey(salt, purpose);
       
-      const cipher = crypto.createCipher(this.algorithm, key, iv);
+      const cipher = crypto.createCipherGCM(this.algorithm, key, iv);
       
       let encrypted = cipher.update(plaintext, 'utf8');
       encrypted = Buffer.concat([encrypted, cipher.final()]);
@@ -70,7 +70,7 @@ class MilitaryGradeEncryption {
       
       const key = this.deriveKey(salt, purpose);
       
-      const decipher = crypto.createDecipher(this.algorithm, key, iv);
+      const decipher = crypto.createDecipherGCM(this.algorithm, key, iv);
       decipher.setAuthTag(authTag);
       
       let decrypted = decipher.update(encrypted);
