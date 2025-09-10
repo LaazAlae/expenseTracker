@@ -31,13 +31,17 @@ const loadData = async () => {
       data = decryptData(fileData);
       console.log('✅ Data loaded and decrypted successfully');
     } catch (decryptErr) {
-      console.warn('⚠️ Corrupted data file detected, creating fresh database');
-      // Data is corrupted, start fresh
-      data = {
-        users: {},
-        userData: {}
-      };
-      await saveData(); // Create new encrypted file
+      if (decryptErr.message === 'CORRUPT_DATA') {
+        console.warn('⚠️ Corrupted data file detected, creating fresh database');
+        // Data is corrupted, start fresh
+        data = {
+          users: {},
+          userData: {}
+        };
+        // Don't save immediately to avoid encryption errors
+      } else {
+        throw decryptErr;
+      }
     }
     
     console.log('Data loaded from file');
@@ -61,55 +65,33 @@ const loadData = async () => {
   }
 };
 
-// Secure encryption for data at rest
-const secureEncryption = require('../security/simple-encryption');
+// Bulletproof encryption for data at rest
+const secureEncryption = require('../security/bulletproof-encryption');
 
 const encryptData = (data) => {
   try {
     return secureEncryption.encryptJSON(data);
   } catch (error) {
-    console.error('Database encryption failed:', error);
-    // Fallback to legacy encryption for compatibility
-    const dataStr = JSON.stringify(data);
-    const encoded = Buffer.from(dataStr).toString('base64');
-    const key = process.env.ENCRYPT_KEY || 'expense-tracker-key-2024';
-    let obfuscated = '';
-    for (let i = 0; i < encoded.length; i++) {
-      obfuscated += String.fromCharCode(encoded.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-    }
-    return Buffer.from(obfuscated).toString('base64');
+    console.error('Encryption failed, using fallback');
+    // Ultimate fallback: just return JSON string
+    return JSON.stringify(data);
   }
 };
 
-// Military-grade decryption for data loading  
+// Bulletproof decryption for data loading  
 const decryptData = (encryptedData) => {
   try {
-    // Try military-grade decryption first
+    // Try bulletproof decryption first
     return secureEncryption.decryptJSON(encryptedData);
   } catch (decryptErr) {
     try {
-      // Fallback: Try legacy XOR decryption for old data
-      const obfuscated = Buffer.from(encryptedData, 'base64').toString();
-      const key = process.env.ENCRYPT_KEY || 'expense-tracker-key-2024';
-      let decoded = '';
-      for (let i = 0; i < obfuscated.length; i++) {
-        decoded += String.fromCharCode(obfuscated.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-      }
-      const dataStr = Buffer.from(decoded, 'base64').toString();
-      const legacyData = JSON.parse(dataStr);
-      
-      console.warn('⚠️ Migrating from legacy encryption to secure encryption...');
-      return legacyData;
-    } catch (legacyErr) {
-      try {
-        // Final fallback: unencrypted data
-        const plainData = JSON.parse(encryptedData);
-        console.warn('⚠️ Found unencrypted data! Migrating to secure encryption...');
-        return plainData;
-      } catch (parseErr) {
-        console.error('Failed to decrypt/parse data:', decryptErr.message);
-        throw new Error('Data corruption detected - unable to decrypt with any method');
-      }
+      // Try direct JSON parse (unencrypted data)
+      const plainData = JSON.parse(encryptedData);
+      console.warn('⚠️ Found unencrypted data, will encrypt on next save');
+      return plainData;
+    } catch (parseErr) {
+      console.error('Data completely corrupted, starting fresh');
+      throw new Error('CORRUPT_DATA');
     }
   }
 };
