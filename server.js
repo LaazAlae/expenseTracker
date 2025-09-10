@@ -132,14 +132,14 @@ app.use('/api', authRoutes);
 
 // Add detailed request logging middleware
 app.use((req, res, next) => {
-  console.log(`📨 ${new Date().toISOString()} - ${req.method} ${req.url} from ${req.ip}`);
-  console.log(`📨 Headers:`, JSON.stringify(req.headers, null, 2));
+  console.log(` ${new Date().toISOString()} - ${req.method} ${req.url} from ${req.ip}`);
+  console.log(` Headers:`, JSON.stringify(req.headers, null, 2));
   next();
 });
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  console.log('💊 Health check requested');
+  console.log(' Health check requested');
   res.status(200).json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
@@ -151,23 +151,23 @@ app.get('/health', (req, res) => {
 
 // Test endpoint
 app.get('/test', (req, res) => {
-  console.log('🧪 Test endpoint requested');
+  console.log(' Test endpoint requested');
   res.status(200).send('<h1>Server is working!</h1><p>If you can see this, the server is responding correctly.</p>');
 });
 
 // Serve main application
 app.get('/', (req, res) => {
-  console.log('🏠 Root endpoint requested');
+  console.log(' Root endpoint requested');
   const indexPath = path.join(__dirname, 'public', 'index.html');
-  console.log('🏠 Serving index.html from:', indexPath);
+  console.log(' Serving index.html from:', indexPath);
   
   // Check if file exists
   const fs = require('fs');
   if (fs.existsSync(indexPath)) {
-    console.log('✅ index.html found, serving file');
+    console.log(' index.html found, serving file');
     res.sendFile(indexPath);
   } else {
-    console.error('❌ index.html not found at:', indexPath);
+    console.error(' index.html not found at:', indexPath);
     res.status(404).send('<h1>index.html not found</h1><p>File path: ' + indexPath + '</p>');
   }
 });
@@ -184,7 +184,7 @@ async function createAdminUserIfNeeded() {
     // Check if any users exist
     const existingUsers = Object.values(data.users);
     if (existingUsers.length > 0) {
-      console.log('✅ Admin user already exists:', existingUsers[0].username);
+      console.log(' Admin user already exists:', existingUsers[0].username);
       return;
     }
     
@@ -192,9 +192,9 @@ async function createAdminUserIfNeeded() {
     const adminUsername = process.env.ADMIN_USERNAME || 'admin';
     const adminPassword = process.env.ADMIN_PASSWORD || 'SecureAdmin123!';
     
-    console.log('🔧 Creating admin user from environment variables...');
-    console.log('🔧 Admin Username:', adminUsername);
-    console.log('🔧 Admin Password:', adminPassword.substring(0, 3) + '***');
+    console.log(' Creating admin user from environment variables...');
+    console.log(' Admin Username:', adminUsername);
+    console.log(' Admin Password:', adminPassword.substring(0, 3) + '***');
     
     const hashedPassword = await bcrypt.hash(adminPassword, 12);
     const userId = Date.now().toString();
@@ -219,19 +219,19 @@ async function createAdminUserIfNeeded() {
     
     await saveData();
     
-    console.log('✅ Admin user created successfully!');
-    console.log('✅ You can now log in with:');
+    console.log(' Admin user created successfully!');
+    console.log(' You can now log in with:');
     console.log(`   Username: ${adminUsername}`);
     console.log(`   Password: ${adminPassword}`);
     
   } catch (error) {
-    console.error('❌ Failed to create admin user:', error);
+    console.error(' Failed to create admin user:', error);
   }
 }
 
 const PORT = process.env.PORT || 3000;
-console.log('🔍 DEBUGGING - process.env.PORT:', process.env.PORT);
-console.log('🔍 DEBUGGING - Final PORT value:', PORT);
+console.log(' DEBUGGING - process.env.PORT:', process.env.PORT);
+console.log(' DEBUGGING - Final PORT value:', PORT);
 const HOST = process.env.HOST || '0.0.0.0'; // Railway requires binding to 0.0.0.0
 
 // Initialize WebSocket
@@ -245,73 +245,73 @@ loadData().then(async () => {
   // Auto-create admin user if none exists
   await createAdminUserIfNeeded();
   
-  console.log('🚀 ATTEMPTING TO START SERVER...');
-  console.log('🚀 Will bind to HOST:', HOST);
-  console.log('🚀 Will bind to PORT:', PORT);
-  console.log('🚀 PORT type:', typeof PORT);
+  console.log(' ATTEMPTING TO START SERVER...');
+  console.log(' Will bind to HOST:', HOST);
+  console.log(' Will bind to PORT:', PORT);
+  console.log(' PORT type:', typeof PORT);
   
   const actualPort = parseInt(PORT, 10);
-  console.log('🚀 Parsed PORT as integer:', actualPort);
+  console.log(' Parsed PORT as integer:', actualPort);
   
   server.listen(actualPort, HOST, () => {
     const address = server.address();
-    console.log(`🔒 Secure expense tracker running on ${HOST}:${actualPort}`);
-    console.log(`🔒 Server address object:`, address);
-    console.log(`📡 WebSocket enabled for real-time communication`);
-    console.log(`💰 Centralized budget management active`);
-    console.log(`🚀 Ready for enterprise-grade consistency!`);
-    console.log(`🌐 Railway URL should be: https://expensetracking.up.railway.app`);
-    console.log(`🔍 Environment: NODE_ENV=${process.env.NODE_ENV}`);
-    console.log(`🔍 All Environment Variables:`, Object.keys(process.env).filter(key => key.includes('RAILWAY') || key.includes('PORT') || key.includes('HOST')));
+    console.log(` Secure expense tracker running on ${HOST}:${actualPort}`);
+    console.log(` Server address object:`, address);
+    console.log(` WebSocket enabled for real-time communication`);
+    console.log(` Centralized budget management active`);
+    console.log(` Ready for enterprise-grade consistency!`);
+    console.log(` Railway URL should be: https://expensetracking.up.railway.app`);
+    console.log(` Environment: NODE_ENV=${process.env.NODE_ENV}`);
+    console.log(` All Environment Variables:`, Object.keys(process.env).filter(key => key.includes('RAILWAY') || key.includes('PORT') || key.includes('HOST')));
   });
   
   // Add error logging for server issues
   server.on('error', (error) => {
-    console.error('❌ SERVER ERROR:', error);
-    console.error('❌ Error code:', error.code);
-    console.error('❌ Error message:', error.message);
+    console.error(' SERVER ERROR:', error);
+    console.error(' Error code:', error.code);
+    console.error(' Error message:', error.message);
   });
   
   server.on('listening', () => {
     const address = server.address();
-    console.log(`✅ Server successfully bound to:`, address);
-    console.log(`✅ Server is listening and ready to accept connections`);
+    console.log(` Server successfully bound to:`, address);
+    console.log(` Server is listening and ready to accept connections`);
   });
   
   server.on('connection', (socket) => {
-    console.log(`🔗 New connection from:`, socket.remoteAddress);
+    console.log(` New connection from:`, socket.remoteAddress);
   });
   
   server.on('close', () => {
-    console.log(`🛑 Server closed`);
+    console.log(` Server closed`);
   });
 }).catch((error) => {
-  console.error('💥 FATAL ERROR during server startup:');
-  console.error('💥 Error name:', error.name);
-  console.error('💥 Error message:', error.message);
-  console.error('💥 Error stack:', error.stack);
-  console.error('💥 Process will exit');
+  console.error(' FATAL ERROR during server startup:');
+  console.error(' Error name:', error.name);
+  console.error(' Error message:', error.message);
+  console.error(' Error stack:', error.stack);
+  console.error(' Process will exit');
   process.exit(1);
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
-  console.error('💥 UNCAUGHT EXCEPTION:');
-  console.error('💥 Error:', error);
-  console.error('💥 Stack:', error.stack);
+  console.error(' UNCAUGHT EXCEPTION:');
+  console.error(' Error:', error);
+  console.error(' Stack:', error.stack);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('💥 UNHANDLED REJECTION:');
-  console.error('💥 Reason:', reason);
-  console.error('💥 Promise:', promise);
+  console.error(' UNHANDLED REJECTION:');
+  console.error(' Reason:', reason);
+  console.error(' Promise:', promise);
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-  console.log('🛑 SIGTERM received, shutting down gracefully');
+  console.log(' SIGTERM received, shutting down gracefully');
   server.close(() => {
-    console.log('✅ Server closed successfully');
+    console.log(' Server closed successfully');
     process.exit(0);
   });
 });

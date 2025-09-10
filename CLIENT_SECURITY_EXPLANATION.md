@@ -1,13 +1,13 @@
-# 🔒 Why Your Expense Tracker is Absolutely Secure
+#  Why Your Expense Tracker is Absolutely Secure
 ## Simple Security Explanation for Non-Technical Users
 
-### 🛡️ **Your Data is Safer Than a Bank Vault**
+### ️ **Your Data is Safer Than a Bank Vault**
 
 Your expense tracker application uses **military-grade security** that makes it virtually impossible for anyone to access your data, even if they really tried. Here's why:
 
 ---
 
-## 🏦 **Where Your Data Lives**
+##  **Where Your Data Lives**
 
 Your data is stored on **Railway's secure cloud servers**, but here's the key point: **even Railway themselves cannot see your actual data**. 
 
@@ -15,7 +15,7 @@ Think of it like this: Your data is stored in a **super-secure safe** (Railway's
 
 ---
 
-## 🔐 **Triple-Layer Protection System**
+##  **Triple-Layer Protection System**
 
 ### **Layer 1: Military-Grade Encryption¹**
 - All your data is scrambled using **AES-256-GCM encryption¹** - the same level used by governments and military
@@ -34,7 +34,7 @@ Think of it like this: Your data is stored in a **super-secure safe** (Railway's
 
 ---
 
-## 🚫 **What Attackers See (Spoiler: Nothing Useful)**
+##  **What Attackers See (Spoiler: Nothing Useful)**
 
 If someone tried to hack your data, here's what they would find:
 
@@ -54,45 +54,45 @@ AAE6VA1BM1QXCyhVDhw4bwkiP0F7WkIDLBUcDicZCkQ5JgJSJQ83HCYfIB98WlUGKis5FicdM1cuKisW
 
 ---
 
-## 🌐 **Railway Platform Security**
+##  **Railway Platform Security**
 
 Railway provides additional protection layers:
 
-✅ **Infrastructure Security**: Enterprise-grade data centers with physical security  
-✅ **Network Protection**: Built-in DDoS protection and firewalls  
-✅ **Isolated Environment**: Your app runs in its own secure container  
-✅ **Encrypted Connections**: All communication uses HTTPS⁸  
-✅ **Regular Security Updates**: Automatic platform security patches  
+ **Infrastructure Security**: Enterprise-grade data centers with physical security  
+ **Network Protection**: Built-in DDoS protection and firewalls  
+ **Isolated Environment**: Your app runs in its own secure container  
+ **Encrypted Connections**: All communication uses HTTPS⁸  
+ **Regular Security Updates**: Automatic platform security patches  
 
 **But remember:** Even Railway staff cannot see your actual expense data because it's encrypted before it reaches them.
 
 ---
 
-## 🔍 **Common Attack Scenarios - All Blocked**
+##  **Common Attack Scenarios - All Blocked**
 
 ### **Scenario 1: Database Theft**
 - **Attack**: Hacker steals the entire database
 - **Result**: They get encrypted gibberish that's useless
-- **Protection Level**: 100% Safe ✅
+- **Protection Level**: 100% Safe 
 
 ### **Scenario 2: Password Attack**
 - **Attack**: Hacker tries to guess your password
 - **Result**: Account locks after 5 attempts, IP gets blocked
-- **Protection Level**: 100% Safe ✅
+- **Protection Level**: 100% Safe 
 
 ### **Scenario 3: Man-in-the-Middle Attack**
 - **Attack**: Hacker tries to intercept your data in transit
 - **Result**: HTTPS encryption⁸ makes data unreadable
-- **Protection Level**: 100% Safe ✅
+- **Protection Level**: 100% Safe 
 
 ### **Scenario 4: Railway Gets Hacked**
 - **Attack**: Even if Railway's servers are compromised
 - **Result**: Your data is still encrypted and unreadable
-- **Protection Level**: 100% Safe ✅
+- **Protection Level**: 100% Safe 
 
 ---
 
-## 🏆 **Security Certifications Met**
+##  **Security Certifications Met**
 
 Your application meets the same security standards as:
 - **Banks and financial institutions**
@@ -102,19 +102,19 @@ Your application meets the same security standards as:
 
 ---
 
-## 📱 **Simple Security Checklist for You**
+##  **Simple Security Checklist for You**
 
 To maintain maximum security:
 
-- ✅ **Use a strong, unique password**
-- ✅ **Don't share your login credentials**
-- ✅ **Log out when using shared computers**
-- ✅ **Keep your browser updated**
-- ✅ **Trust the green padlock** (HTTPS) in your browser
+-  **Use a strong, unique password**
+-  **Don't share your login credentials**
+-  **Log out when using shared computers**
+-  **Keep your browser updated**
+-  **Trust the green padlock** (HTTPS) in your browser
 
 ---
 
-## 🚀 **Bottom Line**
+##  **Bottom Line**
 
 Your expense data is protected by the same technology that:
 - Protects nuclear launch codes
@@ -126,7 +126,7 @@ Your expense data is protected by the same technology that:
 
 ---
 
-## 📚 **Technical Terms Explained**
+##  **Technical Terms Explained**
 
 **(1) Encryption**: Think of it as a secret code that scrambles your data. Only someone with the right "key" can unscramble it. We use AES-256-GCM, which means your data is scrambled using a 256-bit key (that's 2^256 possible combinations - more than the number of atoms in the universe).
 

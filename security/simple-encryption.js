@@ -9,7 +9,7 @@ class SimpleSecureEncryption {
 
   generateKey() {
     const key = crypto.randomBytes(32).toString('hex');
-    console.warn('🔐 CRITICAL: Generated new encryption key. Set MASTER_ENCRYPTION_KEY environment variable!');
+    console.warn(' CRITICAL: Generated new encryption key. Set MASTER_ENCRYPTION_KEY environment variable!');
     console.warn(`MASTER_ENCRYPTION_KEY=${key}`);
     return key;
   }

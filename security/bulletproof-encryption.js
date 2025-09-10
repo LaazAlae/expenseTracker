@@ -9,7 +9,7 @@ class BulletproofEncryption {
 
   generateKey() {
     const key = crypto.randomBytes(32).toString('hex');
-    console.warn('🔐 Generated new encryption key');
+    console.warn(' Generated new encryption key');
     return key;
   }
 

@@ -29,10 +29,10 @@ const loadData = async () => {
     // Try to decrypt, fall back to plain JSON for legacy data
     try {
       data = decryptData(fileData);
-      console.log('✅ Data loaded and decrypted successfully');
+      console.log(' Data loaded and decrypted successfully');
     } catch (decryptErr) {
       if (decryptErr.message === 'CORRUPT_DATA') {
-        console.warn('⚠️ Corrupted data file detected, creating fresh database');
+        console.warn('️ Corrupted data file detected, creating fresh database');
         // Data is corrupted, start fresh
         data = {
           users: {},
@@ -87,7 +87,7 @@ const decryptData = (encryptedData) => {
     try {
       // Try direct JSON parse (unencrypted data)
       const plainData = JSON.parse(encryptedData);
-      console.warn('⚠️ Found unencrypted data, will encrypt on next save');
+      console.warn('️ Found unencrypted data, will encrypt on next save');
       return plainData;
     } catch (parseErr) {
       console.error('Data completely corrupted, starting fresh');
